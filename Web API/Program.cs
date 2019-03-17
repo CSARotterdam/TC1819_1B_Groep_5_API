@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
-namespace Test {
+namespace WebAPI {
 	class Program {
 		public static void Main() {
 			// Create listener thingy.
@@ -55,7 +55,7 @@ namespace Test {
 
 		static void sendHTMLError(HttpListenerContext context, string message, HttpStatusCode statusCode) {
 			//Send error page
-			string responseString = "<HTML><BODY><H1>"+(int)statusCode+" "+statusCode+"</H1>"+message+"</BODY></HTML>";
+			string responseString = "<HTML><BODY><H1>" + (int)statusCode + " " + statusCode + "</H1>" + message + "</BODY></HTML>";
 			sendMessage(context, responseString, statusCode);
 		}
 

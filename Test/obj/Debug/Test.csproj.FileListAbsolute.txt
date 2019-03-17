@@ -1,9 +1,0 @@
-C:\Users\mygro\Google Drive\Code\C#\Test\Test\bin\Debug\Test.exe.config
-C:\Users\mygro\Google Drive\Code\C#\Test\Test\bin\Debug\Test.exe
-C:\Users\mygro\Google Drive\Code\C#\Test\Test\bin\Debug\Test.pdb
-C:\Users\mygro\Google Drive\Code\C#\Test\Test\obj\Debug\Test.csprojAssemblyReference.cache
-C:\Users\mygro\Google Drive\Code\C#\Test\Test\obj\Debug\Test.csproj.CoreCompileInputs.cache
-C:\Users\mygro\Google Drive\Code\C#\Test\Test\obj\Debug\Test.exe
-C:\Users\mygro\Google Drive\Code\C#\Test\Test\obj\Debug\Test.pdb
-C:\Users\mygro\Google Drive\Code\C#\Test\Test\bin\Debug\Newtonsoft.Json.dll
-C:\Users\mygro\Google Drive\Code\C#\Test\Test\obj\Debug\Test.csproj.CopyComplete
