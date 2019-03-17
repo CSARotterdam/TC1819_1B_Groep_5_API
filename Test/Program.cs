@@ -34,7 +34,7 @@ namespace Test {
 				//Check if request has body data. Send a 400 BadRequest if it doesn't.
 				if (!request.HasEntityBody) {
 					Console.WriteLine("Request has no body data. Sending error response and ignoring!");
-					sendJSONError(context, "Empty body data", HttpStatusCode.BadRequest);
+					sendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
 				}
 
 				System.IO.Stream body = request.InputStream;
@@ -57,13 +57,6 @@ namespace Test {
 			//Send error page
 			string responseString = "<HTML><BODY><H1>"+(int)statusCode+" "+statusCode+"</H1>"+message+"</BODY></HTML>";
 			sendMessage(context, responseString, statusCode);
-		}
-
-		static void sendJSONError(HttpListenerContext context, string message, HttpStatusCode statusCode) {
-			//Send error response
-			HttpListenerResponse response = context.Response;
-			response.StatusCode = (int)statusCode;
-			sendMessage(context, message, statusCode);
 		}
 
 		static void sendMessage(HttpListenerContext context, string message, HttpStatusCode statusCode = HttpStatusCode.OK) {

@@ -1,0 +1,9 @@
+C:\Users\mygro\Google Drive\School\Informatica (2018+)\Project B\Repo - API\Test\bin\Debug\Test.exe.config
+C:\Users\mygro\Google Drive\School\Informatica (2018+)\Project B\Repo - API\Test\bin\Debug\Test.exe
+C:\Users\mygro\Google Drive\School\Informatica (2018+)\Project B\Repo - API\Test\bin\Debug\Test.pdb
+C:\Users\mygro\Google Drive\School\Informatica (2018+)\Project B\Repo - API\Test\bin\Debug\Newtonsoft.Json.dll
+C:\Users\mygro\Google Drive\School\Informatica (2018+)\Project B\Repo - API\Test\obj\Debug\Web API.csprojAssemblyReference.cache
+C:\Users\mygro\Google Drive\School\Informatica (2018+)\Project B\Repo - API\Test\obj\Debug\Web API.csproj.CoreCompileInputs.cache
+C:\Users\mygro\Google Drive\School\Informatica (2018+)\Project B\Repo - API\Test\obj\Debug\Web API.csproj.CopyComplete
+C:\Users\mygro\Google Drive\School\Informatica (2018+)\Project B\Repo - API\Test\obj\Debug\Test.exe
+C:\Users\mygro\Google Drive\School\Informatica (2018+)\Project B\Repo - API\Test\obj\Debug\Test.pdb
