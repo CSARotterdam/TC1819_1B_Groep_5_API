@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Net;
 using Newtonsoft.Json.Linq;
 
-namespace Test
+namespace TODO_ditto
 {
     class Program
     {
