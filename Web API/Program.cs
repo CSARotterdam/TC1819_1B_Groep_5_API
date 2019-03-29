@@ -6,8 +6,9 @@ using System.Text;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
-namespace WebAPI {
+namespace Web_API {
 	class Program {
 		public static void Main() {
 			// Get local IP address
@@ -19,6 +20,21 @@ namespace WebAPI {
 			}
 			Console.WriteLine("Local IP address is "+ address);
 
+			//Create request queue
+			Queue<HttpListenerContext> requestQueue = new Queue<HttpListenerContext>();
+
+			//Create worker threads
+			Console.WriteLine("Creating worker threads.");
+			int threadCount = 5;
+			Thread[] threadList = new Thread[threadCount];
+			for (int i = 0; i != threadCount; i++) {
+				Thread workerThread = new Thread(() => RequestWorker.main(requestQueue));
+				workerThread.Name = "WorkerThread" + i.ToString();
+				workerThread.Start();
+				threadList[i] = workerThread;
+			}
+			Console.WriteLine("Finished creating worker threads.");
+
 			// Create listener thingy.
 			HttpListener listener = new HttpListener();
 			listener.Prefixes.Add("http://localhost/");
@@ -29,53 +45,9 @@ namespace WebAPI {
 			// Main loop
 			while (true) {
 				// Wait for request 
-				HttpListenerContext context = listener.GetContext();
-				Console.WriteLine("Received a request!");
-
-				// Get request
-				HttpListenerRequest request = context.Request;
-
-				//Check if content type is application/json. Send a 415 UnsupportedMediaType if it isn't.
-				if (request.ContentType != "application/json") {
-					Console.WriteLine("Request has invalid content type. Sending error response and ignoring!");
-					sendHTMLError(context, "If at first you don't succeed, fail 5 more times.", HttpStatusCode.UnsupportedMediaType);
-					continue;
-				}
-				//Check if request has body data. Send a 400 BadRequest if it doesn't.
-				if (!request.HasEntityBody) {
-					Console.WriteLine("Request has no body data. Sending error response and ignoring!");
-					sendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
-				}
-
-				System.IO.Stream body = request.InputStream;
-				System.Text.Encoding encoding = request.ContentEncoding;
-				System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
-				dynamic requestContent = JObject.Parse(reader.ReadToEnd());
-				Console.WriteLine(requestContent.hello);
-
-				// Create response
-				HttpListenerResponse response = context.Response;
-				response.ContentType = "application/json";
-				JObject json = new JObject {
-					{ "goodbye", "world" }
-				};
-				sendMessage(context, json.ToString(), HttpStatusCode.OK);
+				requestQueue.Enqueue(listener.GetContext());
+				Console.WriteLine("Received and enqueued a request!");
 			}
-		}
-
-		static void sendHTMLError(HttpListenerContext context, string message, HttpStatusCode statusCode) {
-			//Send error page
-			string responseString = "<HTML><BODY><H1>" + (int)statusCode + " " + statusCode + "</H1>" + message + "</BODY></HTML>";
-			sendMessage(context, responseString, statusCode);
-		}
-
-		static void sendMessage(HttpListenerContext context, string message, HttpStatusCode statusCode = HttpStatusCode.OK) {
-			HttpListenerResponse response = context.Response;
-			response.StatusCode = (int)statusCode;
-			byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
-			System.IO.Stream output = response.OutputStream;
-			output.Write(buffer, 0, buffer.Length);
-			output.Close();
 		}
 	}
 }
