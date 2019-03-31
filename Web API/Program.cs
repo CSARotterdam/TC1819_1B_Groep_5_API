@@ -7,6 +7,10 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.Threading;
+using MySQLWrapper;
+using System.IO;
+using System.Configuration;
+using System.Collections.Concurrent;
 
 namespace Web_API {
 	class Program {
@@ -21,7 +25,15 @@ namespace Web_API {
 			Console.WriteLine("Local IP address is "+ address);
 
 			//Create request queue
-			Queue<HttpListenerContext> requestQueue = new Queue<HttpListenerContext>();
+			BlockingCollection<HttpListenerContext> requestQueue = new BlockingCollection<HttpListenerContext>();
+
+			//Create console command thread
+			Thread consoleThread = new Thread(() => ConsoleCommand.main());
+			consoleThread.Start();
+
+			//Create database connection
+			Thread databaseMaintainerThread = new Thread(() => DatabaseMaintainer.main());
+			databaseMaintainerThread.Start();
 
 			//Create worker threads
 			Console.WriteLine("Creating worker threads.");
@@ -40,12 +52,12 @@ namespace Web_API {
 			listener.Prefixes.Add("http://localhost/");
 			listener.Prefixes.Add("http://" + address + "/");
 			listener.Start();
-			Console.WriteLine("Listening...");
+			System.Console.WriteLine("Now listening for requests.");
 
 			// Main loop
 			while (true) {
 				// Wait for request 
-				requestQueue.Enqueue(listener.GetContext());
+				requestQueue.Add(listener.GetContext());
 				Console.WriteLine("Received and enqueued a request!");
 			}
 		}

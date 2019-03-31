@@ -4,5 +4,8 @@ using System.Text;
 
 namespace Web_API {
 	class DatabaseMaintainer {
+		public static void main(){
+
+		}
 	}
 }
