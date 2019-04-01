@@ -11,17 +11,34 @@ namespace MySQLWrapper
 	{
 		private readonly MySqlConnection connection;
 		
-		public TechlabMySQL(string username, string password, string database, int timeout = 0, bool persistLogin = true)
+		/// <summary>
+		/// Creates a new instance of TechlabMySQL.
+		/// </summary>
+		/// <param name="server">The server's url.</param>
+		/// <param name="port">The server's port.</param>
+		/// <param name="username">Username for logging in to the server.</param>
+		/// <param name="password">The password for logging in to the server.</param>
+		/// <param name="database">(Optional) The desired database. Can be changed with <seealso cref="ChangeDatabase(string)"/></param>
+		/// <param name="timeout">(Optional) The connection timeout in seconds. -1 by default.</param>
+		/// <param name="persistLogin">(Optional) Set whether to stay logged in for an extended amount of time. Off by default.</param>
+		/// <param name="logging">(Optional) Set logging on or off. Off by default.</param>
+		public TechlabMySQL(string server, string port, string username = null, string password = null, string database = null, int timeout = -1, bool persistLogin = false, bool logging = false)
 		{
-			connection = new MySqlConnection(SQLConstants.ServerUrl
-				.Replace("<username>", username)
-				.Replace("<password>", password)
-				.Replace("<database>", database)
-				.Replace("<timeout>", timeout.ToString())
-				.Replace("<persist>", persistLogin.ToString())
-			);
+			if (server == null) throw new ArgumentNullException("server");
+			if (port == null) throw new ArgumentNullException("port");
+
+			var builder = new MySqlConnectionStringBuilder();
+			builder.Add("server", server);
+			builder.Add("port", port);
+			if (username != null) builder.Add("username", username);
+			if (password != null) builder.Add("password", password);
+			if (database != null) builder.Add("database", database);
+			if (timeout > 0) builder.Add("connect timeout", timeout);
+			builder.Add("persist security info", persistLogin);
+			builder.Add("logging", logging);
+
+			connection = new MySqlConnection(builder.GetConnectionString(true));
 		}
-		public TechlabMySQL(string username, string password, int timeout = 0, bool persistLogin = true) : this(username, password, "", timeout, persistLogin) { }
 
 		#region Database getters
 		/// <summary>
