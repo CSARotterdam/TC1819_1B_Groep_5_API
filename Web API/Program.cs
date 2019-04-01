@@ -5,16 +5,20 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using MySQLWrapper;
 
 namespace Web_API {
 	class Program {
+		public static TechlabMySQL wrapper;
+		public static bool ErrorState = false;
+
 		public static void Main() {
 			//Load configuration file
 			dynamic Settings = Config.loadConfig();
 
 			//Check if config contains all necessary info to start. If it doesn't, abort launch.
 			bool validConfig = true;
-			if(Settings.databaseSettings.username == null || Settings.databaseSettings.password == null || Settings.databaseSettings.serverAddress == null) {
+			if(Settings.databaseSettings.username == null || Settings.databaseSettings.password == null || Settings.databaseSettings.serverAddress == null || Settings.databaseSettings.database == null) {
 				Console.WriteLine("Error: Incomplete database configuration.");
 				validConfig = false;
 			}
@@ -44,6 +48,27 @@ namespace Web_API {
 				//Create console command thread
 				Thread consoleThread = new Thread(() => ConsoleCommand.main());
 				consoleThread.Start();
+
+				//Connect to database
+				string databaseAddress = Settings.databaseSettings.serverAddress;
+				string databasePort = "";
+				string[] splitAddress = databaseAddress.Split(":");
+				if(databaseAddress == splitAddress[0]){
+					databasePort = "80";
+				} else {
+					databaseAddress = splitAddress[0];
+					databasePort = splitAddress[1];
+				}
+				wrapper = new TechlabMySQL(
+					databaseAddress,
+					databasePort,
+					(string)Settings.databaseSettings.username,
+					(string)Settings.databaseSettings.password,
+					(string)Settings.databaseSettings.database,
+					(int)Settings.databaseSettings.connectionTimeout,
+					(bool)Settings.databaseSettings.persistLogin
+				);
+				wrapper.Open();
 
 				//Create database maintainer thread
 				Thread databaseMaintainerThread = new Thread(() => DatabaseMaintainer.main());

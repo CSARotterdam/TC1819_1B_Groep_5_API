@@ -8,7 +8,10 @@ namespace Web_API {
 			'databaseSettings': {
 				'username': null,
 				'password': null,
-				'serverAddress': null
+				'serverAddress': null,
+				'database': null,
+				'connectionTimeout':-1,
+				'persistLogin': true,
 			},
 			'connectionSettings': {
 				'autodetect': true,
