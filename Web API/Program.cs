@@ -11,7 +11,19 @@ namespace Web_API {
 	class Program {
 		public static TechlabMySQL wrapper;
 		public static bool ManualError = false;
-		public static int ErrorCode; //TODO: Add event to detect change in errorcode
+		private static int _errorCode;
+		public static int ErrorCode{
+			get { return _errorCode; }
+			set {
+				_errorCode = value;
+				Console.WriteLine("Error code changed to " + _errorCode.ToString());
+				if(_errorCode == 0){
+					Console.WriteLine("Error state disabled. Now accepting requests.");
+				} else {
+					Console.WriteLine("Error state enabled. All requests will be refused.");
+				}
+			}
+		}
 
 		public static void Main() {
 			//Load configuration file
@@ -56,12 +68,12 @@ namespace Web_API {
 				string databasePort = "";
 				string[] splitAddress = databaseAddress.Split(":");
 				if(databaseAddress == splitAddress[0]){
-					databasePort = "80";
+					databasePort = "3306";
 				} else {
 					databaseAddress = splitAddress[0];
 					databasePort = splitAddress[1];
 				}
-				wrapper = new TechlabMySQL(
+				wrapper = new TechlabMySQL( //TODO: Catch access denied, other exceptions.
 					databaseAddress,
 					databasePort,
 					(string)Settings.databaseSettings.username,

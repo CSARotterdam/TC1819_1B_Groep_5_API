@@ -8,8 +8,10 @@ namespace Web_API {
 		public static void main(){
 			while(true){
 				bool pingSuccess = Program.wrapper.Ping();
-				if (pingSuccess && Program.ErrorCode == 1){
-					Program.ErrorCode = 0;
+				if (pingSuccess){
+					if(Program.ErrorCode == 1 && !Program.ManualError){
+						Program.ErrorCode = 0;
+					}
 				} else {
 					Program.ErrorCode = 1;
 				}
