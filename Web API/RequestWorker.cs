@@ -11,11 +11,16 @@ namespace Web_API {
 		public static void main(BlockingCollection<HttpListenerContext> requestQueue) {
 			Console.WriteLine("Thread " + Thread.CurrentThread.Name + " now running.");
 			while (true) {
-				// Get request
+				// Wait for request.
 				HttpListenerContext context = requestQueue.Take();
 				HttpListenerRequest request = context.Request;
 
-				//Check if content type is application/json. Send a 415 UnsupportedMediaType if it isn't.
+				//If API error state is true, cancel the request (because it'll fail anyway) and send an error.
+				if(Program.ErrorCode != 0){
+					sendMessage(context, "Code"+Program.ErrorCode.ToString(), HttpStatusCode.InternalServerError);
+					continue;
+				}
+				//Check if content type is application/json. Send a HTTP 415 UnsupportedMediaType if it isn't.
 				if (request.ContentType != "application/json") {
 					Console.WriteLine("Request has invalid content type. Sending error response and ignoring!");
 					sendHTMLError(context, "If at first you don't succeed, fail 5 more times.", HttpStatusCode.UnsupportedMediaType);
@@ -27,12 +32,12 @@ namespace Web_API {
 					sendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
 				}
 
+				//Convert request data to JObject
 				System.IO.Stream body = request.InputStream;
 				System.Text.Encoding encoding = request.ContentEncoding;
 				System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
 				dynamic requestContent = JObject.Parse(reader.ReadToEnd());
-				Console.WriteLine(requestContent.hello);
-
+				
 				// Create response
 				HttpListenerResponse response = context.Response;
 				response.ContentType = "application/json";

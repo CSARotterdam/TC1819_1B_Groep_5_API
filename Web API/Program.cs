@@ -10,7 +10,8 @@ using MySQLWrapper;
 namespace Web_API {
 	class Program {
 		public static TechlabMySQL wrapper;
-		public static bool ErrorState = false;
+		public static bool ManualError = false;
+		public static int ErrorCode; //TODO: Add event to detect change in errorcode
 
 		public static void Main() {
 			//Load configuration file

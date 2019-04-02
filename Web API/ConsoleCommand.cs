@@ -7,8 +7,20 @@ namespace Web_API {
 		public static void main(){
 			while(true){
 				string text = Console.ReadLine();
-				Console.WriteLine("success");
-				Console.WriteLine(text);
+				string[] tokens = text.Split(" ");
+
+				switch(tokens[0]){
+					case "errorcode":
+						int ErrorCode;
+						if(int.TryParse(tokens[1], out ErrorCode)){
+							Program.ManualError = true;
+							Program.ErrorCode = ErrorCode;
+						} else if(tokens[1].ToLower() == "none"){
+							Program.ManualError = false;
+							Program.ErrorCode = 0;
+						}
+						break;
+				}
 			}
 		}
 	}
