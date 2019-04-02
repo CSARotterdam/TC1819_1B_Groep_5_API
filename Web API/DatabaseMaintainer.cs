@@ -10,11 +10,10 @@ namespace Web_API {
 				bool pingSuccess = Program.wrapper.Ping();
 				if(pingSuccess){
 					Program.ErrorState = false;
-					Thread.Sleep(1000);
 				} else {
 					Program.ErrorState = true;
-					Thread.Sleep(1000);
 				}
+				Thread.Sleep(1000);
 			}
 		}
 	}

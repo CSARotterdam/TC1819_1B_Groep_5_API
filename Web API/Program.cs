@@ -28,7 +28,8 @@ namespace Web_API {
 			}
 		
 			if (!validConfig) {
-				Console.WriteLine("The server failed to start because some required data is missing. Please check the configuration!");
+				Console.WriteLine("The server failed to start because there is at least one invalid setting. Please check the server configuration!");
+				Console.WriteLine("Press the any key to exit.");
 				Console.ReadLine();
 			} else {
 				//Get local IP address, if autodetect is enabled in settings.
