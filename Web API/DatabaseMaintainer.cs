@@ -7,12 +7,15 @@ namespace Web_API {
 	class DatabaseMaintainer {
 		public static void main(){
 			while(true){
-				bool pingSuccess = Program.wrapper.Ping();
-				if (pingSuccess){
-					if(Program.ErrorCode == 1 && !Program.ManualError){
+				//TODO: DOCUMENTATION, blaasinstrument (lol)
+				if (Program.ErrorCode == 1) {
+					Program.wrapper.Open();
+				}
+				if(Program.wrapper.Ping()){
+					if(Program.ErrorCode == 1 && !Program.ManualError) {
 						Program.ErrorCode = 0;
 					}
-				} else {
+				} else if(Program.ErrorCode == 0){
 					Program.ErrorCode = 1;
 				}
 				Thread.Sleep(1000);
