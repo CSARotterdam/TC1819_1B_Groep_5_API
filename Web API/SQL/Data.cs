@@ -5,7 +5,80 @@ using MySql.Data.MySqlClient;
 
 namespace MySQLWrapper.Data
 {
-	class Item
+	enum IndexType
+    {
+        PRIMARY,
+        UNIQUE,
+        INDEX
+    }
+
+    abstract class SchemaItem
+    {
+        public abstract string Schema { get; }
+        public abstract (string Column, int Length, MySqlDbType Type)[] Metadata { get; }
+        public abstract (IndexType IndexType, (string Column, int Length, MySqlDbType Type) Column)[] Indexes { get; }
+
+        public abstract object[] Fields { get; }
+        public int Length => Fields.Length;
+		public string Primary
+		{
+			get
+			{
+				var indexes = GetIndexes(IndexType.PRIMARY);
+				if (indexes.Length == 0)
+					throw new InvalidOperationException($"Schema `{Schema}` contains no primary key.");
+				return indexes[0].Column;
+			}
+		}
+
+        private object[] fieldTrace = null;
+
+        public void Upload(TechlabMySQL connection)
+        {
+			
+            fieldTrace = Fields;
+        }
+        public void Delete(TechlabMySQL connection)
+        {
+            fieldTrace = null;
+        }
+        public void Update(TechlabMySQL connection)
+        {
+            fieldTrace = Fields;
+        }
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="connection">A TechlabMySQL wrapper object.</param>
+		/// <param name="columns">An array containing the column names to select.</param>
+		/// <param name="conditions">A Dictionary where the key represents a column and the object[] represents conditions to match.
+		/// If left null, everything will be selected.</param>
+		/// <returns>An IEnumerable containing all rows that matched the conditions.</returns>
+		public IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns = null, Dictionary<string, object[]> conditions = null)
+		{
+			return null;
+		}
+
+		public string[] GetColumns()
+		{
+			var outList = new List<string>();
+			foreach (var meta in Metadata)
+				outList.Add(meta.Column);
+			return outList.ToArray();
+		}
+
+		public (string Column, int Length, MySqlDbType Type)[] GetIndexes(IndexType type)
+		{
+			var outList = new List<(string, int, MySqlDbType)>();
+			foreach (var index in Indexes)
+				if (index.IndexType == type)
+					outList.Add(index.Column);
+			return outList.ToArray();
+		}
+	}
+
+    sealed class Item
 	{
 		public const string Schema = "`items`";
 		public const string Primary = IdName;
@@ -66,11 +139,16 @@ namespace MySQLWrapper.Data
 
 		public Product GetProduct(TechlabMySQL connection) => connection.GetProduct(ProductId);
 
+        // TODO: Add static Select method that takes an array of conditions to search for elements in Products
+        // Also allows for specification of columns
+        // Returns an array filled with lists with dynamic values. (Dynamic because of the potential inconsistency of the column parameters)
+        // Sanitation of the columns should be considered.
+
 		public void ClearId() => _id = -1;
 		public bool HasPrimary() => _id != -1;
 	}
 
-	class Product
+    sealed class Product
 	{
 		public const string Schema = "`products`";
 		public const string Primary = IdName;
@@ -115,7 +193,7 @@ namespace MySQLWrapper.Data
 		public LanguageItem GetName(TechlabMySQL connection) => connection.GetLanguageItem(Name);
 	}
 
-	class ProductCategory
+    sealed class ProductCategory
 	{
 		public const string Schema = "`product_categories`";
 		public const string Primary = IdName;
@@ -175,7 +253,7 @@ namespace MySQLWrapper.Data
 		public bool HasPrimary() => _id != -1;
 	}
 
-	class LanguageItem
+	sealed class LanguageItem
 	{
 		public const string Schema = "`language`";
 		public const string Primary = IdName;
@@ -210,5 +288,78 @@ namespace MySQLWrapper.Data
 			ISO_nl = iso_nl;
 		}
 		public LanguageItem(IEnumerable<char> id, string definition) : this(id, definition, definition) { }
+	}
+
+    sealed class User : SchemaItem
+    {
+        public enum UserPermission
+        {
+            Empty,
+            User,
+            Collaborator,
+            Admin
+        }
+
+        #region Schema Metadata
+        private const string _schema = "users";
+        private static readonly (string, int, MySqlDbType)[] _metadata =
+        {
+            ("username", 50, MySqlDbType.VarChar),
+            ("password", char.MaxValue, MySqlDbType.Text),
+            ("permissions", byte.MaxValue, MySqlDbType.Byte),
+        };
+        private static readonly (IndexType, (string, int, MySqlDbType))[] _indexes = 
+        {
+            (IndexType.PRIMARY, _metadata[0]),
+        };
+        private static readonly object[] _fields = new object[_metadata.Length];
+        #endregion
+
+        public User(string username, string password, UserPermission permission)
+        {
+            Username = username;
+            Password = password;
+            Permission = permission;
+        }
+
+        #region Properties
+        public string Username
+        {
+            get { return (string)Fields[0]; }
+            set
+            {
+                if (value != null && value.Length > Metadata[0].Length)
+                    throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+                _fields[0] = value;
+            }
+        }
+        public string Password
+        {
+            get { return (string)Fields[1]; }
+            set
+            {
+				if (value != null && value.Length > Metadata[1].Length)
+                    throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+                _fields[1] = value;
+            }
+        }
+        public UserPermission Permission
+        {
+            get { return (UserPermission)Fields[2]; }
+            set { _fields[1] = value; }
+        }
+        #endregion
+
+        #region SchemaItem Support
+        public override string Schema => _schema;
+        public override (string Column, int Length, MySqlDbType Type)[] Metadata => _metadata;
+        public override (IndexType IndexType, (string Column, int Length, MySqlDbType Type) Column)[] Indexes => _indexes;
+        public override object[] Fields => _fields;
+
+		public void Select(TechlabMySQL connection, string[] UsernameArgs, string[] PasswordArgs, string[] PermissionArgs)
+		{
+			throw new NotImplementedException();
+		}
+		#endregion
 	}
 }

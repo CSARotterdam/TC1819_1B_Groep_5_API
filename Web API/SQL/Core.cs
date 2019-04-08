@@ -18,8 +18,7 @@ namespace MySQLWrapper.MySQL
 		{
 			using (var command = new MySqlCommand(sql, connection))
 			{
-				foreach (var res in Read(command))
-					yield return res;
+				return Read(command);
 			}
 		}
 		

@@ -40,6 +40,32 @@ namespace MySQLWrapper
 			connection = new MySqlConnection(builder.GetConnectionString(true));
 		}
 
+        public void UploadItem(SchemaItem item)
+        {
+            using (var command = connection.CreateCommand())
+            {
+				command.CommandText = SQLConstants.Insert
+					.Replace("<table>", item.Schema);
+            }
+        }
+
+		/// <summary>
+		/// This function allows you to select specific columns from a schema with conditions.
+		/// </summary>
+		/// <param name="schema">The name of the schema to select from.</param>
+		/// <param name="columns">An array containing the column names to select.</param>
+		/// <param name="conditions">A Dictionary where the key represents a column and the object[] represents conditions to match.
+		/// If left null, everything will be selected.</param>
+		/// <returns>An IEnumerable containing all rows that matched the conditions.</returns>
+		public IEnumerable<object[]> Select(string schema, string[] columns = null, Dictionary<string, object[]> conditions = null)
+		{
+			using (var command = connection.CreateCommand())
+			{
+
+			}
+			return null;
+		}
+
 		#region Database getters
 		/// <summary>
 		/// Constructs an Item object from data in the database.
@@ -100,7 +126,7 @@ namespace MySQLWrapper
 		{
 			using (var command = connection.CreateCommand())
 			{
-				command.CommandText = SQLConstants.ConditionalSelect
+				command.CommandText = SQLConstants.ConditionalSelect1
 					.Replace("<table>", schema)
 					.Replace("<primary>", primary);
 				command.Parameters.Add(new MySqlParameter("@condition", primaryCondition.Item1)).Value = primaryCondition.Item2;
