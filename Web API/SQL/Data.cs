@@ -2,63 +2,156 @@
 using System.Linq;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
+using MySQLWrapper.MySQL;
 
 namespace MySQLWrapper.Data
 {
-	enum IndexType
-    {
-        PRIMARY,
-        UNIQUE,
-        INDEX
-    }
+	class ColumnMetadata
+	{
+		public string Column { get; }
+		public int Length { get; }
+		public MySqlDbType Type { get; }
+
+		public ColumnMetadata(string column, int length, MySqlDbType type)
+		{
+			if (length < 0)
+				throw new ArgumentException("Length cannot be lower than 0.", "length");
+			Column = column;
+			Length = length;
+			Type = type;
+		}
+	}
+	class Index
+	{
+		/// <summary>
+		/// An array of types that support auto increment.
+		/// </summary>
+		private static readonly MySqlDbType[] NumberTypes =
+		{
+			MySqlDbType.Byte,
+			MySqlDbType.Int16,
+			MySqlDbType.Int24,
+			MySqlDbType.Int32,
+			MySqlDbType.Int64,
+			MySqlDbType.UByte,
+			MySqlDbType.UInt16,
+			MySqlDbType.UInt24,
+			MySqlDbType.UInt32,
+			MySqlDbType.UInt64,
+			MySqlDbType.Double,
+			MySqlDbType.Float,
+			MySqlDbType.Decimal,
+			MySqlDbType.NewDecimal
+		};
+
+		public enum IndexType
+		{
+			PRIMARY,
+			UNIQUE,
+			INDEX
+		}
+
+		public string Name { get; }
+		public IndexType Type { get; }
+		public ColumnMetadata[] Columns { get; }
+		public bool AutoIncrement { get; }
+
+		public Index(string name, IndexType type, params ColumnMetadata[] columns)
+		{
+			if (columns.Length == 0)
+				throw new ArgumentException("Cannot create index with no columns.", "columns");
+			Type = type;
+			Columns = columns;
+			Name = name;
+			AutoIncrement = false;
+		}
+		public Index(string name, IndexType type, bool autoIncrement, params ColumnMetadata[] columns)
+		{
+			if (columns.Length == 0)
+				throw new ArgumentException("Cannot create index with no columns.", "columns");
+			if (autoIncrement && columns.Length > 1)
+				throw new ArgumentException("Cannot assign auto increment to index with multiple columns.");
+			if (autoIncrement && NumberTypes.Contains(columns[0].Type))
+				throw new ArgumentException("Cannot assign auto increment to a column with the type " + columns[0].Type);
+			Type = type;
+			Columns = columns;
+			Name = name;
+			AutoIncrement = autoIncrement;
+		}
+	}
 
     abstract class SchemaItem
     {
         public abstract string Schema { get; }
-        public abstract (string Column, int Length, MySqlDbType Type)[] Metadata { get; }
-        public abstract (IndexType IndexType, (string Column, int Length, MySqlDbType Type) Column)[] Indexes { get; }
-
+        public abstract ColumnMetadata[] Metadata { get; }
+        public abstract Index[] Indexes { get; }
         public abstract object[] Fields { get; }
-        public int Length => Fields.Length;
-		public string Primary
+
+		public Index AutoIncrement
 		{
 			get
 			{
-				var indexes = GetIndexes(IndexType.PRIMARY);
-				if (indexes.Length == 0)
-					throw new InvalidOperationException($"Schema `{Schema}` contains no primary key.");
-				return indexes[0].Column;
+				foreach (var index in Indexes)
+					if (index.AutoIncrement) return index;
+				return null;
 			}
 		}
 
-        private object[] fieldTrace = null;
+		private object[] fieldTrace = null;
 
-        public void Upload(TechlabMySQL connection)
-        {
-			
-            fieldTrace = Fields;
-        }
-        public void Delete(TechlabMySQL connection)
-        {
-            fieldTrace = null;
-        }
-        public void Update(TechlabMySQL connection)
-        {
-            fieldTrace = Fields;
-        }
+		public ulong Upload(MySqlConnection connection)
+		{
+			using (var cmd = connection.CreateCommand())
+			{
+				var paramNames = new string[Fields.Length];
+				for (int i = 0; i < Fields.Length; i++)
+				{
+					paramNames[i] = $"@param{i}";
+					cmd.Parameters.Add(new MySqlParameter(paramNames[i], Metadata[i].Type) { Value = Fields[i] });
+				}
+
+				var columnInsert = string.Join(", ", GetColumns().Select(column => $"`{Schema}`.`{column}`"));
+				var valueInsert = string.Join(", ", paramNames);
+
+				cmd.CommandText = SQLConstants.Insert
+					.Replace("<schema>", Schema)
+					.Replace("<columns>", columnInsert)
+					.Replace("<values>", valueInsert);
+				cmd.CommandText += "; " + SQLConstants.SelectLastIndex;
+
+				var scalar = (ulong)cmd.ExecuteScalar();
+				if (AutoIncrement != null) Fields[Array.IndexOf(Metadata, AutoIncrement.Columns[0])] = scalar;
+
+				UpdateTrace();
+				return scalar;
+			}
+		}
+		public ulong Upload(TechlabMySQL connection) => connection.Upload(this);
+
+		public int Delete(MySqlConnection connection)
+		{
+			throw new NotImplementedException(); // TODO: Implement Delete method.
+		}
+		public int Delete(TechlabMySQL connection) => connection.Delete(this);
+
+		public int Update(MySqlConnection connection)
+		{
+			throw new NotImplementedException(); // TODO: Implement Update method.
+		}
+		public int Update(TechlabMySQL connection) => connection.Update(this);
 
 		/// <summary>
-		/// 
+		/// Updates the field trace with the current <see cref="Fields"/>.
+		/// <para>This function is called automatically when calling <see cref="Upload(TechlabMySQL)"/> or <see cref="Update(TechlabMySQL)"/>.</para>
+		/// <para>The field trace is used to update the old instance in the database. Do not call this function if you intend to call <c>Update()</c> later.</para>
 		/// </summary>
-		/// <param name="connection">A TechlabMySQL wrapper object.</param>
-		/// <param name="columns">An array containing the column names to select.</param>
-		/// <param name="conditions">A Dictionary where the key represents a column and the object[] represents conditions to match.
-		/// If left null, everything will be selected.</param>
-		/// <returns>An IEnumerable containing all rows that matched the conditions.</returns>
-		public IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns = null, Dictionary<string, object[]> conditions = null)
-		{
-			return null;
-		}
+		public void UpdateTrace() => fieldTrace = (object[])Fields.Clone();
+		/// <summary>
+		/// Clears the field trace.
+		/// <para>This function is called automatically when calling <see cref="Delete(TechlabMySQL)"/>.</para>
+		/// <para>The field trace is used to update the old instance in the database. Do not call this function if you intend to call <c>Update()</c> later.</para>
+		/// </summary>
+		public void ClearTrace() => fieldTrace = null;
 
 		public string[] GetColumns()
 		{
@@ -67,13 +160,19 @@ namespace MySQLWrapper.Data
 				outList.Add(meta.Column);
 			return outList.ToArray();
 		}
-
-		public (string Column, int Length, MySqlDbType Type)[] GetIndexes(IndexType type)
+		public Index GetIndex(string name)
 		{
-			var outList = new List<(string, int, MySqlDbType)>();
 			foreach (var index in Indexes)
-				if (index.IndexType == type)
-					outList.Add(index.Column);
+				if (index.Name == name)
+					return index;
+			return null;
+		}
+		public Index[] GetIndexesOfType(Index.IndexType type)
+		{
+			var outList = new List<Index>();
+			foreach (var index in Indexes)
+				if (index.Type == type)
+					outList.Add(index);
 			return outList.ToArray();
 		}
 	}
@@ -138,11 +237,6 @@ namespace MySQLWrapper.Data
 		}
 
 		public Product GetProduct(TechlabMySQL connection) => connection.GetProduct(ProductId);
-
-        // TODO: Add static Select method that takes an array of conditions to search for elements in Products
-        // Also allows for specification of columns
-        // Returns an array filled with lists with dynamic values. (Dynamic because of the potential inconsistency of the column parameters)
-        // Sanitation of the columns should be considered.
 
 		public void ClearId() => _id = -1;
 		public bool HasPrimary() => _id != -1;
@@ -302,20 +396,20 @@ namespace MySQLWrapper.Data
 
         #region Schema Metadata
         private const string _schema = "users";
-        private static readonly (string, int, MySqlDbType)[] _metadata =
+        private static readonly ColumnMetadata[] _metadata =
         {
-            ("username", 50, MySqlDbType.VarChar),
-            ("password", char.MaxValue, MySqlDbType.Text),
-            ("permissions", byte.MaxValue, MySqlDbType.Byte),
+            new ColumnMetadata("username", 50, MySqlDbType.VarChar),
+			new ColumnMetadata("password", char.MaxValue, MySqlDbType.Text),
+			new ColumnMetadata("permissions", byte.MaxValue, MySqlDbType.Byte),
         };
-        private static readonly (IndexType, (string, int, MySqlDbType))[] _indexes = 
+        private static readonly Index[] _indexes = 
         {
-            (IndexType.PRIMARY, _metadata[0]),
+            new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0])
         };
         private static readonly object[] _fields = new object[_metadata.Length];
         #endregion
 
-        public User(string username, string password, UserPermission permission)
+        public User(string username, string password, UserPermission permission = UserPermission.User)
         {
             Username = username;
             Password = password;
@@ -346,19 +440,27 @@ namespace MySQLWrapper.Data
         public UserPermission Permission
         {
             get { return (UserPermission)Fields[2]; }
-            set { _fields[1] = value; }
+            set { _fields[2] = value; }
         }
         #endregion
 
         #region SchemaItem Support
         public override string Schema => _schema;
-        public override (string Column, int Length, MySqlDbType Type)[] Metadata => _metadata;
-        public override (IndexType IndexType, (string Column, int Length, MySqlDbType Type) Column)[] Indexes => _indexes;
+        public override ColumnMetadata[] Metadata => _metadata;
+        public override Index[] Indexes => _indexes;
         public override object[] Fields => _fields;
+		#endregion
 
-		public void Select(TechlabMySQL connection, string[] UsernameArgs, string[] PasswordArgs, string[] PermissionArgs)
+		#region Methods
+		public void Select(TechlabMySQL connection, MySqlConditionBuilder condition)
 		{
-			throw new NotImplementedException();
+			throw new NotImplementedException(); // TODO: Implement Select with a MySqlConditionBuilder.
+			// Calls the Verify function of the ConditionBuilder with _metadata.
+		}
+		public void Select(TechlabMySQL connection, string[] usernameArgs, string[] passwordArgs, string[] permissionArgs)
+		{
+			throw new NotImplementedException(); // TODO: Implement Select with a set of arrays as conditions.
+			// Creates a MySqlConditionBuilder and calls the other select.
 		}
 		#endregion
 	}
