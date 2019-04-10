@@ -187,6 +187,22 @@ namespace MySQLWrapper.Data
 			throw new NotImplementedException(); // TODO: Implement column verification.
 		}
 
+		public void MergeCommand(MySqlCommand cmd)
+		{
+			MergeCommandText(cmd);
+			MergeParameters(cmd);
+		}
+
+		private void MergeCommandText(MySqlCommand cmd)
+		{
+			if (!cmd.CommandText.TrimEnd().ToUpper().EndsWith("WHERE"))
+				cmd.CommandText = cmd.CommandText.TrimEnd() + " WHERE";
+			if (conditionString.Length == 0) cmd.CommandText += " TRUE";
+			Verify();
+			cmd.CommandText += ConditionString;
+		}
+		private void MergeParameters(MySqlCommand cmd) => cmd.Parameters.AddRange(Parameters.ToArray());
+
 		private void VerifyInput(params string[] input)
 		{
 			foreach (var txt in input)

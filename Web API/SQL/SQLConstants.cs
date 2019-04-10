@@ -10,9 +10,13 @@ namespace MySQLWrapper.MySQL
 		public const string SelectForeignKeys = "SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME " +
 			"FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = DATABASE() AND TABLE_NAME = <table>";
 
-		public const string ConditionalSelect = "SELECT <columns> FROM <schema> WHERE <conditions>";
+		public const string Select = "SELECT <columns> FROM <schema> WHERE <condition>";
+		public const string Insert = "INSERT INTO <schema> (<columns>) VALUES (<values>)";
+		public const string Update = "UPDATE <schema> SET <column_value_pairs> WHERE <condition>";
+		public const string Delete = "DELETE FROM <schema> WHERE <condition>";
+
 		public const string ConditionalSelect1 = "SELECT * FROM <table> WHERE <primary> = @condition";
-		public const string Insert = "INSERT INTO <table> (<fields>) VALUES (<values>)";
+		public const string Insert1 = "INSERT INTO <table> (<fields>) VALUES (<values>)";
 
 		public const string SelectLastIndex = "SELECT LAST_INSERT_ID()";
 	}

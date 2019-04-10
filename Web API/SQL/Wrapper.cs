@@ -40,31 +40,11 @@ namespace MySQLWrapper
 			connection = new MySqlConnection(builder.GetConnectionString(true));
 		}
 
-        public void UploadItem(SchemaItem item)
-        {
-            using (var command = connection.CreateCommand())
-            {
-				command.CommandText = SQLConstants.Insert
-					.Replace("<table>", item.Schema);
-            }
-        }
+		public ulong Upload(SchemaItem item) => item.Upload(connection);
 
-		/// <summary>
-		/// This function allows you to select specific columns from a schema with conditions.
-		/// </summary>
-		/// <param name="schema">The name of the schema to select from.</param>
-		/// <param name="columns">An array containing the column names to select.</param>
-		/// <param name="conditions">A Dictionary where the key represents a column and the object[] represents conditions to match.
-		/// If left null, everything will be selected.</param>
-		/// <returns>An IEnumerable containing all rows that matched the conditions.</returns>
-		public IEnumerable<object[]> Select(string schema, string[] columns = null, Dictionary<string, object[]> conditions = null)
-		{
-			using (var command = connection.CreateCommand())
-			{
+		public int Update(SchemaItem item) => item.Update(connection);
 
-			}
-			return null;
-		}
+		public int Delete(SchemaItem item) => item.Delete(connection);
 
 		#region Database getters
 		/// <summary>
