@@ -80,12 +80,12 @@ namespace MySQLWrapper.Data
 		}
 	}
 
-    abstract class SchemaItem
-    {
-        public abstract string Schema { get; }
-        public abstract ColumnMetadata[] Metadata { get; }
-        public abstract Index[] Indexes { get; }
-        public abstract object[] Fields { get; }
+	abstract class SchemaItem
+	{
+		public abstract string Schema { get; }
+		public abstract ColumnMetadata[] Metadata { get; }
+		public abstract Index[] Indexes { get; }
+		public abstract object[] Fields { get; }
 
 		public Index AutoIncrement
 		{
@@ -177,7 +177,7 @@ namespace MySQLWrapper.Data
 		}
 	}
 
-    sealed class Item
+	sealed class Item
 	{
 		public const string Schema = "`items`";
 		public const string Primary = IdName;
@@ -242,7 +242,7 @@ namespace MySQLWrapper.Data
 		public bool HasPrimary() => _id != -1;
 	}
 
-    sealed class Product
+	sealed class Product
 	{
 		public const string Schema = "`products`";
 		public const string Primary = IdName;
@@ -287,7 +287,7 @@ namespace MySQLWrapper.Data
 		public LanguageItem GetName(TechlabMySQL connection) => connection.GetLanguageItem(Name);
 	}
 
-    sealed class ProductCategory
+	sealed class ProductCategory
 	{
 		public const string Schema = "`product_categories`";
 		public const string Primary = IdName;
@@ -384,71 +384,71 @@ namespace MySQLWrapper.Data
 		public LanguageItem(IEnumerable<char> id, string definition) : this(id, definition, definition) { }
 	}
 
-    sealed class User : SchemaItem
-    {
-        public enum UserPermission
-        {
-            Empty,
-            User,
-            Collaborator,
-            Admin
-        }
+	sealed class User : SchemaItem
+	{
+		public enum UserPermission
+		{
+			Empty,
+			User,
+			Collaborator,
+			Admin
+		}
 
-        #region Schema Metadata
-        private const string _schema = "users";
-        private static readonly ColumnMetadata[] _metadata =
-        {
-            new ColumnMetadata("username", 50, MySqlDbType.VarChar),
+		#region Schema Metadata
+		private const string _schema = "users";
+		private static readonly ColumnMetadata[] _metadata =
+		{
+			new ColumnMetadata("username", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("password", char.MaxValue, MySqlDbType.Text),
 			new ColumnMetadata("permissions", byte.MaxValue, MySqlDbType.Byte),
-        };
-        private static readonly Index[] _indexes = 
-        {
-            new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0])
-        };
-        private static readonly object[] _fields = new object[_metadata.Length];
-        #endregion
+		};
+		private static readonly Index[] _indexes = 
+		{
+			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0])
+		};
+		private static readonly object[] _fields = new object[_metadata.Length];
+		#endregion
 
-        public User(string username, string password, UserPermission permission = UserPermission.User)
-        {
-            Username = username;
-            Password = password;
-            Permission = permission;
-        }
+		public User(string username, string password, UserPermission permission = UserPermission.User)
+		{
+			Username = username;
+			Password = password;
+			Permission = permission;
+		}
 
-        #region Properties
-        public string Username
-        {
-            get { return (string)Fields[0]; }
-            set
-            {
-                if (value != null && value.Length > Metadata[0].Length)
-                    throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
-                _fields[0] = value;
-            }
-        }
-        public string Password
-        {
-            get { return (string)Fields[1]; }
-            set
-            {
+		#region Properties
+		public string Username
+		{
+			get { return (string)Fields[0]; }
+			set
+			{
+				if (value != null && value.Length > Metadata[0].Length)
+					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+				_fields[0] = value;
+			}
+		}
+		public string Password
+		{
+			get { return (string)Fields[1]; }
+			set
+			{
 				if (value != null && value.Length > Metadata[1].Length)
-                    throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
-                _fields[1] = value;
-            }
-        }
-        public UserPermission Permission
-        {
-            get { return (UserPermission)Fields[2]; }
-            set { _fields[2] = value; }
-        }
-        #endregion
+					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+				_fields[1] = value;
+			}
+		}
+		public UserPermission Permission
+		{
+			get { return (UserPermission)Fields[2]; }
+			set { _fields[2] = value; }
+		}
+		#endregion
 
-        #region SchemaItem Support
-        public override string Schema => _schema;
-        public override ColumnMetadata[] Metadata => _metadata;
-        public override Index[] Indexes => _indexes;
-        public override object[] Fields => _fields;
+		#region SchemaItem Support
+		public override string Schema => _schema;
+		public override ColumnMetadata[] Metadata => _metadata;
+		public override Index[] Indexes => _indexes;
+		public override object[] Fields => _fields;
 		#endregion
 
 		#region Methods
