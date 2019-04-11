@@ -1,6 +1,6 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
-using MySql.Data.MySqlClient;
 
 namespace MySQLWrapper.Data
 {
@@ -14,19 +14,19 @@ namespace MySQLWrapper.Data
 				{ Verify(); }
 				catch (Exception e)
 				{ throw new OperationCanceledException("Condition verification failed.", e); }
+				if (conditionString.Length == 0) return "TRUE";
 				return conditionString;
 			}
-			private set { conditionString = value; }
 		}
 		public List<MySqlParameter> Parameters { get; } = new List<MySqlParameter>();
 
 		private string conditionString = "";
+		private string verifiedString = "";
 		private int depth = 0;
 		private int cursor = 0;
 		private bool unfinished = false;
 		private bool expectingOperand = true;
 		private bool modifyingOperand = false;
-		private List<(string Schema, string Column)> columns = new List<(string Schema, string Column)>();
 
 		private bool newGroup
 		{
@@ -34,6 +34,27 @@ namespace MySQLWrapper.Data
 			{
 				if ((depth != 0 && conditionString.Substring(0, cursor+1).EndsWith("()")) || conditionString.Length == 0) return true;
 				return false;
+			}
+		}
+
+		/// <summary>
+		/// Creates a new instance of <see cref="MySqlConditionBuilder"/>.
+		/// </summary>
+		public MySqlConditionBuilder() { }
+		/// <summary>
+		/// Auto-generates a condition that exactly matches the given fields and metadata.
+		/// </summary>
+		/// <param name="Metadata">A set of <see cref="ColumnMetadata"/> objects.</param>
+		/// <param name="Fields">A set of objects to compare to the columns.</param>
+		public MySqlConditionBuilder(ColumnMetadata[] Metadata, object[] Fields)
+		{
+			if (Metadata.Length != Fields.Length)
+				throw new ArgumentException("Metadata and Fields must be equal in length.");
+			for (int i = 0; i < Fields.Length; i++)
+			{
+				if (i != 0) And();
+				if (Fields[i] == null) Column(Metadata[i].Column).Equals().Null();
+				else ColumnEquals(Metadata[i].Column, Fields[i], Metadata[i].Type);
 			}
 		}
 
@@ -49,7 +70,6 @@ namespace MySQLWrapper.Data
 			expectingOperand = true;
 			return this;
 		}
-
 		public MySqlConditionBuilder Or()
 		{
 			if (newGroup) return this;
@@ -72,7 +92,6 @@ namespace MySQLWrapper.Data
 			catch (Exception e)
 			{ throw new OperationCanceledException("Can't append column.", e); }
 			Append($"`{txt}`");
-			columns.Add((null, txt));
 			expectingOperand = false;
 			return this;
 		}
@@ -85,16 +104,28 @@ namespace MySQLWrapper.Data
 			catch (Exception e)
 			{ throw new OperationCanceledException("Can't append column.", e); }
 			Append($"`{schema}`.`{txt}`");
-			columns.Add((schema, txt));
 			expectingOperand = false;
 			return this;
 		}
 
 		public MySqlConditionBuilder Operand(object value, MySqlDbType type)
 		{
+			if (!expectingOperand)
+				throw new OperationCanceledException("Can't append operand; Not expecting operand.");
 			var paramName = "@" + GetHashedName() + "_param" + Parameters.Count;
 			Parameters.Add(new MySqlParameter(paramName, type) { Value = value });
 			Append(paramName);
+			expectingOperand = false;
+			if (!modifyingOperand)
+				unfinished = !unfinished;
+			else modifyingOperand = false;
+			return this;
+		}
+		public MySqlConditionBuilder Null()
+		{
+			if (!expectingOperand)
+				throw new OperationCanceledException("Can't append operand; Not expecting operand.");
+			Append("NULL");
 			expectingOperand = false;
 			if (!modifyingOperand)
 				unfinished = !unfinished;
@@ -114,6 +145,8 @@ namespace MySQLWrapper.Data
 		public MySqlConditionBuilder GreaterThan(long value) => GreaterThan().Operand(value, MySqlDbType.Int64);
 		public MySqlConditionBuilder GreaterThanOrEqual() => AppendOperator(">=");
 		public MySqlConditionBuilder GreaterThanOrEqual(long value) => GreaterThanOrEqual().Operand(value, MySqlDbType.Int64);
+		public MySqlConditionBuilder Like() => AppendOperator("LIKE");
+		public MySqlConditionBuilder Like(object value, MySqlDbType type) => Like().Operand(value, type);
 
 		public MySqlConditionBuilder Add() => AppendOperator('+');
 		public MySqlConditionBuilder Add(long value) => Add().Operand(value, MySqlDbType.Int64);
@@ -175,16 +208,17 @@ namespace MySQLWrapper.Data
 			cursor += txt.Length;
 		}
 
-		private void Verify()
+		/// <summary>
+		/// Checks if the condition is valid. This detects and skip redundant calls.
+		/// </summary>
+		/// <exception cref="FormatException">Thrown when the condition is not valid.</exception>
+		public void Verify()
 		{
+			if (verifiedString == conditionString) return;
 			if (unfinished) throw new FormatException("Not all conditions are completed.");
 			if (depth != 0 && conditionString.Substring(0, cursor+1).EndsWith("()"))
 				throw new FormatException("Not all groups are filled with a condition.");
-		}
-
-		public void Verify(string Schema, ColumnMetadata[] columns)
-		{
-			throw new NotImplementedException(); // TODO: Implement column verification.
+			verifiedString = conditionString;
 		}
 
 		public void MergeCommand(MySqlCommand cmd)
@@ -192,16 +226,14 @@ namespace MySQLWrapper.Data
 			MergeCommandText(cmd);
 			MergeParameters(cmd);
 		}
-
-		private void MergeCommandText(MySqlCommand cmd)
+		public void MergeCommandText(MySqlCommand cmd)
 		{
+			Verify();
 			if (!cmd.CommandText.TrimEnd().ToUpper().EndsWith("WHERE"))
 				cmd.CommandText = cmd.CommandText.TrimEnd() + " WHERE";
-			if (conditionString.Length == 0) cmd.CommandText += " TRUE";
-			Verify();
 			cmd.CommandText += ConditionString;
 		}
-		private void MergeParameters(MySqlCommand cmd) => cmd.Parameters.AddRange(Parameters.ToArray());
+		public void MergeParameters(MySqlCommand cmd) => cmd.Parameters.AddRange(Parameters.ToArray());
 
 		private void VerifyInput(params string[] input)
 		{
