@@ -1,11 +1,16 @@
-﻿using System.Data;
+﻿using MySql.Data.MySqlClient;
 using System.Collections.Generic;
-using MySql.Data.MySqlClient;
+using System.Data;
 
 namespace MySQLWrapper.MySQL
 {
 	static class Core
 	{
+		/// <summary>
+		/// Reads the output of the command. Yields one IDataReader per resultset.
+		/// </summary>
+		/// <param name="command">The <see cref="MySqlCommand"/> to excecute.</param>
+		/// <returns>An IEnumerable containing IDataReaders.</returns>
 		public static IEnumerable<IDataReader> Read(MySqlCommand command)
 		{
 			using (var reader = command.ExecuteReader())
@@ -14,29 +19,17 @@ namespace MySQLWrapper.MySQL
 				while (reader.NextResult());
 			}
 		}
+		/// <summary>
+		/// Reads the output of the query. Yields one IDataReader per resultset.
+		/// </summary>
+		/// <param name="connection">The MySql connection to send the query to.</param>
+		/// <param name="sql">The MySql query.</param>
+		/// <returns>An IEnumerable containing IDataReaders.</returns>
 		public static IEnumerable<IDataReader> Read(MySqlConnection connection, string sql)
 		{
 			using (var command = new MySqlCommand(sql, connection))
 			{
 				return Read(command);
-			}
-		}
-		
-		public static IEnumerable<IDictionary<string, string>> GetForeignKeys(MySqlConnection connection, string table)
-		{
-			using (var command = connection.CreateCommand())
-			{
-				command.CommandText = SQLConstants.SelectForeignKeys;
-				command.Parameters.Add("@table", MySqlDbType.String).Value = table;
-
-				var reader = command.ExecuteReader();
-				while (reader.Read())
-				{
-					var dict = new Dictionary<string, string>();
-					for (int i = 0; i < reader.FieldCount; i++)
-						dict.Add(reader.GetName(i), reader.GetString(i));
-					yield return dict;
-				}
 			}
 		}
 	}
