@@ -28,9 +28,10 @@ namespace MySQLWrapper
 			if (server == null) throw new ArgumentNullException("server");
 			if (port == null) throw new ArgumentNullException("port");
 
-			var builder = new MySqlConnectionStringBuilder();
-			builder.Add("server", server);
-			builder.Add("port", port);
+			var builder = new MySqlConnectionStringBuilder {
+				{ "server", server },
+				{ "port", port }
+			};
 			if (username != null) builder.Add("username", username);
 			if (password != null) builder.Add("password", password);
 			if (database != null) builder.Add("database", database);

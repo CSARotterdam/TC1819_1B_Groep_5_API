@@ -6,30 +6,32 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using API.Requests;
+using Logging;
 
 namespace API.Threads {
 	class RequestWorker {
-		public static void main(BlockingCollection<HttpListenerContext> requestQueue) {
-			Console.WriteLine("Thread " + Thread.CurrentThread.Name + " now running.");
+		public static void main(Logger log, BlockingCollection<HttpListenerContext> requestQueue) {
+			log.Info("Thread " + Thread.CurrentThread.Name + " now running.");
 			while (true) {
 				// Wait for request.
 				HttpListenerContext context = requestQueue.Take();
 				HttpListenerRequest request = context.Request;
+				log.Fine("Processing request.");
 
 				// If API error state is true, cancel the request (because it'll fail anyway) and send an error.
-				if(Program.ErrorCode != 0){
+				if (Program.ErrorCode != 0){
 					sendMessage(context, "Code"+Program.ErrorCode.ToString(), HttpStatusCode.InternalServerError);
 					continue;
 				}
 				// Check if content type is application/json. Send a HTTP 415 UnsupportedMediaType if it isn't.
 				if (request.ContentType != "application/json") {
-					Console.WriteLine("Request has invalid content type. Sending error response and ignoring!");
+					log.Error("Request has invalid content type. Sending error response and ignoring!");
 					sendHTMLError(context, "If at first you don't succeed, fail 5 more times.", HttpStatusCode.UnsupportedMediaType);
 					continue;
 				}
 				// Check if request has body data. Send a 400 BadRequest if it doesn't.
 				if (!request.HasEntityBody) {
-					Console.WriteLine("Request has no body data. Sending error response and ignoring!");
+					log.Error("Request has no body data. Sending error response and ignoring!");
 					sendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
 				}
 
@@ -54,14 +56,14 @@ namespace API.Threads {
 
 					}
 				} catch(InvalidRequestTypeException e){
-					Console.WriteLine("Invalid request type "+e);
+					log.Error("Invalid request type "+e);
 				}
 				
 				// Create & send response
 				HttpListenerResponse response = context.Response;
 				response.ContentType = "application/json";
 				sendMessage(context, responseJson.ToString(), statusCode);
-				Console.WriteLine("Request processed successfully.");
+				log.Fine("Request processed successfully.");
 			}
 		}
 
