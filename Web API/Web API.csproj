@@ -3,9 +3,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <RootNamespace>Web_API</RootNamespace>
+    <RootNamespace>API</RootNamespace>
     <ApplicationIcon />
-    <StartupObject>Web_API.Program</StartupObject>
+    <StartupObject>API.Program</StartupObject>
+    <ApplicationManifest>App.manifest</ApplicationManifest>
+    <AssemblyName>API</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

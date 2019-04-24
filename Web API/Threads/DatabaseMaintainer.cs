@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace Web_API {
+namespace API.Threads {
 	class DatabaseMaintainer {
 		public static void main(){
 			while(true){

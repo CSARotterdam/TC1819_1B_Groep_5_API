@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using MySQLWrapper;
 
-namespace Web_API {
+namespace API {
 	class Program {
 		public static TechlabMySQL wrapper;
 		public static bool ManualError = false;
@@ -39,81 +39,82 @@ namespace Web_API {
 				Console.WriteLine("Error: Missing server address.");
 				validConfig = false;
 			}
-		
 			if (!validConfig) {
 				Console.WriteLine("The server failed to start because there is at least one invalid setting. Please check the server configuration!");
 				Console.WriteLine("Press the any key to exit.");
 				Console.ReadLine();
+				return;
+			}
+
+			//Get local IP address, if autodetect is enabled in settings.
+			List<string> addresses = Settings.connectionSettings.serverAddresses.ToObject<List<string>>();
+			if ((bool)Settings.connectionSettings.autodetect) {
+				using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0)) {
+					socket.Connect("8.8.8.8", 65530);
+					IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+					string address = endPoint.Address.ToString();
+					addresses.Add(address);
+				}
+			}
+
+			//Create request queue
+			BlockingCollection<HttpListenerContext> requestQueue = new BlockingCollection<HttpListenerContext>();
+
+			//Create console command thread
+			Thread consoleThread = new Thread(() => API.Threads.ConsoleCommand.main());
+			consoleThread.Start();
+
+			//Connect to database
+			string databaseAddress = Settings.databaseSettings.serverAddress;
+			string databasePort = "";
+			string[] splitAddress = databaseAddress.Split(":");
+			if(databaseAddress == splitAddress[0]){
+				databasePort = "3306";
 			} else {
-				//Get local IP address, if autodetect is enabled in settings.
-				List<string> addresses = Settings.connectionSettings.serverAddresses.ToObject<List<string>>();
-				if ((bool)Settings.connectionSettings.autodetect) {
-					using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0)) {
-						socket.Connect("8.8.8.8", 65530);
-						IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
-						string address = endPoint.Address.ToString();
-						addresses.Add(address);
-					}
-				}
+				databaseAddress = splitAddress[0];
+				databasePort = splitAddress[1];
+			}
+			wrapper = new TechlabMySQL( //TODO: Catch access denied, other exceptions.
+				databaseAddress,
+				databasePort,
+				(string)Settings.databaseSettings.username,
+				(string)Settings.databaseSettings.password,
+				(string)Settings.databaseSettings.database,
+				(int)Settings.databaseSettings.connectionTimeout,
+				(bool)Settings.databaseSettings.persistLogin
+			);
+			wrapper.Open();
 
-				//Create request queue
-				BlockingCollection<HttpListenerContext> requestQueue = new BlockingCollection<HttpListenerContext>();
+			//Create database maintainer thread
+			Thread databaseMaintainerThread = new Thread(() => API.Threads.DatabaseMaintainer.main());
+			databaseMaintainerThread.Start();
 
-				//Create console command thread
-				Thread consoleThread = new Thread(() => ConsoleCommand.main());
-				consoleThread.Start();
+			//Create worker threads
+			Console.WriteLine("Creating worker threads.");
+			int threadCount = (int)Settings.performanceSettings.workerThreadCount;
+			Thread[] threadList = new Thread[threadCount];
+			for (int i = 0; i != threadCount; i++) {
+				Thread workerThread = new Thread(() => API.Threads.RequestWorker.main(requestQueue)) {
+					Name = "WorkerThread" + i.ToString()
+				};
+				workerThread.Start();
+				threadList[i] = workerThread;
+			}
+			Console.WriteLine("Finished creating worker threads.");
 
-				//Connect to database
-				string databaseAddress = Settings.databaseSettings.serverAddress;
-				string databasePort = "";
-				string[] splitAddress = databaseAddress.Split(":");
-				if(databaseAddress == splitAddress[0]){
-					databasePort = "3306";
-				} else {
-					databaseAddress = splitAddress[0];
-					databasePort = splitAddress[1];
-				}
-				wrapper = new TechlabMySQL( //TODO: Catch access denied, other exceptions.
-					databaseAddress,
-					databasePort,
-					(string)Settings.databaseSettings.username,
-					(string)Settings.databaseSettings.password,
-					(string)Settings.databaseSettings.database,
-					(int)Settings.databaseSettings.connectionTimeout,
-					(bool)Settings.databaseSettings.persistLogin
-				);
-				wrapper.Open();
+			// Create listener thingy.
+			HttpListener listener = new HttpListener();
+			foreach (string address in addresses) {
+				listener.Prefixes.Add("http://" + address + "/");
+			}
+			listener.Start();
+			System.Console.WriteLine("Now listening for requests.");
 
-				//Create database maintainer thread
-				Thread databaseMaintainerThread = new Thread(() => DatabaseMaintainer.main());
-				databaseMaintainerThread.Start();
-
-				//Create worker threads
-				Console.WriteLine("Creating worker threads.");
-				int threadCount = (int)Settings.performanceSettings.workerThreadCount;
-				Thread[] threadList = new Thread[threadCount];
-				for (int i = 0; i != threadCount; i++) {
-					Thread workerThread = new Thread(() => RequestWorker.main(requestQueue));
-					workerThread.Name = "WorkerThread" + i.ToString();
-					workerThread.Start();
-					threadList[i] = workerThread;
-				}
-				Console.WriteLine("Finished creating worker threads.");
-
-				// Create listener thingy.
-				HttpListener listener = new HttpListener();
-				foreach (string address in addresses) {
-					listener.Prefixes.Add("http://" + address + "/");
-				}
-				listener.Start();
-				System.Console.WriteLine("Now listening for requests.");
-
-				// Main loop
-				while (true) {
-					// Wait for request 
-					requestQueue.Add(listener.GetContext());
-					Console.WriteLine("Received and enqueued a request!");
-				}
+			// Main loop
+			while (true) {
+				// Wait for request 
+				requestQueue.Add(listener.GetContext());
+				Console.WriteLine("Received and enqueued a request!");
 			}
 		}
 	}

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Web_API {
+namespace API.Threads {
 	class ConsoleCommand {
 		public static void main(){
 			while(true){
 				string text = Console.ReadLine();
 				string[] tokens = text.Split(" ");
-
+				//TODO: comments lol
 				switch(tokens[0]){
 					case "errorcode":
 						int ErrorCode;

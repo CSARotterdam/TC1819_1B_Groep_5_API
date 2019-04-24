@@ -2,9 +2,9 @@
 using Newtonsoft.Json.Linq;
 using System.IO;
 
-namespace Web_API {
+namespace API {
 	class Config {
-		private static string defaultJson = @"{
+		private static readonly string defaultJson = @"{
 			'databaseSettings': {
 				'username': null,
 				'password': null,
