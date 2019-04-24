@@ -21,7 +21,7 @@ namespace API.Requests {
 
 			//TODO: Actually implement login
 			bool loginSuccessful = false;
-			if (username == "test" && password == "[B@6ad6ff3") {
+			if (username == "test" && password == "e9e633097ab9ceb3e48ec3f70ee2beba41d05d5420efee5da85f97d97005727587fda33ef4ff2322088f4c79e8133cc9cd9f3512f4d3a303cbdb5bc585415a00") {
 				loginSuccessful = true;
 			}
 
