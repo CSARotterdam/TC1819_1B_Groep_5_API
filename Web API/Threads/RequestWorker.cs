@@ -5,12 +5,15 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading;
-using API.Requests;
 using Logging;
+using API.Requests;
+using System.Reflection;
 
 namespace API.Threads {
 	class RequestWorker {
 		public static void main(Logger log, BlockingCollection<HttpListenerContext> requestQueue) {
+			MethodInfo[] methods = typeof(RequestMethods).GetMethods();
+
 			log.Info("Thread " + Thread.CurrentThread.Name + " now running.");
 			while (true) {
 				// Wait for request.
@@ -43,22 +46,28 @@ namespace API.Threads {
 
 				// Handle request
 				HttpStatusCode statusCode = HttpStatusCode.OK;
-				JObject responseJson = new JObject();
-
-				try {
-					switch (requestContent["requestType"].ToString()) {
-						case "login":
-							responseJson = LoginRequest.Login(requestContent);
-							break;
-
-						default:
-							throw new InvalidRequestTypeException(requestContent["requestType"].ToString());
-
+				MethodInfo requestMethod = null;
+				foreach (MethodInfo method in methods) {
+					if (method.Name == requestContent["requestType"].ToString()){
+						requestMethod = method;
 					}
-				} catch(InvalidRequestTypeException e){
-					log.Error("Invalid request type "+e);
 				}
-				
+
+				JObject responseJson;
+				if (requestMethod != null) {
+					Object[] methodParams = new object[1] { requestContent };
+					responseJson = (JObject)requestMethod.Invoke(null, methodParams);
+				} else {
+					log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
+					statusCode = HttpStatusCode.BadRequest;
+					responseJson = new JObject(){
+						{"requestID", requestContent["requestID"].ToString()},
+						{"requestData", new JObject(){
+							{"Error", "Invalid requestType value"}
+						}}
+					};
+				}
+
 				// Create & send response
 				HttpListenerResponse response = context.Response;
 				response.ContentType = "application/json";

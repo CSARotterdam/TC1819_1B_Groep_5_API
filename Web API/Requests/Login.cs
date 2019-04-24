@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace API.Requests {
-	static class LoginRequest {
+	static partial class RequestMethods {
 		/// <summary>
 		/// Handles requests with requestType "login".
 		/// </summary>
 		/// <param name="request">The JObject containing the request received from the client.</param>
 		/// <returns>A JObject containing the request response, which can then be sent to the client.</returns>
-		public static JObject Login(JObject request){
+		public static JObject login(JObject request){
 			//If the requestType is 
 			if(request["requestType"].ToString() != "login"){
 				throw new InvalidRequestTypeException(request["requestType"].ToString());
