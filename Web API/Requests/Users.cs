@@ -39,7 +39,7 @@ namespace API.Requests {
 				}}
 			};
 			if(loginSuccessful){
-				response["requestData"]["userToken"] = (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+				response["requestData"]["userToken"] = generateUserToken(username);
 			} else {
 				response["requestData"]["reason"] = "Incorrect username/password";
 			}
@@ -57,16 +57,50 @@ namespace API.Requests {
 				throw new InvalidRequestTypeException(request["requestType"].ToString());
 			}
 
-			//TODO Registration code
-			bool registerUserSuccessful = true;
+			String password = request["requestData"]["password"].ToString();
+			String username = request["requestData"]["username"].ToString();
 
-			return new JObject() {
+			bool registerUserSuccessful = false;
+
+			//Check if username already exists
+			bool usernameExists = false;
+			IEnumerable<User> selection = wrapper.Select<User>();
+			foreach (User user in selection) {
+				if (user.Username == username) {
+					usernameExists = true;
+					break;
+				}
+			}
+
+			//Check if password meets criteria
+			bool invalidPassword = false;
+			if(password.Length < 10){
+				invalidPassword = true;
+			}
+
+			
+
+			JObject response = new JObject() {
 				{"requestID", request["requestID"].ToString()},
 				{"requestData", new JObject(){
 					{"registerUserSuccessful", registerUserSuccessful},
-					{"userToken", (Int32)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds}
+					{"userToken", null},
+					{"usernameReason", null},
+					{"passwordReason", null}
 				}}
 			};
+			if (registerUserSuccessful) {
+				response["requestData"]["userToken"] = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+			} else {
+				if (usernameExists) {
+					response["requestData"]["usernameReason"] = "User already exists.";
+				}
+				if(invalidPassword) {
+					response["requestData"]["passwordReason"] = "Password too short.";
+				}
+			}
+
+			return response;
 		}
 	}
 }
