@@ -228,7 +228,7 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
-		public static IEnumerable<object[]> Select<T>(MySqlConnection connection, string[] columns = null, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+		public static IEnumerable<object[]> Select<T>(MySqlConnection connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 				where T : SchemaItem, new()
 		{
 			using (var cmd = connection.CreateCommand())
@@ -265,7 +265,7 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
-		public static IEnumerable<object[]> Select<T>(TechlabMySQL connection, string[] columns = null, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+		public static IEnumerable<object[]> Select<T>(TechlabMySQL connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 				where T : SchemaItem, new()
 		{
 			return connection.Select<T>(columns, condition, range);
@@ -279,7 +279,7 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <typeparamref name="T"/>.</returns>
-		public static IEnumerable<T> SelectAll<T>(MySqlConnection connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null) where T : SchemaItem, new()
+		public static IEnumerable<T> Select<T>(MySqlConnection connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null) where T : SchemaItem, new()
 		{
 			foreach (var result in Select<T>(connection, null, condition, range))
 			{
@@ -297,8 +297,8 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <typeparamref name="T"/>.</returns>
-		public static IEnumerable<T> SelectAll<T>(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null) where T : SchemaItem, new()
-			=> connection.SelectAll<T>(condition, range);
+		public static IEnumerable<T> Select<T>(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null) where T : SchemaItem, new()
+			=> connection.Select<T>(condition, range);
 
 		/// <summary>
 		/// Updates the field trace with the current <see cref="Fields"/>.
@@ -423,7 +423,7 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
-		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns = null, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 			=> Select<Item>(connection, columns, condition, range);
 
 		/// <summary>
@@ -433,8 +433,8 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <see cref="Item"/>.</returns>
-		public static IEnumerable<Item> SelectAll(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
-			=> SelectAll<Item>(connection, condition, range);
+		public static IEnumerable<Item> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+			=> Select<Item>(connection, condition, range);
 		#endregion
 	}
 
@@ -528,7 +528,7 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
-		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns = null, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 			=> Select<Product>(connection, columns, condition, range);
 
 		/// <summary>
@@ -538,8 +538,8 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <see cref="Product"/>.</returns>
-		public static IEnumerable<Product> SelectAll(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
-			=> SelectAll<Product>(connection, condition, range);
+		public static IEnumerable<Product> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+			=> Select<Product>(connection, condition, range);
 		#endregion
 	}
 
@@ -621,7 +621,7 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
-		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns = null, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 			=> Select<ProductCategory>(connection, columns, condition, range);
 
 		/// <summary>
@@ -631,8 +631,8 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <see cref="ProductCategory"/>.</returns>
-		public static IEnumerable<ProductCategory> SelectAll(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
-			=> SelectAll<ProductCategory>(connection, condition, range);
+		public static IEnumerable<ProductCategory> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+			=> Select<ProductCategory>(connection, condition, range);
 		#endregion
 	}
 
@@ -717,7 +717,7 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
-		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns = null, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 			=> Select<LanguageItem>(connection, columns, condition, range);
 
 		/// <summary>
@@ -727,8 +727,8 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <see cref="LanguageItem"/>.</returns>
-		public static IEnumerable<LanguageItem> SelectAll(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
-			=> SelectAll<LanguageItem>(connection, condition, range);
+		public static IEnumerable<LanguageItem> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+			=> Select<LanguageItem>(connection, condition, range);
 		#endregion
 	}
 
@@ -816,7 +816,7 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
-		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns = null, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 			=> Select<User>(connection, columns, condition, range);
 
 		/// <summary>
@@ -826,8 +826,8 @@ namespace MySQLWrapper.Data
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <see cref="User"/>.</returns>
-		public static IEnumerable<User> SelectAll(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
-			=> SelectAll<User>(connection, condition, range);
+		public static IEnumerable<User> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+			=> Select<User>(connection, condition, range);
 		#endregion
 	}
 }
