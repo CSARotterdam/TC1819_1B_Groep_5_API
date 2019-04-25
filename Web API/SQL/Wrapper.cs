@@ -64,7 +64,7 @@ namespace MySQLWrapper
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <typeparamref name="T"/>.</returns>
 		public IEnumerable<T> Select<T>(MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null) where T : SchemaItem, new()
-			=> SchemaItem.SelectAll<T>(Connection, condition, range);
+			=> SchemaItem.Select<T>(Connection, condition, range);
 
 		#region Exposed connection properties
 
