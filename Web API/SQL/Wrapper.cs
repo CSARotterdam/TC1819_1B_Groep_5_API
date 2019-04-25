@@ -54,7 +54,7 @@ namespace MySQLWrapper
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
-		public IEnumerable<object[]> Select<T>(string[] columns = null, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null) where T : SchemaItem, new()
+		public IEnumerable<object[]> Select<T>(string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null) where T : SchemaItem, new()
 			=> SchemaItem.Select<T>(Connection, columns, condition, range);
 		/// <summary>
 		/// Selects all columns of a <see cref="SchemaItem"/> subclass.
