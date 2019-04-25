@@ -4,6 +4,9 @@ using System.Data;
 
 namespace MySQLWrapper.MySQL
 {
+	/// <summary>
+	/// Handles basic SQL communication
+	/// </summary>
 	static class Core
 	{
 		/// <summary>

@@ -9,6 +9,9 @@ namespace MySQLWrapper
 {
 	class TechlabMySQL : IDisposable
 	{
+		/// <summary>
+		/// Convenience property that raises an error if this instance is disposed. Otherwise returns _connection.\
+		/// </summary>
 		private MySqlConnection Connection => RaiseIfDisposed()._connection;
 		private readonly MySqlConnection _connection;
 		
@@ -42,8 +45,25 @@ namespace MySQLWrapper
 			_connection = new MySqlConnection(builder.GetConnectionString(true));
 		}
 
+		/// <summary>
+		/// Upload a <see cref="SchemaItem"/> to the database.
+		/// </summary>
+		/// <param name="item"></param>
+		/// <returns></returns>
 		public long Upload(SchemaItem item) => item.Upload(Connection);
+
+		/// <summary>
+		/// Updates the old values of a <see cref="SchemaItem"/> with the object's new values.
+		/// </summary>
+		/// <param name="item">The item whose database counterpart to update.</param>
+		/// <returns>The number of affected rows. 0 if the item was not found.</returns>
 		public int Update(SchemaItem item) => item.Update(Connection);
+
+		/// <summary>
+		/// Deletes a <see cref="SchemaItem"/> from the database.
+		/// </summary>
+		/// <param name="item">The item to delete.</param>
+		/// <returns>The number of affected rows. 0 if the item was not found.</returns>
 		public int Delete(SchemaItem item) => item.Delete(Connection);
 
 		/// <summary>
@@ -68,19 +88,42 @@ namespace MySQLWrapper
 
 		#region Exposed connection properties
 
-		public bool IsPasswordExpired => _connection.IsPasswordExpired;
+		/// <summary>
+		/// Get whether or not the password for the underlying connection is expired.
+		/// </summary>
+		public bool IsPasswordExpired => Connection.IsPasswordExpired;
 
 		#endregion
+
 		#region Exposed connection methods
 
+		/// <summary>
+		/// Opens the underlying <see cref="MySqlConnection"/> instance.
+		/// </summary>
 		public void Open() => _connection.Open();
+		/// <summary>
+		/// Opens the underlying <see cref="MySqlConnection"/> instance asynchronously.
+		/// </summary>
 		public async void OpenAsync() => await _connection.OpenAsync();
 
+		/// <summary>
+		/// Opens the underlying <see cref="MySqlConnection"/> instance.
+		/// </summary>
 		public void Close() => _connection.Close();
+		/// <summary>
+		/// Closes the underlying <see cref="MySqlConnection"/> instance asynchronously.
+		/// </summary>
 		public async void CloseAsync() => await _connection.CloseAsync();
 
+		/// <summary>
+		/// Moves to the specified database at the server.
+		/// </summary>
+		/// <param name="databaseName">The name of the database to move to.</param>
 		public void ChangeDatabase(string databaseName) => _connection.ChangeDatabase(databaseName);
 
+		/// <summary>
+		/// Returns true if the server was successfully pinged. False otherwise.
+		/// </summary>
 		public bool Ping() => _connection.Ping();
 		
 		#endregion
@@ -101,6 +144,9 @@ namespace MySQLWrapper
 			}
 		}
 		
+		/// <summary>
+		/// Disposes this object and the underlying <see cref="MySqlConnection"/>.
+		/// </summary>
 		public void Dispose()
 		{
 			Dispose(true);

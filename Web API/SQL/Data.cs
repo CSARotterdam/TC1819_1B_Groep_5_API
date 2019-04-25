@@ -7,6 +7,9 @@ using System.Linq;
 
 namespace MySQLWrapper.Data
 {
+	/// <summary>
+	/// A class representing the data associated with columns of a MySQL database.
+	/// </summary>
 	class ColumnMetadata
 	{
 		public string Column { get; }
@@ -22,10 +25,13 @@ namespace MySQLWrapper.Data
 			Type = type;
 		}
 	}
+	/// <summary>
+	/// A class representing MySQL indexes.
+	/// </summary>
 	class Index
 	{
 		/// <summary>
-		/// An array of types that support auto increment.
+		/// An collection of types that support auto increment.
 		/// </summary>
 		private static readonly MySqlDbType[] NumberTypes =
 		{
@@ -45,6 +51,9 @@ namespace MySQLWrapper.Data
 			MySqlDbType.NewDecimal
 		};
 
+		/// <summary>
+		/// An enumeration of available index types.
+		/// </summary>
 		public enum IndexType
 		{
 			PRIMARY,
@@ -57,6 +66,12 @@ namespace MySQLWrapper.Data
 		public ColumnMetadata[] Columns { get; }
 		public bool AutoIncrement { get; }
 
+		/// <summary>
+		/// Creates a new instance of <see cref="Index"/>.
+		/// </summary>
+		/// <param name="name">The name of the index.</param>
+		/// <param name="type">The type of the index.</param>
+		/// <param name="columns">A collection of <see cref="ColumnMetadata"/> instances.</param>
 		public Index(string name, IndexType type, params ColumnMetadata[] columns)
 		{
 			if (columns.Length == 0)
@@ -66,6 +81,13 @@ namespace MySQLWrapper.Data
 			Name = name;
 			AutoIncrement = false;
 		}
+		/// <summary>
+		/// Creates a new instance of <see cref="Index"/>.
+		/// </summary>
+		/// <param name="name">The name of the index.</param>
+		/// <param name="type">The type of the index.</param>
+		/// <param name="autoIncrement">Whether or not the index is marked as auto increment.</param>
+		/// <param name="columns">A collection of <see cref="ColumnMetadata"/> instances. If auto increment is true, this may only include one column.</param>
 		public Index(string name, IndexType type, bool autoIncrement, params ColumnMetadata[] columns)
 		{
 			if (columns.Length == 0)
@@ -83,8 +105,17 @@ namespace MySQLWrapper.Data
 
 	abstract class SchemaItem
 	{
+		/// <summary>
+		/// The name of the schema that this item's class is modeled after.
+		/// </summary>
 		public abstract string Schema { get; }
+		/// <summary>
+		/// A collection of <see cref="ColumnMetadata"/> objects that represent the columns found in the actual schema.
+		/// </summary>
 		public abstract ReadOnlyCollection<ColumnMetadata> Metadata { get; }
+		/// <summary>
+		/// A collection of <see cref="Index"/> objects that represent the indexes found in the actual schema.
+		/// </summary>
 		public abstract ReadOnlyCollection<Index> Indexes { get; }
 
 		/// <summary>
@@ -233,23 +264,29 @@ namespace MySQLWrapper.Data
 		{
 			using (var cmd = connection.CreateCommand())
 			{
+				// Because SchemaItem is abstract, I need a reference instance to access certain fields.
 				var reference = new T();
 
 				string columnInsert;
+				// If no collumns are specified, replace it with a wildcard
 				if (columns == null || columns.Length == 0) columnInsert = "*";
 				else columnInsert = string.Join(", ", columns.Select(x => x == "*" ? x : $"`{x}`"));
 
+				// Get select query string
 				cmd.CommandText = SQLConstants.GetSelect(
 					columnInsert,
 					$"`{reference.Schema}`",
 					condition == null ? "TRUE" : condition.ConditionString
 				);
+				// Add a limit to the query if specified
 				if (range.HasValue) cmd.CommandText += $" LIMIT {range.Value.Start},{range.Value.Amount}";
+				// Merge the condition's parameters if it isn't null
 				if (condition != null) condition.MergeParameters(cmd);
 
 				foreach (var reader in Core.Read(cmd))
 					while (reader.Read())
 					{
+						// Return all values
 						var values = new object[reader.FieldCount];
 						reader.GetValues(values);
 						yield return values;
@@ -267,9 +304,7 @@ namespace MySQLWrapper.Data
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
 		public static IEnumerable<object[]> Select<T>(TechlabMySQL connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 				where T : SchemaItem, new()
-		{
-			return connection.Select<T>(columns, condition, range);
-		}
+			=> connection.Select<T>(columns, condition, range);
 
 		/// <summary>
 		/// Selects all columns of a <see cref="SchemaItem"/> subclass.
@@ -284,7 +319,9 @@ namespace MySQLWrapper.Data
 			foreach (var result in Select<T>(connection, null, condition, range))
 			{
 				var obj = new T();
+				// Copy the resulting object[] to the new SchemaItem, obj
 				result.CopyTo(obj.Fields, 0);
+				// Update the 'trace' of the value. The trace links it with its original values.
 				obj.UpdateTrace();
 				yield return obj;
 			}
@@ -317,28 +354,20 @@ namespace MySQLWrapper.Data
 		/// </remarks>
 		public void ClearTrace() => fieldTrace = null;
 
-		public string[] GetColumns()
-		{
-			var outList = new List<string>();
-			foreach (var meta in Metadata)
-				outList.Add(meta.Column);
-			return outList.ToArray();
-		}
-		public Index GetIndex(string name)
-		{
-			foreach (var index in Indexes)
-				if (index.Name == name)
-					return index;
-			return null;
-		}
-		public Index[] GetIndexesOfType(Index.IndexType type)
-		{
-			var outList = new List<Index>();
-			foreach (var index in Indexes)
-				if (index.Type == type)
-					outList.Add(index);
-			return outList.ToArray();
-		}
+		/// <summary>
+		/// Returns a string[] with the column names associated with this SchemaItem.
+		/// </summary>
+		public string[] GetColumns() => Metadata.Select(x => x.Column).ToArray();
+		/// <summary>
+		/// Gets an index with the specified name, or null if none were found.
+		/// </summary>
+		/// <param name="name">The name of the index.</param>
+		public Index GetIndex(string name) => Indexes.FirstOrDefault(x => x.Name == name);
+		/// <summary>
+		/// Gets all indexes of a certain type.
+		/// </summary>
+		/// <param name="type">The index type to find.</param>
+		public Index[] GetIndexesOfType(Index.IndexType type) => Indexes.Where(x => x.Type == type).ToArray();
 		
 		/// <summary>
 		/// Returns a string that represents the current object.
