@@ -25,6 +25,7 @@ namespace API.Requests {
 			foreach(User user in selection){
 				if(user.Password == password && user.Username == username){
 					loginSuccessful = true;
+					break;
 				}
 			}
 
@@ -33,6 +34,8 @@ namespace API.Requests {
 				{"requestID", request["requestID"].ToString()},
 				{"requestData", new JObject(){
 					{"loginSuccesful", loginSuccessful },
+					{"userToken", null},
+					{"reason", null }
 				}}
 			};
 			if(loginSuccessful){
