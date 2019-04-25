@@ -90,6 +90,7 @@ namespace API {
 				(int)Settings.databaseSettings.connectionTimeout,
 				(bool)Settings.databaseSettings.persistLogin
 			);
+			Requests.RequestMethods.wrapper = wrapper;
 			wrapper.Open();
 
 			//Create database maintainer thread
