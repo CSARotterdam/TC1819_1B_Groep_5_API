@@ -11,6 +11,8 @@ using System.Reflection;
 
 namespace API.Threads {
 	class RequestWorker {
+
+		//RequestWorker threads takes and processes incoming requests from the requestQueue (which are added to the queue by the Listener thread.
 		public static void main(Logger log, BlockingCollection<HttpListenerContext> requestQueue) {
 			MethodInfo[] methods = typeof(RequestMethods).GetMethods();
 
