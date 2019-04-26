@@ -11,9 +11,9 @@ namespace API.Requests {
 		/// </summary>
 		/// <param name="request">The JObject containing the request received from the client.</param>
 		/// <returns>A JObject containing the request response, which can then be sent to the client.</returns>
-		public static JObject login(JObject request){
+		public static JObject login(JObject request) {
 			//If the requestType isn't "login", throw an exception.
-			if(request["requestType"].ToString() != "login"){
+			if (request["requestType"].ToString() != "login") {
 				throw new InvalidRequestTypeException(request["requestType"].ToString());
 			}
 
@@ -22,8 +22,8 @@ namespace API.Requests {
 			String username = request["requestData"]["username"].ToString();
 			IEnumerable<User> selection = wrapper.Select<User>();
 			bool loginSuccessful = false;
-			foreach(User user in selection){
-				if(user.Password == password && user.Username == username){
+			foreach (User user in selection) {
+				if (user.Password == password && user.Username == username) {
 					loginSuccessful = true;
 					break;
 				}
@@ -38,7 +38,7 @@ namespace API.Requests {
 					{"reason", null }
 				}}
 			};
-			if(loginSuccessful){
+			if (loginSuccessful) {
 				response["requestData"]["userToken"] = generateUserToken(username);
 			} else {
 				response["requestData"]["reason"] = "Incorrect username/password";
@@ -46,12 +46,18 @@ namespace API.Requests {
 			return response;
 		}
 
+
+
+
+
+
+
 		/// <summary>
 		/// Handles requests with requestType "registerUser".
 		/// </summary>
 		/// <param name="request"></param>
 		/// <returns></returns>
-		public static JObject registerUser(JObject request){
+		public static JObject registerUser(JObject request) {
 			//If the requestType isn't "registerUser", throw an exception.
 			if (request["requestType"].ToString() != "registerUser") {
 				throw new InvalidRequestTypeException(request["requestType"].ToString());
@@ -74,12 +80,13 @@ namespace API.Requests {
 
 			//Check if password meets criteria
 			bool invalidPassword = false;
-			if(password.Length < 10){
+			if (password.Length < 10) {
 				invalidPassword = true;
 			}
 
-			
+			//TODO register user
 
+			//Create + return response object
 			JObject response = new JObject() {
 				{"requestID", request["requestID"].ToString()},
 				{"requestData", new JObject(){
@@ -95,12 +102,35 @@ namespace API.Requests {
 				if (usernameExists) {
 					response["requestData"]["usernameReason"] = "User already exists.";
 				}
-				if(invalidPassword) {
+				if (invalidPassword) {
 					response["requestData"]["passwordReason"] = "Password too short.";
 				}
 			}
 
 			return response;
+		}
+
+
+
+
+
+
+
+		public static JObject logout(JObject request) {
+			//If the requestType isn't "login", throw an exception.
+			if (request["requestType"].ToString() != "logout") {
+				throw new InvalidRequestTypeException(request["requestType"].ToString());
+			}
+
+			//TODO 
+
+			//Create + return response object
+			//Don't need any requestData for this one; the response itself serves as a confirmation.
+			return new JObject() {
+				{"requestID", request["requestID"].ToString()},
+				{"requestData", new JObject(){
+				}}
+			};
 		}
 	}
 }
