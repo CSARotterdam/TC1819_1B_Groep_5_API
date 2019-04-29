@@ -31,7 +31,6 @@ namespace API.Requests {
 
 			//Create + return response object
 			JObject response = new JObject() {
-				{"requestID", request["requestID"].ToString()},
 				{"requestData", new JObject(){
 					{"loginSuccesful", loginSuccessful },
 					{"userToken", null},
@@ -78,33 +77,38 @@ namespace API.Requests {
 				}
 			}
 
-			//Check if password meets criteria
+			//Check if password is a SHA-512 hash.
+            //This checks whether the password string is the correct length for a SHA-512 hash, and if it is a proper hexadecimal number.
+            //It's possible for people directly calling the API to create a user with a password that wasn't salted with their username (should we fix this?), but I doubt anyone would do that.
+            //Also regex is weird and I do not like it.
 			bool invalidPassword = false;
-			if (password.Length < 10) {
+			if (password.Length != 128 && !System.Text.RegularExpressions.Regex.IsMatch(password, @"\A\b[0-9a-fA-F]+\b\Z")) {
 				invalidPassword = true;
 			}
 
-			//TODO register user
+            //If the above checks passed, register the user.
+            if(!invalidPassword && !usernameExists){
+                User user = new User(username, password, User.UserPermission.User);
+                user.Upload(wrapper);
+                registerUserSuccessful = true;
+            }
 
 			//Create + return response object
 			JObject response = new JObject() {
-				{"requestID", request["requestID"].ToString()},
 				{"requestData", new JObject(){
 					{"registerUserSuccessful", registerUserSuccessful},
 					{"userToken", null},
-					{"usernameReason", null},
-					{"passwordReason", null}
+					{"reason", null},
 				}}
 			};
 			if (registerUserSuccessful) {
 				response["requestData"]["userToken"] = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
 			} else {
 				if (usernameExists) {
-					response["requestData"]["usernameReason"] = "User already exists.";
-				}
-				if (invalidPassword) {
-					response["requestData"]["passwordReason"] = "Password too short.";
-				}
+					response["requestData"]["reason"] = "User already exists.";
+				} else if (invalidPassword) {
+                    response["requestData"]["reason"] = "Password not valid.";
+                }
 			}
 
 			return response;

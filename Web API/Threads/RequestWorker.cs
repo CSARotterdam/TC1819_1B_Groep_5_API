@@ -38,6 +38,7 @@ namespace API.Threads {
 				if (!request.HasEntityBody) {
 					log.Error("Request has no body data. Sending error response and ignoring!");
 					sendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
+                    continue;
 				}
 
 				//Convert request data to JObject
@@ -52,6 +53,7 @@ namespace API.Threads {
 				foreach (MethodInfo method in methods) {
 					if (method.Name == requestContent["requestType"].ToString()){
 						requestMethod = method;
+                        break;
 					}
 				}
 
