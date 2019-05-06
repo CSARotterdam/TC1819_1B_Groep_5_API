@@ -22,47 +22,49 @@ namespace Logging
 		/// </summary>
 		public static readonly Dictionary<string, Level> DefaultLevels = new Dictionary<string, Level>();
 
+		#region Default Levels
 		/// <summary>
 		/// Disables all log messages.
 		/// </summary>
-		public static readonly Level OFF = new Level(int.MinValue, "OFF");
+		public static readonly Level OFF = new Level(int.MinValue, "OFF", true);
+		/// <summary>
+		/// Mostly used for debugging code. 
+		/// </summary>
+		public static readonly Level DEBUG = new Level(-1000, "DEBUG", true);
 		/// <summary>
 		/// Used for errors after which the program cannot continue running.
 		/// </summary>
-		public static readonly Level FATAL = new Level(-1000, "FATAL");
+		public static readonly Level FATAL = new Level(-500, "FATAL", true);
 		/// <summary>
 		/// Used for errors that nonetheless do not prevent the program from continuing.
 		/// </summary>
-		public static readonly Level ERROR = new Level(-100, "ERROR");
+		public static readonly Level ERROR = new Level(-250, "ERROR", true);
 		/// <summary>
 		/// Used to warn for things that may be out of the ordinary, but are otherwise not a problem.
 		/// </summary>
-		public static readonly Level WARN = new Level(-50, "WARN");
-		/// <summary>
-		/// Mostly used for debugging code.
-		/// </summary>
-		public static readonly Level DEBUG = new Level(0, "DEBUG");
+		public static readonly Level WARN = new Level(-100, "WARN", true);
 		/// <summary>
 		/// Used for general program information/feedback.
 		/// </summary>
-		public static readonly Level INFO = new Level(10, "INFO");
+		public static readonly Level INFO = new Level(0, "INFO", true);
 		/// <summary>
 		/// Used for relatively fine logging. Not as fine as TRACE.
 		/// </summary>
-		public static readonly Level FINE = new Level(100, "FINE");
+		public static readonly Level FINE = new Level(100, "FINE", true);
 		/// <summary>
 		/// Used for very fine information. E.G object construction, function calls, etc.
 		/// </summary>
-		public static readonly Level TRACE = new Level(1000, "TRACE");
+		public static readonly Level TRACE = new Level(1000, "TRACE", true);
 		/// <summary>
 		/// Enables all log messages.
 		/// </summary>
-		public static readonly Level ALL = new Level(int.MaxValue, "ALL");
+		public static readonly Level ALL = new Level(int.MaxValue, "ALL", true);
+		#endregion
 
 		public string Name { get; }
 		public int Value { get; }
 
-		private Level(int value, string name, bool isDefault = true)
+		private Level(int value, string name, bool isDefault)
 		{
 			Value = value;
 			Name = name;
@@ -70,20 +72,15 @@ namespace Logging
 		}
 
 		/// <summary>
-		/// Creates a new logging <see cref="Level"/> objects.
+		/// Creates a new instance of <see cref="Level"/>.
 		/// </summary>
 		/// <param name="value">The logging level value. This must be a unique value.</param>
 		/// <param name="name">The name of the logging level. This is case sensitive and must be unique.</param>
 		/// <returns>The newly created <see cref="Level"/> instance.</returns>
 		/// <exception cref="ArgumentException">When <paramref name="name"/> or <paramref name="value"/> are not unique.</exception>
-		public static Level NewCustomLevel(int value, string name)
+		public Level(int value, string name) : this(value, name, false)
 		{
-			if (CustomLevels.ContainsKey(name))
-				throw new ArgumentException($"Duplicate level '{name}'.", "name");
-			if (CustomLevels.Any(x => x.Value.Value == value))
-				throw new ArgumentException($"Duplicate level {value}.", "value");
-			CustomLevels[name] = new Level(value, name, false);
-			return CustomLevels[name];
+			CustomLevels[name] = this;
 		}
 
 		/// <summary>
@@ -93,7 +90,15 @@ namespace Logging
 	}
 
 	/// <summary>
-	/// General purpose logging class.
+	/// A class whose instances contain all information related to a logging message.
+	/// </summary>
+	class LogRecord
+	{
+		// TODO: Implement LogRecord, or not ¯\_(ツ)_/¯
+	}
+
+	/// <summary>
+	/// General purpose logging class, influenced largely by the logging class in Python.
 	/// <para>
 	/// These loggers support a hierarchy structure of <see cref="Logger"/> objects,
 	/// where one parent logger passes its log messages to any child loggers.
@@ -101,6 +106,12 @@ namespace Logging
 	/// </summary>
 	class Logger : IDisposable
 	{
+		// TODO: Implement logger name
+		public string Name { get { return $"Logger{GetHashCode().ToString("X")}"; } }
+		// TODO: Implement logger creation time
+		public DateTime Created { get; } = DateTime.Now;
+
+
 		/// <summary>
 		/// A read-only collection of associated loggers
 		/// </summary>
@@ -129,6 +140,26 @@ namespace Logging
 		/// <para>This also prevents writing to child loggers, but it does not silence it's children.</para>
 		/// </summary>
 		public bool Silent { get; set; } = false;
+
+		// TODO: Add support for the following format parameters and convert them to something more c# friendly
+		// asctime : formattable time
+		// created : serves as a placeholder. only useful when log records become their own class
+		// filename : filename part of pathname
+		// funcname : name of the function issuing the log record
+		// levelname : logging level name
+		// levelno : int value of logging level. may be worth converting to uint or ulong.
+		// lineno : line number where logging call was made
+		// message : the message with any additional formatting
+		// module : this is the namespace
+		// name : serves as a placeholder. only useful when loggers get names
+		// pathname : same as filename, but includes full path
+		// process : something with the System.Diagnostics.Process class
+		// processName : ^
+		// relativeCreated : created time offset by logger creation time
+		// stack_info : the full stack trace including the call that created the new log record
+		// thread : thread ID
+		// threadName : duh
+		public string LogFormat { get; } = "";
 
 		/// <summary>
 		/// The dateTime format for the logging timestamps. This can be changed at any time.
