@@ -101,9 +101,13 @@ namespace Logging
 	/// </summary>
 	class Logger : IDisposable
 	{
-		// TODO: Implement logger name
+		/// <summary>
+		/// The name of this logger object
+		/// </summary>
 		public string Name { get; }
-		// TODO: Implement logger creation time
+		/// <summary>
+		/// The time when this logger was created
+		/// </summary>
 		public DateTime Created { get; } = DateTime.Now;
 
 		/// <summary>
