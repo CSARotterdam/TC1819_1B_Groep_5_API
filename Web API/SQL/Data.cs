@@ -3,7 +3,9 @@ using MySQLWrapper.MySQL;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Drawing;
 
 namespace MySQLWrapper.Data
 {
@@ -795,11 +797,12 @@ namespace MySQLWrapper.Data
 		/// should be done with the <see cref="Fields"/> property.
 		/// </remarks>
 		public User() { }
-		public User(string username, string password, UserPermission permission = UserPermission.User)
+		public User(string username, string password, long token, UserPermission permission = UserPermission.User)
 		{
 			Username = username;
 			Password = password;
 			Permission = permission;
+			Token = token;
 		}
 
 		#region Properties
@@ -825,7 +828,7 @@ namespace MySQLWrapper.Data
 		}
 		public UserPermission Permission
 		{
-			get { return (UserPermission)Fields[2]; }
+			get { return (UserPermission)Enum.Parse(typeof(UserPermission), (string)Fields[2]); }
 			set { _fields[2] = value; }
 		}
 		public long Token
@@ -863,6 +866,106 @@ namespace MySQLWrapper.Data
 		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <see cref="User"/>.</returns>
 		public static IEnumerable<User> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 			=> Select<User>(connection, condition, range);
+		#endregion
+	}
+
+	class Image : SchemaItem
+	{
+		#region Schema Metadata
+		private const string _schema = "images";
+		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
+		{
+			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
+			new ColumnMetadata("data", (int)Math.Pow(byte.MaxValue, 3) - 1, MySqlDbType.MediumBlob),
+			new ColumnMetadata("extension", 10, MySqlDbType.VarChar),
+ 		});
+		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
+		{
+			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0])
+		});
+		private readonly object[] _fields = new object[_metadata.Count];
+		#endregion
+
+		/// <summary>
+		/// Creates a new <see cref="Image"/> instance.
+		/// </summary>
+		/// <remarks>
+		/// This constructor is intended for generic functions. Setting the fields
+		/// should be done with the <see cref="Fields"/> property.
+		/// </remarks>
+		public Image() { }
+		public Image(string path)
+			: this(Path.GetFileNameWithoutExtension(path), File.ReadAllBytes(path), Path.GetExtension(path).ToLower())
+		{
+		}
+		public Image(string id, byte[] data, string extension = null)
+		{
+			Id = id;
+			Data = data;
+			Extension = extension ?? Path.GetExtension(id);
+		}
+
+		#region Properties
+		public string Id
+		{
+			get { return (string)Fields[0]; }
+			set
+			{
+				if (value != null && value.Length > Metadata[0].Length)
+					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+				_fields[0] = value;
+			}
+		}
+		public byte[] Data
+		{
+			get { return (byte[])Fields[1]; }
+			set
+			{
+				if (value != null && value.Length > Metadata[1].Length)
+					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+				_fields[1] = value;
+			}
+		}
+		public string Extension
+		{
+			get { return (string)Fields[2]; }
+			set
+			{
+				if (value != null && value.Length > Metadata[2].Length)
+					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+				_fields[2] = value;
+			}
+		}
+		#endregion
+
+		#region SchemaItem Support
+		public override string Schema => _schema;
+		public override ReadOnlyCollection<ColumnMetadata> Metadata => _metadata;
+		public override ReadOnlyCollection<Index> Indexes => _indexes;
+		public override object[] Fields => _fields;
+		#endregion
+
+		#region Methods
+		/// <summary>
+		/// Selects columns based on the given conditions.
+		/// </summary>
+		/// <param name="connection">An opened <see cref="TechlabMySQL"/> object.</param>
+		/// <param name="columns">An array specifying which columns to return. Passing <c>null</c> will select all columns.</param>
+		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
+		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
+		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
+		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+			=> Select<Image>(connection, columns, condition, range);
+
+		/// <summary>
+		/// Selects all columns based on the given condition.
+		/// </summary>
+		/// <param name="connection">An opened <see cref="TechlabMySQL"/> object.</param>
+		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
+		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
+		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <see cref="Image"/>.</returns>
+		public static IEnumerable<Image> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+			=> Select<Image>(connection, condition, range);
 		#endregion
 	}
 }
