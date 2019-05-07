@@ -61,7 +61,6 @@ namespace API {
             }
 
 			//Check if config contains all necessary info to start. If it doesn't, abort launch.
-			
 			if(Settings.databaseSettings.username == null || Settings.databaseSettings.password == null || Settings.databaseSettings.serverAddress == null || Settings.databaseSettings.database == null) {
 				log.Fatal("Incomplete or missing database configuration.");
 				validConfig = false;
@@ -70,6 +69,8 @@ namespace API {
 				log.Fatal("Missing server address.");
 				validConfig = false;
 			}
+
+            //If the config file is invalid, throw an error and abort.
 			if (!validConfig) {
                 log.Fatal("\n");
 				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
@@ -77,10 +78,16 @@ namespace API {
 				Console.ReadLine();
 				return;
 			}
-			log.Info("Successfully loaded configuration file.");
+			
+            if((string)Settings["authenticationSettings"]["expiration"] == null) {
+                log.Info("User token expiration not set. Defaulting to 7200 (2 hours).");
+                Settings["authenticationSettings"]["expiration"] = 7200;
+            }
 
-			//Get local IP address, if autodetect is enabled in settings.
-			List<string> addresses = Settings.connectionSettings.serverAddresses.ToObject<List<string>>();
+            log.Info("Successfully loaded configuration file.");
+
+            //Get local IP address, if autodetect is enabled in settings.
+            List<string> addresses = Settings.connectionSettings.serverAddresses.ToObject<List<string>>();
 			if ((bool)Settings.connectionSettings.autodetect) {
 				string address;
 				using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0)) {

@@ -12,7 +12,7 @@ namespace API.Threads {
             while (true) {
                 int waitTime = (int)(DateTime.Now.AddDays(1) - DateTime.Now).TotalMilliseconds;
                 Thread.Sleep(waitTime);
-
+                //TODO Test this!
                 log.Detach(child);
                 compressLogs();
                 child = new Logger(Level.ALL, File.CreateText("Logs\\latest.log"));

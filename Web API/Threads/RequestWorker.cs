@@ -47,7 +47,7 @@ namespace API.Threads {
 				System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
 				JObject requestContent = JObject.Parse(reader.ReadToEnd());
 
-				// Handle request
+				// Select request handler
 				HttpStatusCode statusCode = HttpStatusCode.OK;
 				MethodInfo requestMethod = null;
 				foreach (MethodInfo method in methods) {
@@ -57,23 +57,25 @@ namespace API.Threads {
 					}
 				}
 
-				JObject responseJson;
-				if (requestMethod != null) {
-					Object[] methodParams = new object[1] { requestContent };
-					responseJson = (JObject)requestMethod.Invoke(null, methodParams);
-				} else {
-					log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
-					statusCode = HttpStatusCode.BadRequest;
-					responseJson = new JObject(){
-						{"requestID", requestContent["requestID"].ToString()},
-						{"requestData", new JObject(){
-							{"Error", "Invalid requestType value"}
-						}}
-					};
-				}
+                //If no request handler was found, send an error response
+                JObject responseJson;
+                if (requestMethod == null) {
+                    log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
+                    statusCode = HttpStatusCode.BadRequest;
+                    responseJson = new JObject(){
+                        {"requestData", new JObject(){
+                            {"Error", "Invalid requestType value"}
+                        }}
+                    };
 
-				// Create & send response
-				HttpListenerResponse response = context.Response;
+                } else {
+                    //Attempt to process the request
+                    Object[] methodParams = new object[1] { requestContent };
+                    responseJson = (JObject)requestMethod.Invoke(null, methodParams);
+                }
+
+                // Create & send response
+                HttpListenerResponse response = context.Response;
 				response.ContentType = "application/json";
 				sendMessage(context, responseJson.ToString(), statusCode);
 				log.Fine("Request processed successfully.");
