@@ -479,12 +479,14 @@ namespace MySQLWrapper.Data
 			new ColumnMetadata("manufacturer", 80, MySqlDbType.VarChar),
 			new ColumnMetadata("category", 11, MySqlDbType.Int32),
 			new ColumnMetadata("name", 50, MySqlDbType.VarChar),
+			new ColumnMetadata("image", 50, MySqlDbType.VarChar),
 		});
 		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
 		{
 			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0]),
 			new Index("category", Index.IndexType.INDEX, _metadata[1]),
-			new Index("name", Index.IndexType.INDEX, _metadata[2])
+			new Index("name", Index.IndexType.INDEX, _metadata[2]),
+			new Index("image", Index.IndexType.INDEX, _metadata[4])
 		});
 		private readonly object[] _fields = new object[_metadata.Count];
 		#endregion
@@ -497,12 +499,13 @@ namespace MySQLWrapper.Data
 		/// should be done with the <see cref="Fields"/> property.
 		/// </remarks>
 		public Product() { }
-		public Product(string id, string manufacturer, int category, string name)
+		public Product(string id, string manufacturer, int category, string name, string image = "default")
 		{
 			Id = id;
 			Manufacturer = manufacturer;
 			Category = category;
 			Name = name;
+			Image = image;
 		}
 
 		#region Properties
@@ -539,6 +542,16 @@ namespace MySQLWrapper.Data
 				if (value != null && value.Length > Metadata[3].Length)
 					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
 				_fields[3] = value;
+			}
+		}
+		public string Image
+		{
+			get { return (string)Fields[4]; }
+			set
+			{
+				if (value != null && value.Length > Metadata[4].Length)
+					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+				_fields[4] = value;
 			}
 		}
 		#endregion
@@ -887,6 +900,11 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		/// <summary>
+		/// Array of image formats supported by android studio.
+		/// </summary>
+		private static readonly string[] ImageFormats = { ".jpeg", ".jpg", ".gif", ".bmp", ".png", ".webp", ".heif" };
+
+		/// <summary>
 		/// Creates a new <see cref="Image"/> instance.
 		/// </summary>
 		/// <remarks>
@@ -896,8 +914,7 @@ namespace MySQLWrapper.Data
 		public Image() { }
 		public Image(string path)
 			: this(Path.GetFileNameWithoutExtension(path), File.ReadAllBytes(path), Path.GetExtension(path).ToLower())
-		{
-		}
+		{ }
 		public Image(string id, byte[] data, string extension = null)
 		{
 			Id = id;
@@ -933,6 +950,8 @@ namespace MySQLWrapper.Data
 			{
 				if (value != null && value.Length > Metadata[2].Length)
 					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+				if (value != null && ImageFormats.Contains(value.ToLower()))
+					throw new FormatException($"Image format '{value}' is not supported.");
 				_fields[2] = value;
 			}
 		}
