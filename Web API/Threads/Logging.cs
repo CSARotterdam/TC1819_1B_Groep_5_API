@@ -4,11 +4,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Threading;
 
 namespace API.Threads {
     class Logging {
         public static void main(Logger log, Logger child) {
+            while (true) {
+                int waitTime = (int)(DateTime.Now.AddDays(1) - DateTime.Now).TotalMilliseconds;
+                Thread.Sleep(waitTime);
 
+                log.Detach(child);
+                compressLogs();
+                child = new Logger(Level.ALL, File.CreateText("Logs\\latest.log"));
+                log.Attach(child);
+            }
         }
 
         public static void compressLogs() {
