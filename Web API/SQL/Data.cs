@@ -778,7 +778,8 @@ namespace MySQLWrapper.Data
 			new ColumnMetadata("username", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("password", char.MaxValue, MySqlDbType.Text),
 			new ColumnMetadata("permissions", 3, MySqlDbType.Enum),
-		});
+			new ColumnMetadata("token", 20, MySqlDbType.Int64),
+ 		});
 		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
 		{
 			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0])
@@ -826,6 +827,11 @@ namespace MySQLWrapper.Data
 		{
 			get { return (UserPermission)Fields[2]; }
 			set { _fields[2] = value; }
+		}
+		public long Token
+		{
+			get { return (long)Fields[3]; }
+			set { _fields[3] = value; }
 		}
 		#endregion
 
