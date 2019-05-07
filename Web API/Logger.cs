@@ -136,9 +136,9 @@ namespace Logging
 		public Level LogLevel { get; set; }
 		
 		/// <summary>
-		/// Formats 
+		/// The format used for log records.
 		/// </summary>
-		public string Format { get; } = "{asctime:HH:mm:ss} {classname,-10} {level,5}: {message}";
+		public string Format { get; private set; } = "{asctime:HH:mm:ss} {classname,-10} {level,5}: {message}";
 		/// <summary>
 		/// Sets whether or not the log record stacktraces will use file info.
 		/// </summary>
@@ -151,7 +151,7 @@ namespace Logging
 		public bool Silent { get; set; } = false;
 
 		/// <summary>
-		/// Creates a new instance of <see cref="Logger"/> with a default name.
+		/// Creates a new instance of <see cref="Logger"/>.
 		/// </summary>
 		/// <remarks>
 		/// This constructor supports custom log levels.
@@ -161,22 +161,35 @@ namespace Logging
 		public Logger(Level level, params TextWriter[] outStreams)
 			: this(level, null, outStreams)
 		{ }
-
 		/// <summary>
-		/// Creates a new instance of <see cref="Logger"/>.
+		/// Creates a new instance of <see cref="Logger"/> with a custom name.
 		/// </summary>
 		/// <remarks>
 		/// This constructor supports custom log levels.
 		/// </remarks>
 		/// <param name="level">The maximum logging level, represented as <see cref="int"/>.</param>
-		/// <param name="name">The name of the new logger.</param>
+		/// <param name="name">The name of the new logger. If null, a default name with the classname and hashcode will be chosen.</param>
 		/// <param name="outStreams">A collection of unique <see cref="TextWriter"/> objects.</param>
 		public Logger(Level level, string name, params TextWriter[] outStreams)
+			: this(level, name, null, outStreams)
+		{ }
+		/// <summary>
+		/// Creates a new instance of <see cref="Logger"/> with a custom name and format.
+		/// </summary>
+		/// <remarks>
+		/// This constructor supports custom log levels.
+		/// </remarks>
+		/// <param name="level">The maximum logging level, represented as <see cref="int"/>.</param>
+		/// <param name="name">The name of the new logger. If null, a default name with the classname and hashcode will be chosen.</param>
+		/// <param name="format">The format used for log records. If null, the default format is used.</param>
+		/// <param name="outStreams">A collection of unique <see cref="TextWriter"/> objects.</param>
+		public Logger(Level level, string name, string format, params TextWriter[] outStreams)
 		{
 			LogLevel = level;
 			foreach (var stream in outStreams)
 				OutputStreams.Add(stream);
 			Name = name ?? $"{GetType().Name}@{GetHashCode().ToString("X")}";
+			Format = format ?? Format;
 			Fine("Started log");
 		}
 
@@ -364,7 +377,7 @@ namespace Logging
 			// format all attributes 
 			return string.Format(format,
 				DateTime.Now,
-				DateTimeOffset.Now.ToUnixTimeSeconds(),
+				DateTimeOffset.Now.ToUnixTimeMilliseconds()/1000d,
 				callerType.Name,
 				Path.GetFileName(fileName),
 				callerFunc.Name,
@@ -377,7 +390,7 @@ namespace Logging
 				fileName,
 				Process.GetCurrentProcess().Id,
 				Process.GetCurrentProcess().ProcessName,
-				DateTime.UtcNow - Process.GetCurrentProcess().StartTime,
+				DateTime.Now - Process.GetCurrentProcess().StartTime,
 				includeStackTrace ? "\n" + stackTrace.ToString().Remove(stackTrace.ToString().Length - 2, 2).Remove(0, 0) : null,
 				Thread.CurrentThread.ManagedThreadId,
 				Thread.CurrentThread.Name
@@ -427,18 +440,18 @@ namespace Logging
 			className,
 			fileName,
 			funcName,
-			level,
+			levelName,
 			levelno,
 			lineno,
 			message,
 			module,
 			name,
 			pathname,
-			process,
+			processId,
 			processName,
 			relativeCreated,
 			stackInfo,
-			thread,
+			threadId,
 			threadName
 		}
 	}
