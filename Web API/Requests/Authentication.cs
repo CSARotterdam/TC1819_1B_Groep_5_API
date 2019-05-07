@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace API.Requests {
@@ -20,16 +21,12 @@ namespace API.Requests {
 			//Verify user details
 			String password = request["requestData"]["password"].ToString();
 			String username = request["requestData"]["username"].ToString();
-			IEnumerable<User> selection = wrapper.Select<User>();
-			bool loginSuccessful = false;
-            User selectedUser = null;
-			foreach (User user in selection) {
-                if (user.Password == password && user.Username == username) {
-					loginSuccessful = true;
-                    selectedUser = user;
-                    break;
-				}
-			}
+
+            bool loginSuccessful = false;
+            User user = getUser(username);
+            if(user != null && user.Password == password) {
+                loginSuccessful = true;
+            }
 
             //Create + return response object
             JObject response = new JObject() {
@@ -42,10 +39,10 @@ namespace API.Requests {
 			};
 			if (loginSuccessful) {
                 long token = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-                selectedUser.Token = token;
-                selectedUser.Update(wrapper);
+                user.Token = token;
+                user.Update(wrapper);
                 response["requestData"]["token"] = token;
-                response["requestData"]["permissionLevel"] = (int)selectedUser.Permission;
+                response["requestData"]["permissionLevel"] = (int)user.Permission;
 			} else {
 				response["requestData"]["reason"] = "Incorrect username/password";
 			}
@@ -72,15 +69,11 @@ namespace API.Requests {
 
             }
 
-			//Check if username already exists
-			bool usernameExists = false;
-			IEnumerable<User> selection = wrapper.Select<User>();
-			foreach (User u in selection) {
-				if (u.Username == username) {
-					usernameExists = true;
-					break;
-				}
-			}
+            //Check if username already exists
+            bool usernameExists = false;
+			if(getUser(username) != null) {
+                usernameExists = true;
+            }
 
 			//Check if password is a SHA-512 hash.
             //This checks whether the password string is the correct length for a SHA-512 hash, and if it is a proper hexadecimal number.
@@ -102,7 +95,7 @@ namespace API.Requests {
             };
 
             //If the above checks passed, register the user.
-            if (!invalidPassword && !usernameExists){
+            if (!invalidPassword && !usernameExists) {
                 long token = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                 User user = new User(username, password, token, User.UserPermission.User);
                 user.Upload(wrapper);
@@ -142,14 +135,8 @@ namespace API.Requests {
             } catch (ArgumentException) {
 
             }
-            IEnumerable<User> selection = wrapper.Select<User>();
-            User selectedUser = null;
-            foreach (User user in selection) {
-                if (user.Username == username) {
-                    selectedUser = user;
-                    break;
-                }
-            }
+
+            User user = getUser(username);
 
             //Create response object
             JObject response = new JObject() {
@@ -160,9 +147,14 @@ namespace API.Requests {
 			};
 
             //If token is valid, log the user out. Otherwise, return an error response
-            if (checkToken(selectedUser, token)) {
-                selectedUser.Token = 0;
-                selectedUser.Update(wrapper);
+            if (user == null) {
+                response["requestData"]["success"] = false;
+                response["requestData"]["reason"] = "No such user";
+
+            } else if (checkToken(user, token)) {
+                user.Token = 0;
+                user.Update(wrapper);
+
             } else {
                 response["requestData"]["success"] = false;
                 response["requestData"]["reason"] = "Invalid or expired token";
@@ -185,6 +177,20 @@ namespace API.Requests {
             token = token.AddSeconds(tokenRaw).ToLocalTime();
             return !((DateTime.Today - token).TotalSeconds > (double)Program.Settings["authenticationSettings"]["expiration"]);
            
+        }
+
+        private static User getUser(string username) {
+            List<User> selection = wrapper.Select<User>(new MySqlConditionBuilder()
+                   .Column("Username")
+                   .Equals()
+                   .Operand(username, MySql.Data.MySqlClient.MySqlDbType.VarChar)
+            ).ToList();
+
+            if (selection.Count == 0) {
+                return null;
+            } else {
+                return selection[0];
+            }
         }
 	}
 }
