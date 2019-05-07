@@ -950,7 +950,7 @@ namespace MySQLWrapper.Data
 			{
 				if (value != null && value.Length > Metadata[2].Length)
 					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
-				if (value != null && ImageFormats.Contains(value.ToLower()))
+				if (value != null && !ImageFormats.Contains(value.ToLower()))
 					throw new FormatException($"Image format '{value}' is not supported.");
 				_fields[2] = value;
 			}
