@@ -138,7 +138,7 @@ namespace Logging
 		/// <summary>
 		/// The format used for log records.
 		/// </summary>
-		public string Format { get; private set; } = "{asctime:HH:mm:ss} {classname,-10} {level,5}: {message}";
+		public string Format { get; private set; } = "{asctime:HH:mm:ss} {classname,-10} {levelname,5}: {message}";
 		/// <summary>
 		/// Sets whether or not the log record stacktraces will use file info.
 		/// </summary>
@@ -265,6 +265,7 @@ namespace Logging
 
 		/// <summary>
 		/// Writes the log to the output streams if the level is lower or equal to the set logging level.
+		/// <para>This function is thread-safe due to it's stream locking.</para>
 		/// </summary>
 		/// <param name="level">A <see cref="Level"/> message level.</param>
 		/// <param name="message">The value to write.</param>
@@ -280,8 +281,11 @@ namespace Logging
 
 			foreach (var stream in OutputStreams)
 			{
-				stream.WriteLine(GetRecord(level, message.ToString(), stack, includeStackTrace));
-				stream.Flush();
+				lock (stream)
+				{
+					stream.WriteLine(GetRecord(level, message.ToString(), stack, includeStackTrace));
+					stream.Flush();
+				}
 			}
 		}
 
