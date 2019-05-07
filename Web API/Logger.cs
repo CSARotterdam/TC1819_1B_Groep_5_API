@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace Logging
 {
@@ -22,47 +25,49 @@ namespace Logging
 		/// </summary>
 		public static readonly Dictionary<string, Level> DefaultLevels = new Dictionary<string, Level>();
 
+		#region Default Levels
 		/// <summary>
 		/// Disables all log messages.
 		/// </summary>
-		public static readonly Level OFF = new Level(int.MinValue, "OFF");
+		public static readonly Level OFF = new Level(int.MinValue, "OFF", true);
+		/// <summary>
+		/// Mostly used for debugging code. 
+		/// </summary>
+		public static readonly Level DEBUG = new Level(-1000, "DEBUG", true);
 		/// <summary>
 		/// Used for errors after which the program cannot continue running.
 		/// </summary>
-		public static readonly Level FATAL = new Level(-1000, "FATAL");
+		public static readonly Level FATAL = new Level(-500, "FATAL", true);
 		/// <summary>
 		/// Used for errors that nonetheless do not prevent the program from continuing.
 		/// </summary>
-		public static readonly Level ERROR = new Level(-100, "ERROR");
+		public static readonly Level ERROR = new Level(-250, "ERROR", true);
 		/// <summary>
 		/// Used to warn for things that may be out of the ordinary, but are otherwise not a problem.
 		/// </summary>
-		public static readonly Level WARN = new Level(-50, "WARN");
-		/// <summary>
-		/// Mostly used for debugging code.
-		/// </summary>
-		public static readonly Level DEBUG = new Level(0, "DEBUG");
+		public static readonly Level WARN = new Level(-100, "WARN", true);
 		/// <summary>
 		/// Used for general program information/feedback.
 		/// </summary>
-		public static readonly Level INFO = new Level(10, "INFO");
+		public static readonly Level INFO = new Level(0, "INFO", true);
 		/// <summary>
 		/// Used for relatively fine logging. Not as fine as TRACE.
 		/// </summary>
-		public static readonly Level FINE = new Level(100, "FINE");
+		public static readonly Level FINE = new Level(100, "FINE", true);
 		/// <summary>
 		/// Used for very fine information. E.G object construction, function calls, etc.
 		/// </summary>
-		public static readonly Level TRACE = new Level(1000, "TRACE");
+		public static readonly Level TRACE = new Level(1000, "TRACE", true);
 		/// <summary>
 		/// Enables all log messages.
 		/// </summary>
-		public static readonly Level ALL = new Level(int.MaxValue, "ALL");
+		public static readonly Level ALL = new Level(int.MaxValue, "ALL", true);
+		#endregion
 
 		public string Name { get; }
 		public int Value { get; }
 
-		private Level(int value, string name, bool isDefault = true)
+		private Level(int value, string name, bool isDefault)
 		{
 			Value = value;
 			Name = name;
@@ -70,20 +75,15 @@ namespace Logging
 		}
 
 		/// <summary>
-		/// Creates a new logging <see cref="Level"/> objects.
+		/// Creates a new instance of <see cref="Level"/>.
 		/// </summary>
 		/// <param name="value">The logging level value. This must be a unique value.</param>
 		/// <param name="name">The name of the logging level. This is case sensitive and must be unique.</param>
 		/// <returns>The newly created <see cref="Level"/> instance.</returns>
 		/// <exception cref="ArgumentException">When <paramref name="name"/> or <paramref name="value"/> are not unique.</exception>
-		public static Level NewCustomLevel(int value, string name)
+		public Level(int value, string name) : this(value, name, false)
 		{
-			if (CustomLevels.ContainsKey(name))
-				throw new ArgumentException($"Duplicate level '{name}'.", "name");
-			if (CustomLevels.Any(x => x.Value.Value == value))
-				throw new ArgumentException($"Duplicate level {value}.", "value");
-			CustomLevels[name] = new Level(value, name, false);
-			return CustomLevels[name];
+			CustomLevels[name] = this;
 		}
 
 		/// <summary>
@@ -93,7 +93,7 @@ namespace Logging
 	}
 
 	/// <summary>
-	/// General purpose logging class.
+	/// General purpose logging class, influenced largely by the logging class in Python.
 	/// <para>
 	/// These loggers support a hierarchy structure of <see cref="Logger"/> objects,
 	/// where one parent logger passes its log messages to any child loggers.
@@ -101,6 +101,15 @@ namespace Logging
 	/// </summary>
 	class Logger : IDisposable
 	{
+		/// <summary>
+		/// The name of this logger object
+		/// </summary>
+		public string Name { get; }
+		/// <summary>
+		/// The time when this logger was created
+		/// </summary>
+		public DateTime Created { get; } = DateTime.Now;
+
 		/// <summary>
 		/// A read-only collection of associated loggers
 		/// </summary>
@@ -114,16 +123,27 @@ namespace Logging
 		private List<Logger> _parents = new List<Logger>();
 
 		/// <summary>
-		/// The current logging level. This can be changed at any time.
-		/// </summary>
-		public Level LogLevel { get; set; }
-		/// <summary>
 		/// The collection of <see cref="TextWriter"/> objects this logger writes to.
 		/// </summary>
 		/// <remarks>
 		/// When removing streams, make sure to close and/or dispose them, as this does not happen automatically.
 		/// </remarks>
 		public List<TextWriter> OutputStreams { get; } = new List<TextWriter>();
+
+		/// <summary>
+		/// The current logging level. This can be changed at any time.
+		/// </summary>
+		public Level LogLevel { get; set; }
+		
+		/// <summary>
+		/// Formats 
+		/// </summary>
+		public string Format { get; } = "{asctime:HH:mm:ss} {classname,-10} {level,5}: {message}";
+		/// <summary>
+		/// Sets whether or not the log record stacktraces will use file info.
+		/// </summary>
+		public bool UseFileInfo { get; set; } = true;
+
 		/// <summary>
 		/// Disables logging for this instance and without changing the logging level.
 		/// <para>This also prevents writing to child loggers, but it does not silence it's children.</para>
@@ -131,9 +151,16 @@ namespace Logging
 		public bool Silent { get; set; } = false;
 
 		/// <summary>
-		/// The dateTime format for the logging timestamps. This can be changed at any time.
+		/// Creates a new instance of <see cref="Logger"/> with a default name.
 		/// </summary>
-		public string TimeFormat { get; set; } = "[H:mm:ss]";
+		/// <remarks>
+		/// This constructor supports custom log levels.
+		/// </remarks>
+		/// <param name="level">The maximum logging level, represented as <see cref="int"/>.</param>
+		/// <param name="outStreams">A collection of unique <see cref="TextWriter"/> objects.</param>
+		public Logger(Level level, params TextWriter[] outStreams)
+			: this(level, null, outStreams)
+		{ }
 
 		/// <summary>
 		/// Creates a new instance of <see cref="Logger"/>.
@@ -142,78 +169,107 @@ namespace Logging
 		/// This constructor supports custom log levels.
 		/// </remarks>
 		/// <param name="level">The maximum logging level, represented as <see cref="int"/>.</param>
+		/// <param name="name">The name of the new logger.</param>
 		/// <param name="outStreams">A collection of unique <see cref="TextWriter"/> objects.</param>
-		public Logger(Level level, params TextWriter[] outStreams)
+		public Logger(Level level, string name, params TextWriter[] outStreams)
 		{
 			LogLevel = level;
 			foreach (var stream in outStreams)
 				OutputStreams.Add(stream);
-			Fine("Started logging");
+			Name = name ?? $"{GetType().Name}@{GetHashCode().ToString("X")}";
+			Fine("Started log");
 		}
 
+		#region Default Logging Methods
 		/// <summary>
 		/// Writes a message with the FATAL log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
-		public void Fatal(object message) => Write(Level.FATAL, message);
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Fatal(object message, bool stackTrace = false) => Write(Level.FATAL, message, stackTrace);
 		/// <summary>
 		/// Writes a message with the FATAL log level. This includes an exception traceback.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
-		/// <param name="innerException">The exception that caused this message.</param>
-		public void Fatal(object message, Exception innerException) => Write(Level.FATAL, $"{message}\n{innerException}");
+		/// <param name="cause">The exception that caused this message.</param>
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Fatal(object message, Exception cause, bool stackTrace = true) => Write(Level.FATAL, message, new StackTrace(cause, UseFileInfo), stackTrace);
 
 		/// <summary>
 		/// Writes a message with the ERROR log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
-		public void Error(object message) => Write(Level.ERROR, message);
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Error(object message, bool stackTrace = false) => Write(Level.ERROR, message, stackTrace);
 		/// <summary>
 		/// Writes a message with the ERROR log level. This includes an exception traceback.
+		/// <para>The traceback of the given exception will be used, where the most recent calls will end at the cause.</para>
 		/// </summary>
 		/// <param name="message">The value to write.</param>
-		/// <param name="innerException">The exception that caused this message.</param>
-		public void Error(object message, Exception innerException) => Write(Level.ERROR, $"{message}\n{innerException}");
+		/// <param name="cause">The exception that caused this message. This exception's traceback will be used.</param>
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Error(object message, Exception cause, bool stackTrace = true) => Write(Level.ERROR, message, new StackTrace(cause, UseFileInfo), stackTrace);
 
 		/// <summary>
 		/// Writes a message with the WARN log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
-		public void Warning(object message) => Write(Level.WARN, message);
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Warning(object message, bool stackTrace = false) => Write(Level.WARN, message, stackTrace);
 		/// <summary>
 		/// Writes a message with the INFO log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
-		public void Info(object message) => Write(Level.INFO, message);
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Info(object message, bool stackTrace = false) => Write(Level.INFO, message, stackTrace);
 		/// <summary>
 		/// Writes a message with the DEBUG log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
-		public void Debug(object message) => Write(Level.DEBUG, message);
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Debug(object message, bool stackTrace = false) => Write(Level.DEBUG, message, stackTrace);
 		/// <summary>
 		/// Writes a message with the FINE log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
-		public void Fine(object message) => Write(Level.FINE, message);
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Fine(object message, bool stackTrace = false) => Write(Level.FINE, message, stackTrace);
 		/// <summary>
 		/// Writes a message with the TRACE log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
-		public void Trace(object message) => Write(Level.TRACE, message);
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Trace(object message, bool stackTrace = false) => Write(Level.TRACE, message, stackTrace);
+		#endregion
 
 		/// <summary>
 		/// Writes the log to the output streams if the level is lower or equal to the set logging level.
 		/// </summary>
 		/// <param name="level">A <see cref="Level"/> message level.</param>
 		/// <param name="message">The value to write.</param>
-		public void Write(Level level, object message)
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Write(Level level, object message, bool stackTrace = false) => Write(level, message, new StackTrace(UseFileInfo), stackTrace);
+
+		/// <summary>
+		/// Writes the log to the output streams if the level is lower or equal to the set logging level.
+		/// </summary>
+		/// <param name="level">A <see cref="Level"/> message level.</param>
+		/// <param name="message">The value to write.</param>
+		/// <param name="stack">The stacktrace to reference in the log record.</param>
+		/// <param name="includeStackTrace">Set whether to include a full stacktrace in the log record.</param>
+		private void Write(Level level, object message, StackTrace stack, bool includeStackTrace)
 		{
 			if (Silent) return;
-			foreach (var logger in Children) logger.Write(level, message);
 			if (disposedValue) throw new ObjectDisposedException(ToString());
-			if (LogLevel.Value >= level.Value)
-				foreach (var stream in OutputStreams)
-					stream.WriteLine($"[{level}] {DateTime.Now.ToString(TimeFormat)} {message}");
+
+			foreach (var logger in Children) logger.Write(level, message, stack, includeStackTrace);
+			if (LogLevel.Value < level.Value) return;
+
+			foreach (var stream in OutputStreams)
+			{
+				stream.WriteLine(GetRecord(level, message.ToString(), stack, includeStackTrace));
+				stream.Flush();
+			}
 		}
 
 		/// <summary>
@@ -221,7 +277,7 @@ namespace Logging
 		/// <para>All logging messages to this logger will be passed on to its child loggers.</para>
 		/// </summary>
 		/// <param name="logger">The <see cref="Logger"/> object to add to this logger.</param>
-		public void Add(Logger logger)
+		public void Attach(Logger logger)
 		{
 			_children.Add(logger);
 			logger._parents.Add(this);
@@ -231,7 +287,7 @@ namespace Logging
 		/// Removes a logger from this object's children.
 		/// </summary>
 		/// <param name="logger">The logger to remove.</param>
-		public void Remove(Logger logger)
+		public void Detach(Logger logger)
 		{
 			_children.Remove(logger);
 			logger._parents.Remove(this);
@@ -246,10 +302,86 @@ namespace Logging
 			{
 				logger.Close();
 				_children.Remove(logger);
-				foreach (var parent in Parents) parent.Remove(this);
+				foreach (var parent in Parents) parent.Detach(this);
 			}
 			Fine("Closing log...");
 			foreach (var stream in OutputStreams) stream.Close();
+		}
+
+		/// <summary>
+		/// Returns a formatted log record based on this logger instance.
+		/// </summary>
+		/// <remarks>
+		/// TL;DR - Big dumb block of code that fills in the blanks. Replaces and formats stuff. Makes the log look nice.
+		/// </remarks>
+		/// <param name="msg">The string to format.</param>
+		protected string GetRecord(Level level, string message, StackTrace stack, bool includeStackTrace)
+		{
+			// check if stackinfo has been specified. if not, stack info will always be appended.
+			bool appendStackTrace = !Regex.IsMatch(Format, ".*{stackinfo.*", RegexOptions.IgnoreCase);
+
+			// replace all available attributes for records with a number for string formatting.
+			string format = Format;
+			foreach (var value in Enum.GetValues(typeof(RecordAttributes)).Cast<int>().Reverse())
+			{
+				var name = Enum.GetName(typeof(RecordAttributes), value);
+				format = Regex.Replace(format, '{' + name, '{' + value.ToString(), RegexOptions.IgnoreCase);
+			}
+			// prepare local fields extracted from the stacktrace
+			Type callerType = null;
+			MethodBase callerFunc = null;
+			int? lineno = null;
+			string fileName = null;
+			string stackTrace = stack.ToString();
+
+			// loops through all stacktrace frames and fills in the previous values
+			int i = 0;
+			foreach (var frame in stack.GetFrames())
+			{
+				i++;
+				callerFunc = frame.GetMethod();
+				fileName = frame.GetFileName();
+				lineno = frame.GetFileLineNumber();
+				if (i != stack.FrameCount && callerType == GetType() && callerFunc.DeclaringType == GetType() && stack.GetFrame(i).GetMethod().DeclaringType == GetType())
+				{
+					callerFunc = stack.GetFrame(i).GetMethod();
+					break; // Internal logging calls (log calls from the Logger class) only go through the default logging level methods,
+						   // meaning once 3 calls originating from Logger have been found, we can be sure the call actually came from the Logger class.
+				}
+				callerType = callerFunc.DeclaringType;
+				if (callerType != GetType())
+					break;
+			}
+			if (i <= stack.FrameCount)
+			{
+				// trim chained logging calls from the stacktrace. These calls are after the first logging call and are irrelevant.
+				var stacklines = stackTrace.Split("\r\n");
+				stackTrace = stacklines[i-1];
+				for (i = i; i < stacklines.Length; i++)
+					stackTrace += "\r\n" + stacklines[i];
+			}
+
+			// format all attributes 
+			return string.Format(format,
+				DateTime.Now,
+				DateTimeOffset.Now.ToUnixTimeSeconds(),
+				callerType.Name,
+				Path.GetFileName(fileName),
+				callerFunc.Name,
+				level,
+				level.Value,
+				lineno,
+				message,
+				callerFunc.Module,
+				Name,
+				fileName,
+				Process.GetCurrentProcess().Id,
+				Process.GetCurrentProcess().ProcessName,
+				DateTime.UtcNow - Process.GetCurrentProcess().StartTime,
+				includeStackTrace ? "\n" + stackTrace.ToString().Remove(stackTrace.ToString().Length - 2, 2).Remove(0, 0) : null,
+				Thread.CurrentThread.ManagedThreadId,
+				Thread.CurrentThread.Name
+			) + (appendStackTrace && includeStackTrace ? "\n" + stackTrace.ToString().Remove(stackTrace.ToString().Length - 2, 2) : null);
 		}
 
 		#region IDisposable Support
@@ -261,15 +393,14 @@ namespace Logging
 			{
 				if (disposing)
 				{
-					foreach (var logger in Children)
-					{
+					// New list copy because otherwise we are changing the list we are iterating through
+					foreach (var logger in new List<Logger>(Children))
 						logger.Dispose();
-						_children.Remove(logger);
-					}
 					Fine("Disposing log...");
 					foreach (var stream in OutputStreams)
 						stream.Dispose();
-					foreach (var parent in Parents) parent.Remove(this);
+					// Same reason for new list as previous
+					foreach (var parent in new List<Logger>(Parents)) parent.Detach(this);
 				}
 
 				disposedValue = true;
@@ -284,5 +415,31 @@ namespace Logging
 			Dispose(true);
 		}
 		#endregion
+
+		/// <summary>
+		/// An enum of attributes used in log records
+		/// </summary>
+		enum RecordAttributes
+		{
+			// TODO: Add documentation (wow im so exited)
+			asctime,
+			created,
+			className,
+			fileName,
+			funcName,
+			level,
+			levelno,
+			lineno,
+			message,
+			module,
+			name,
+			pathname,
+			process,
+			processName,
+			relativeCreated,
+			stackInfo,
+			thread,
+			threadName
+		}
 	}
 }
