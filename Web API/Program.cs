@@ -7,6 +7,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using MySQLWrapper;
 using Logging;
+using Newtonsoft.Json;
+using System.IO;
+using System.Collections;
 
 namespace API {
 	class Program {
@@ -14,7 +17,9 @@ namespace API {
 		public static bool ManualError = false;
 		public static Logger log = new Logger(Level.ALL, Console.Out);
 		private static int _errorCode;
-		public static int ErrorCode{
+        public static dynamic Settings;
+
+        public static int ErrorCode{
 			get { return _errorCode; }
 			set {
 				_errorCode = value;
@@ -28,24 +33,47 @@ namespace API {
 		}
 
 		public static void Main() {
-			log.Info("Hello world!");
+			log.Info("Server is starting!");
 
-			//Load configuration file
-			dynamic Settings = Config.loadConfig();
+            //Start logger
+            Directory.CreateDirectory("Logs");
+            if (File.Exists("Logs\\latest.log")) {
+                API.Threads.Logging.compressLogs();
+            }
+            Logger child = new Logger(Level.ALL, File.CreateText("Logs\\latest.log"));
+            log.Attach(child);
+            Thread LoggerThread = new Thread(() => API.Threads.Logging.main(log, child)) {
+                Name = "LoggerThread"
+            };
+
+            //Load configuration file
+            log.Info("Loading configuration file.");
+            bool validConfig = true;
+
+            try {
+                Settings = Config.loadConfig();
+            } catch (JsonReaderException) {
+                log.Fatal("Configuration file is not a valid JSON file.");
+                log.Fatal("Validate the file at https://www.jsonschemavalidator.net/");
+                log.Fatal("Press the any key to exit.");
+                Console.ReadLine();
+                return;
+            }
 
 			//Check if config contains all necessary info to start. If it doesn't, abort launch.
-			bool validConfig = true;
+			
 			if(Settings.databaseSettings.username == null || Settings.databaseSettings.password == null || Settings.databaseSettings.serverAddress == null || Settings.databaseSettings.database == null) {
-				log.Error("Error: Incomplete database configuration.");
+				log.Fatal("Incomplete or missing database configuration.");
 				validConfig = false;
 			}
 			if((bool)Settings.connectionSettings.autodetect && Settings.connectionSettings.serverAddresses.Count == 0) {
-				log.Error("Error: Missing server address.");
+				log.Fatal("Missing server address.");
 				validConfig = false;
 			}
 			if (!validConfig) {
-				log.Error("The server failed to start because there is at least one invalid setting. Please check the server configuration!");
-				log.Error("Press the any key to exit.");
+                log.Fatal("\n");
+				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
+				log.Fatal("Press the any key to exit.");
 				Console.ReadLine();
 				return;
 			}
@@ -115,7 +143,7 @@ namespace API {
 			foreach (string address in addresses) {
 				listener.Prefixes.Add("http://" + address + "/");
 			}
-			Thread ListenerThread = new Thread(() => API.Listener.main(log, listener, requestQueue)) {
+			Thread ListenerThread = new Thread(() => API.Threads.Listener.main(log, listener, requestQueue)) {
 				Name = "ListenerThread"
 			};
 			ListenerThread.Start();
