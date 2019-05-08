@@ -225,14 +225,13 @@ namespace MySQLWrapper.Data
 				throw new InvalidOperationException("This object cannot be traced back to the database.");
 			using (var cmd = connection.CreateCommand())
 			{
-				Func<ColumnMetadata, object, string> addValues = (meta, value) =>
-				{
-					if (value == null) return $"`{meta.Column}` = NULL";
-					var paramName = $"@param{cmd.Parameters.Count}";
-					cmd.Parameters.Add(new MySqlParameter(paramName, meta.Type) { Value = value });
-					return $"`{meta.Column}` = {paramName}";
-				};
-				var columnValuePairs = string.Join(", ", Metadata.Zip(Fields, (x, y) => addValues(x, y)));
+                string addValues(ColumnMetadata meta, object value) {
+                    if (value == null) return $"`{meta.Column}` = NULL";
+                    var paramName = $"@param{cmd.Parameters.Count}";
+                    cmd.Parameters.Add(new MySqlParameter(paramName, meta.Type) { Value = value });
+                    return $"`{meta.Column}` = {paramName}";
+                }
+                var columnValuePairs = string.Join(", ", Metadata.Zip(Fields, (x, y) => addValues(x, y)));
 				var condition = new MySqlConditionBuilder(Metadata.ToArray(), fieldTrace);
 				cmd.CommandText = SQLConstants.GetUpdate(
 					Schema,

@@ -15,16 +15,21 @@ namespace API.Requests {
 			}
 
             //Get arguments
-            String ID;
-            String username;
-            long token;
-            try {
-                ID = request["requestData"]["productID"].ToString();
-                username = request["requestData"]["username"].ToString();
-                token = (long)request["requestData"]["token"]; 
-            } catch (ArgumentException) {
+            JObject requestData = request["requestData"].ToObject<JObject>();
+            requestData.TryGetValue("username", out JToken usernameValue);
+            requestData.TryGetValue("token", out JToken tokenValue);
+            requestData.TryGetValue("ID", out JToken idValue);
+            requestData.TryGetValue("sendImage", out JToken sendImageValue);
+            if(usernameValue.Type == JTokenType.Null || tokenValue.Type == JTokenType.Null) {
                 return Templates.MissingArguments;
             }
+            if(sendImageValue.Type == JTokenType.Null) {
+                sendImageValue = false;
+            }
+            string username = usernameValue.ToString();
+            long token = tokenValue.ToObject<long>();
+            string ID = idValue.ToString();
+            bool sendImage = sendImageValue.ToObject<bool>();
 
             //Check token
             if (!checkToken(getUser(username), token)) {
@@ -35,7 +40,8 @@ namespace API.Requests {
                .Column("id")
                .Equals()
                .Operand(ID, MySql.Data.MySqlClient.MySqlDbType.VarChar)
-           ).ToList();
+            ).ToList();
+            Product product = selection[0];
 
             JObject response = new JObject() {
 				{"requestData", new JObject(){
@@ -47,7 +53,15 @@ namespace API.Requests {
             if(selection.Count == 0) {
                 response["requestData"]["reason"] = "Product not found.";
             } else {
-                response["requestData"]["productData"] = JsonConvert.SerializeObject(selection[0].Fields);  
+                response["requestData"]["productData"] = new JObject() {
+                    {"id",  product.Id},
+                    {"manufacturer", product.Manufacturer},
+                    {"category", product.Category},
+                    {"name", product.Name}
+                };
+                if (sendImage) {
+                    response["requestData"]["productData"] = product.Image;
+                }
             }
             return response;
         }

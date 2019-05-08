@@ -19,14 +19,14 @@ namespace API.Requests {
 			}
 
             //Verify user details
-            String password;
-            String username;
-            try {
-			    password = request["requestData"]["password"].ToString();
-			    username = request["requestData"]["username"].ToString();
-            } catch (ArgumentException) {
+            JObject requestData = request["requestData"].ToObject<JObject>();
+            requestData.TryGetValue("username", out JToken usernameValue);
+            requestData.TryGetValue("password", out JToken passwordValue);
+            if (usernameValue.Type == JTokenType.Null || passwordValue.Type == JTokenType.Null) {
                 return Templates.MissingArguments;
             }
+            string username = usernameValue.ToString();
+            string password = passwordValue.ToString();
 
             bool loginSuccessful = false;
             User user = getUser(username);
@@ -66,14 +66,15 @@ namespace API.Requests {
 				throw new InvalidRequestTypeException(request["requestType"].ToString());
 			}
 
-            String password;
-            String username;
-            try {
-                password = request["requestData"]["password"].ToString();
-                username = request["requestData"]["username"].ToString();
-            } catch (ArgumentException) {
+            //Verify user details
+            JObject requestData = request["requestData"].ToObject<JObject>();
+            requestData.TryGetValue("username", out JToken usernameValue);
+            requestData.TryGetValue("password", out JToken passwordValue);
+            if (usernameValue.Type == JTokenType.Null || passwordValue.Type == JTokenType.Null) {
                 return Templates.MissingArguments;
             }
+            string username = usernameValue.ToString();
+            string password = passwordValue.ToString();
 
             //Check if username already exists
             bool usernameExists = false;
@@ -132,15 +133,15 @@ namespace API.Requests {
 				throw new InvalidRequestTypeException(request["requestType"].ToString());
 			}
 
-            //Find the correct user
-            String username;
-            long token;
-            try {
-                username = request["requestData"]["username"].ToString();
-                token = request["requestData"]["token"].ToObject<long>();
-            } catch (ArgumentException) {
+            //Verify user details
+            JObject requestData = request["requestData"].ToObject<JObject>();
+            requestData.TryGetValue("username", out JToken usernameValue);
+            requestData.TryGetValue("token", out JToken tokenValue);
+            if (usernameValue.Type == JTokenType.Null || tokenValue.Type == JTokenType.Null) {
                 return Templates.MissingArguments;
             }
+            string username = usernameValue.ToString();
+            long token = tokenValue.ToObject<long>();
 
             User user = getUser(username);
 
