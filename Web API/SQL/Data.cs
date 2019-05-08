@@ -396,13 +396,19 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		/// <summary>
-		/// Creates a new <see cref="Item"/> instance.
+		/// Creates a new blank instance of <see cref="Item"/>.
 		/// </summary>
 		/// <remarks>
 		/// This constructor is intended for generic functions. Setting the fields
 		/// should be done with the <see cref="Fields"/> property.
 		/// </remarks>
 		public Item() { }
+		/// <summary>
+		/// Creates a new instance of <see cref="Item"/>.
+		/// </summary>
+		/// <param name="id">A unique id to give this item. If null, a unique id will automatically be assigned after uploading.</param>
+		/// <param name="product">The id of a <see cref="Product"/></param>
+		/// <param name="serial_id">The serial id of the physical item.</param>
 		public Item(int? id, string product, string serial_id)
 		{
 			Id = id;
@@ -467,6 +473,19 @@ namespace MySQLWrapper.Data
 		public static IEnumerable<Item> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 			=> Select<Item>(connection, condition, range);
 		#endregion
+
+		#region Foreign Key Getters
+		/// <summary>
+		/// Gets the <see cref="Product"/> with an id equal to <see cref="ProductId"/>.
+		/// </summary>
+		/// <param name="connection">The connection to perform the query on.</param>
+		/// <returns>A <see cref="Product"/> instance whose Id is equal to <see cref="ProductId"/>, or null if none are found.</returns>
+		public Product GetProduct(TechlabMySQL connection)
+		{
+			var reference = new Product();
+			return connection.Select<Product>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { ProductId })).FirstOrDefault();
+		}
+		#endregion
 	}
 
 	sealed class Product : SchemaItem
@@ -492,13 +511,21 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		/// <summary>
-		/// Creates a new <see cref="Product"/> instance.
+		/// Creates a new blank instance of <see cref="Product"/>.
 		/// </summary>
 		/// <remarks>
 		/// This constructor is intended for generic functions. Setting the fields
 		/// should be done with the <see cref="Fields"/> property.
 		/// </remarks>
 		public Product() { }
+		/// <summary>
+		/// Creates a new instance of <see cref="Product"/>.
+		/// </summary>
+		/// <param name="id">A unique id to give this product.</param>
+		/// <param name="manufacturer">The name of the manufacturer.</param>
+		/// <param name="category">The id of a <see cref="ProductCategory"/>.</param>
+		/// <param name="name">The id of a <see cref="LanguageItem"/>.</param>
+		/// <param name="image">The id of a <see cref="Data.Image"/>.</param>
 		public Product(string id, string manufacturer, int category, string name, string image = "default")
 		{
 			Id = id;
@@ -585,6 +612,39 @@ namespace MySQLWrapper.Data
 		public static IEnumerable<Product> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 			=> Select<Product>(connection, condition, range);
 		#endregion
+
+		#region Foreign Key Getters
+		/// <summary>
+		/// Gets the <see cref="ProductCategory"/> with an id equal to <see cref="Category"/>.
+		/// </summary>
+		/// <param name="connection">The connection to perform the query on.</param>
+		/// <returns>A <see cref="ProductCategory"/> instance whose Id is equal to <see cref="Category"/>, or null if none are found.</returns>
+		public ProductCategory GetCategory(TechlabMySQL connection)
+		{
+			var reference = new ProductCategory();
+			return connection.Select<ProductCategory>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { Category })).FirstOrDefault();
+		}
+		/// <summary>
+		/// Gets the <see cref="LanguageItem"/> with an id equal to <see cref="Name"/>.
+		/// </summary>
+		/// <param name="connection">The connection to perform the query on.</param>
+		/// <returns>A <see cref="LanguageItem"/> instance whose Id is equal to <see cref="Name"/>, or null if none are found.</returns>
+		public LanguageItem GetName(TechlabMySQL connection)
+		{
+			var reference = new LanguageItem();
+			return connection.Select<LanguageItem>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { Name })).FirstOrDefault();
+		}
+		/// <summary>
+		/// Gets the <see cref="Data.Image"/> with an id equal to <see cref="Image"/>.
+		/// </summary>
+		/// <param name="connection">The connection to perform the query on.</param>
+		/// <returns>A <see cref="Data.Image"/> instance whose Id is equal to <see cref="Image"/>, or null if none are found.</returns>
+		public Image GetImage(TechlabMySQL connection)
+		{
+			var reference = new Image();
+			return connection.Select<Image>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { Image })).FirstOrDefault();
+		}
+		#endregion
 	}
 
 	sealed class ProductCategory : SchemaItem
@@ -607,13 +667,19 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		/// <summary>
-		/// Creates a new <see cref="ProductCategory"/> instance.
+		/// Creates a new blank instance of <see cref="ProductCategory"/>.
 		/// </summary>
 		/// <remarks>
 		/// This constructor is intended for generic functions. Setting the fields
 		/// should be done with the <see cref="Fields"/> property.
 		/// </remarks>
 		public ProductCategory() { }
+		/// <summary>
+		/// Creates a new instance of <see cref="ProductCategory"/>.
+		/// </summary>
+		/// <param name="id">The id of the category. If null, the id will be assigned upon uploading this item.</param>
+		/// <param name="category">A unique name identifier for the category.</param>
+		/// <param name="name">The id of a <see cref="LanguageItem"/>.</param>
 		public ProductCategory(int? id, string category, string name)
 		{
 			Id = id;
@@ -678,6 +744,19 @@ namespace MySQLWrapper.Data
 		public static IEnumerable<ProductCategory> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
 			=> Select<ProductCategory>(connection, condition, range);
 		#endregion
+
+		#region Foreign Key Getters
+		/// <summary>
+		/// Gets the <see cref="LanguageItem"/> with an id equal to <see cref="Name"/>.
+		/// </summary>
+		/// <param name="connection">The connection to perform the query on.</param>
+		/// <returns>A <see cref="LanguageItem"/> instance whose Id is equal to <see cref="Name"/>, or null if none are found.</returns>
+		public LanguageItem GetName(TechlabMySQL connection)
+		{
+			var reference = new LanguageItem();
+			return connection.Select<LanguageItem>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { Name })).FirstOrDefault();
+		}
+		#endregion
 	}
 
 	sealed class LanguageItem : SchemaItem
@@ -688,7 +767,8 @@ namespace MySQLWrapper.Data
 		{
 			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("en", char.MaxValue, MySqlDbType.Text),
-			new ColumnMetadata("nl", char.MaxValue, MySqlDbType.Text)
+			new ColumnMetadata("nl", char.MaxValue, MySqlDbType.Text),
+			new ColumnMetadata("ar", char.MaxValue, MySqlDbType.Text),
 		});
 		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
 		{
@@ -698,18 +778,34 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		/// <summary>
-		/// Creates a new <see cref="LanguageItem"/> instance.
+		/// Creates a new blank instance of <see cref="LanguageItem"/>.
 		/// </summary>
 		/// <remarks>
 		/// This constructor is intended for generic functions. Setting the fields
 		/// should be done with the <see cref="Fields"/> property.
 		/// </remarks>
 		public LanguageItem() { }
-		public LanguageItem(string id, string en, string nl)
+		/// <summary>
+		/// Creates a new instance <see cref="LanguageItem"/> with a single universal definition.
+		/// </summary>
+		/// <param name="id">A unique identifier for this object.</param>
+		/// <param name="uniDef">A universal definition to assign to this languageitem.</param>
+		public LanguageItem(string id, string uniDef)
+		{
+			Id = id;
+			ISO_en = uniDef;
+			for (int i = 2; i < _fields.Length; i++)
+				_fields[i] = uniDef;
+		}
+		/// <summary>
+		/// Creates a new instance of <see cref="LanguageItem"/> with translations for some ISO languages.
+		/// </summary>
+		public LanguageItem(string id, string en, string nl, string ar)
 		{
 			Id = id;
 			ISO_en = en;
 			ISO_nl = nl;
+			ISO_ar = ar;
 		}
 
 		#region Properties
@@ -741,6 +837,16 @@ namespace MySQLWrapper.Data
 				if (value != null && value.Length > Metadata[2].Length)
 					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
 				_fields[2] = value;
+			}
+		}
+		public string ISO_ar
+		{
+			get { return (string)Fields[3]; }
+			set
+			{
+				if (value != null && value.Length > Metadata[3].Length)
+					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+				_fields[3] = value;
 			}
 		}
 		#endregion
@@ -803,13 +909,20 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		/// <summary>
-		/// Creates a new <see cref="User"/> instance.
+		/// Creates a new instance of <see cref="User"/>.
 		/// </summary>
 		/// <remarks>
 		/// This constructor is intended for generic functions. Setting the fields
 		/// should be done with the <see cref="Fields"/> property.
 		/// </remarks>
 		public User() { }
+		/// <summary>
+		/// Creates a new instance of <see cref="User"/>.
+		/// </summary>
+		/// <param name="username">A unique username for this user.</param>
+		/// <param name="password">The password to give this user.</param>
+		/// <param name="token">The time this user has logged in, represented in seconds since epoch.</param>
+		/// <param name="permission">The permissions to give this user.</param>
 		public User(string username, string password, long token, UserPermission permission = UserPermission.User)
 		{
 			Username = username;
@@ -905,19 +1018,29 @@ namespace MySQLWrapper.Data
 		private static readonly string[] ImageFormats = { ".jpeg", ".jpg", ".gif", ".bmp", ".png", ".webp", ".heif" };
 
 		/// <summary>
-		/// Creates a new <see cref="Image"/> instance.
+		/// Creates a new instance of <see cref="Image"/>.
 		/// </summary>
 		/// <remarks>
 		/// This constructor is intended for generic functions. Setting the fields
 		/// should be done with the <see cref="Fields"/> property.
 		/// </remarks>
 		public Image() { }
+		/// <summary>
+		/// Creates a new instance of <see cref="Image"/> from an image file on this system.
+		/// </summary>
+		/// <param name="path">The path to an image file.</param>
 		public Image(string path)
 			: this(Path.GetFileNameWithoutExtension(path), File.ReadAllBytes(path), Path.GetExtension(path).ToLower())
 		{ }
+		/// <summary>
+		/// Creates a new instance of <see cref="Image"/>.
+		/// </summary>
+		/// <param name="id">The unique identifier to give this image. File extensions are automatically excluded.</param>
+		/// <param name="data">The raw byte data of the image file.</param>
+		/// <param name="extension">The extension of the image. If null, it will attempt to extract it from <paramref name="id"/>.</param>
 		public Image(string id, byte[] data, string extension = null)
 		{
-			Id = id;
+			Id = Path.GetFileNameWithoutExtension(id);
 			Data = data;
 			Extension = extension ?? Path.GetExtension(id);
 		}
