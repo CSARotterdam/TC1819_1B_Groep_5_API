@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -14,13 +15,16 @@ namespace API.Requests {
 		}
 	}
 
-	public class MissingRequestDataException : Exception {
-		/// <summary>
-		/// Exception thrown when a request is missing its requestData value.
-		/// </summary>
-		/// <param name="message"></param>
-		public MissingRequestDataException()
-			: base(string.Format("Received request with missing requestData")) {
-		}
-	}
+    public static class Templates {
+        public static JObject MissingArguments = new JObject() {
+            {"requestData", new JObject(){
+                {"reason", "MissingArguments" }
+            }}
+        };
+        public static JObject ExpiredToken = new JObject() {
+            {"requestData", new JObject(){
+                {"reason", "InvalidToken"}
+            }}
+        };
+    }
 }

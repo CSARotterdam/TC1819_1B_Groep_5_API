@@ -1,23 +1,64 @@
 import requests
+import hashlib
 
-r = requests.post("http://localhost", json={
-	"requestType": "login",
-	"requestData": {
-		"password": "da7e18cfddde44ed221d1aafe943c092851406dd9e66250290acbb5fbe2170087fa7a6bcc854a16fe698177a0787ce4d363261e40d7311e19e2d64bd9030e588",
-		"username": "Administrator"
-	}
-})
-print(r.status_code)
-print(r.text)
-token = r.json()["requestData"]["token"]
-r = requests.post("http://localhost", json={
-	"requestType": "logout",
-	"requestData": {
-		"token": token,
-		"username": "Administrator"
-	}
-})
-print(r.status_code)
-print(r.text)
+address = "http://localhost"
+token = ""
+username = ""
 
-input()
+while True:
+	print('''
+		1. Login
+		2. Register
+		3. Logout
+		4. GetProduct
+	''')
+	answer = input()
+	if answer == "1":
+		username = input("Username:")
+		password = input("Password:")
+		password = str(hashlib.sha512(username.encode("utf-8") + password.encode("utf-8")).hexdigest())
+
+		r = requests.post(address, json={
+			"requestType": "login",
+			"requestData": {
+				"password": password,
+				"username": username
+			}
+		})
+		token = r.json()["requestData"]["token"]
+		print("Token: "+str(token))
+
+	elif answer == "2":
+		u = input("Username:")
+		p = input("Password:")
+		p = hashlib.sha512(u + p).hexdigest()
+		r = requests.post(address, json={
+			"requestType": "login",
+			"requestData": {
+				"password": p,
+				"username": u
+			}
+		})
+
+	elif answer == "3":
+		r = requests.post(address, json={
+			"requestType": "logout",
+			"requestData": {
+				"token": token,
+				"username": username
+			}
+		})
+
+	elif answer == "4":
+		ID = input("Product ID:")
+		r = requests.post(address, json={
+			"requestType": "getProduct",
+			"requestData": {
+				"productID": ID,
+				"token": token,
+				"username": username
+			}
+		})
+
+	print(r.text)
+	input()

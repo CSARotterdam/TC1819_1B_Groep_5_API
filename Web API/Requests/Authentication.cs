@@ -18,9 +18,15 @@ namespace API.Requests {
 				throw new InvalidRequestTypeException(request["requestType"].ToString());
 			}
 
-			//Verify user details
-			String password = request["requestData"]["password"].ToString();
-			String username = request["requestData"]["username"].ToString();
+            //Verify user details
+            String password;
+            String username;
+            try {
+			    password = request["requestData"]["password"].ToString();
+			    username = request["requestData"]["username"].ToString();
+            } catch (ArgumentException) {
+                return Templates.MissingArguments;
+            }
 
             bool loginSuccessful = false;
             User user = getUser(username);
@@ -60,13 +66,13 @@ namespace API.Requests {
 				throw new InvalidRequestTypeException(request["requestType"].ToString());
 			}
 
-            String password = "";
-            String username = "";
+            String password;
+            String username;
             try {
                 password = request["requestData"]["password"].ToString();
                 username = request["requestData"]["username"].ToString();
-            } catch(ArgumentException) {
-
+            } catch (ArgumentException) {
+                return Templates.MissingArguments;
             }
 
             //Check if username already exists
@@ -119,7 +125,7 @@ namespace API.Requests {
 		/// Handles requests with requestType "logout".
 		/// </summary>
 		/// <param name="request">The JObject containing the request received from the client.</param>
-		/// <returns>A JObject containing the request response, which can then be sent to the client.</returns>
+		/// <returns>A <see cref="JObject"/> containing the request response, which can then be sent to the client.</returns>
 		public static JObject logout(JObject request) {
 			//If the requestType isn't "login", throw an exception.
 			if (request["requestType"].ToString() != "logout") {
@@ -127,13 +133,13 @@ namespace API.Requests {
 			}
 
             //Find the correct user
-            String username = "";
-            long token = 0;
+            String username;
+            long token;
             try {
                 username = request["requestData"]["username"].ToString();
                 token = request["requestData"]["token"].ToObject<long>();
             } catch (ArgumentException) {
-
+                return Templates.MissingArguments;
             }
 
             User user = getUser(username);
@@ -156,8 +162,7 @@ namespace API.Requests {
                 user.Update(wrapper);
 
             } else {
-                response["requestData"]["success"] = false;
-                response["requestData"]["reason"] = "Invalid or expired token";
+                return Templates.ExpiredToken;
             }
             return response;
         }
@@ -176,7 +181,6 @@ namespace API.Requests {
             System.DateTime token = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
             token = token.AddSeconds(tokenRaw).ToLocalTime();
             return !((DateTime.Today - token).TotalSeconds > (double)Program.Settings["authenticationSettings"]["expiration"]);
-           
         }
 
         private static User getUser(string username) {

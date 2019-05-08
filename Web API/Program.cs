@@ -45,6 +45,7 @@ namespace API {
             Thread LoggerThread = new Thread(() => API.Threads.Logging.main(log, child)) {
                 Name = "LoggerThread"
             };
+            Requests.RequestMethods.log = log;
 
             //Load configuration file
             log.Info("Loading configuration file.");
@@ -128,8 +129,8 @@ namespace API {
 			Requests.RequestMethods.wrapper = wrapper;
 			wrapper.Open();
 
-			//Create database maintainer thread
-			Thread databaseMaintainerThread = new Thread(() => API.Threads.DatabaseMaintainer.main());
+            //Create database maintainer thread
+            Thread databaseMaintainerThread = new Thread(() => API.Threads.DatabaseMaintainer.main());
 			databaseMaintainerThread.Start();
 
 			//Create worker threads
