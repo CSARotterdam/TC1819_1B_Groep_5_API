@@ -20,6 +20,12 @@ namespace API.Requests {
                 {"reason", "InvalidRequestType"}
             }}
         };
+        public static JObject AccessDenied = new JObject() {
+            {"requestData", new JObject(){
+                {"reason", "AccessDenied"}
+            }}
+        };
+
         public static JObject ServerError(string message) {
             return new JObject() {
                 {"requestData", new JObject(){

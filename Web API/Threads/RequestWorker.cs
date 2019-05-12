@@ -63,9 +63,7 @@ namespace API.Threads {
                     log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
                     statusCode = HttpStatusCode.BadRequest;
                     responseJson = new JObject(){
-                        {"requestData", new JObject(){
-                            {"Error", "Invalid requestType value"}
-                        }}
+                        Templates.InvalidRequestType
                     };
 
                 } else {

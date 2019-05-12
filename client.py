@@ -12,6 +12,7 @@ while True:
 3. Logout
 4. GetProduct
 5. GetProductList
+6. DeleteProduct
 	''')
 	answer = input()
 	if answer == "1":
@@ -82,8 +83,23 @@ while True:
 					"username": username,
 					"token": token,
 					"criteria": {
-						"id": "LIKE %"
+						"id": "LIKE %",
+						"manufacturer": "me",
 					}
+				}
+			})
+		except Exception:
+			print("Failed")
+
+	elif answer == "6":
+		try:
+			ID = input("Product ID:")
+			r = requests.post(address, json={
+				"requestType": "deleteProduct",
+				"requestData": {
+					"username": username,
+					"token": token,
+					"productID": ID
 				}
 			})
 		except Exception:

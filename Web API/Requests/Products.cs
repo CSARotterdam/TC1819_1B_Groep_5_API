@@ -28,7 +28,7 @@ namespace API.Requests {
             ){
                 return Templates.MissingArguments;
             }
-            if (usernameValue.Type == JTokenType.Null || tokenValue.Type == JTokenType.Null) {
+            if (usernameValue.Type == JTokenType.Null || tokenValue.Type == JTokenType.Null || idValue.Type == JTokenType.Null) {
                 return Templates.MissingArguments;
             }
             if (sendImageValue.Type == JTokenType.Null) {
@@ -49,25 +49,6 @@ namespace API.Requests {
                 return Templates.ExpiredToken;
             }
 
-            //Get product info
-            List<Product> products = wrapper.Select<Product>(new MySqlConditionBuilder()
-               .Column("id")
-               .Equals()
-               .Operand(ID, MySql.Data.MySqlClient.MySqlDbType.VarChar)
-            ).ToList();
-            Product product = products[0];
-
-            //Get image, if necessary
-            Image image = null;
-            if (sendImage) {
-                List<Image> images = wrapper.Select<Image>(new MySqlConditionBuilder()
-                   .Column("id")
-                   .Equals()
-                   .Operand(product.Image, MySql.Data.MySqlClient.MySqlDbType.VarChar)
-                ).ToList();
-                image = images[0];
-            }
-
             JObject response = new JObject() {
                 {"requestData", new JObject(){
                     {"reason", null },
@@ -75,24 +56,44 @@ namespace API.Requests {
                 }}
             };
 
-            if (products.Count == 0) {
+            //Get product info
+            List<Product> products = wrapper.Select<Product>(new MySqlConditionBuilder()
+               .Column("id")
+               .Equals()
+               .Operand(ID, MySql.Data.MySqlClient.MySqlDbType.VarChar)
+            ).ToList();
+            if(products.Count == 0) {
                 response["requestData"]["reason"] = "NoSuchProduct.";
-            } else {
-                response["requestData"]["productData"] = new JObject() {
-                    {"id",  product.Id},
-                    {"manufacturer", product.Manufacturer},
-                    {"category", product.Category},
-                    {"name", product.Name},
-                    {"image", null }
-                };
-                if (sendImage) {
-                    response["requestData"]["productData"]["image"] = new JObject() {
-                        {"data" , image.Data },
-                        {"id", image.Id },
-                        {"extension", image.Extension }
-                    };
-                }
+                return response;
             }
+
+            Product product = products[0];
+
+            //Get image, if necessary
+            Image image;
+            response["requestData"]["productData"] = new JObject() {
+                {"id",  product.Id},
+                {"manufacturer", product.Manufacturer},
+                {"category", product.Category},
+                {"name", product.Name},
+                {"image", null }
+            };
+
+            if (sendImage) {
+                List<Image> images = wrapper.Select<Image>(new MySqlConditionBuilder()
+                   .Column("id")
+                   .Equals()
+                   .Operand(product.Image, MySql.Data.MySqlClient.MySqlDbType.VarChar)
+                ).ToList();
+                image = images[0];
+
+                response["requestData"]["productData"]["image"] = new JObject() {
+                    {"data" , image.Data },
+                    {"id", image.Id },
+                    {"extension", image.Extension }
+                };
+            }
+
             return response;
         }
 
@@ -205,23 +206,69 @@ namespace API.Requests {
             };
         }
 
-        public static JObject deleteObject(JObject request) {
+        public static JObject deleteProduct(JObject request) {
             if (!API.Threads.DatabaseMaintainer.Ping()) {
                 return Templates.ServerError("DatabaseConnectionError");
             }
             //If the requestType isn't "deleteObject", throw an exception.
-            if (request["requestType"].ToString() != "deleteObject") {
+            if (request["requestType"].ToString() != "deleteProduct") {
                 return Templates.InvalidRequestType;
             }
 
-            //TODO Add updateProduct method
+            //Get arguments
+            JObject requestData = request["requestData"].ToObject<JObject>();
+            if (
+                !requestData.TryGetValue("username", out JToken usernameValue) ||
+                !requestData.TryGetValue("token", out JToken tokenValue) ||
+                !requestData.TryGetValue("productID", out JToken idValue)
+            ) {
+                return Templates.MissingArguments;
+            }
+            if (usernameValue.Type == JTokenType.Null || tokenValue.Type == JTokenType.Null || idValue.Type == JTokenType.Null) {
+                return Templates.MissingArguments;
+            }
 
+            string ID = idValue.ToString();
 
-            return new JObject() {
-                {"requestID", request["requestID"].ToString()},
+            //Check user
+            try {
+                string username = usernameValue.ToString();
+                long token = tokenValue.ToObject<long>();
+                User user = getUser(username);
+                if (!checkToken(user, token)) {
+                    return Templates.ExpiredToken;
+                }
+                if (!(user.Permission >= User.UserPermission.Collaborator)) {
+                    return Templates.AccessDenied;
+                }
+            } catch (FormatException) {
+                return Templates.ExpiredToken;
+            }
+
+            //Create base response
+            JObject response = new JObject() {
                 {"requestData", new JObject(){
+                    {"reason", null },
+                    {"success", false}
                 }}
             };
+
+            //Get product info
+            List<Product> products = wrapper.Select<Product>(new MySqlConditionBuilder()
+               .Column("id")
+               .Equals()
+               .Operand(ID, MySql.Data.MySqlClient.MySqlDbType.VarChar)
+            ).ToList();
+            if (products.Count == 0) {
+                response["requestData"]["reason"] = "NoSuchProduct.";
+                return response;
+            }
+
+            Product product = products[0];
+            product.Delete(wrapper);
+            response["requestData"]["success"] = true;            
+
+            return response;
         }
     }
 }
