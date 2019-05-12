@@ -4,17 +4,6 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace API.Requests {
-	public class InvalidRequestTypeException : Exception {
-		/// <summary>
-		/// Exception thrown when a request is missing a proper requestType value.
-		/// Should only be thrown by requestHandlers.
-		/// </summary>
-		/// <param name="requestType"></param>
-		public InvalidRequestTypeException(string requestType)
-			: base(string.Format("Received request with invalid requestType: {0}", requestType)){
-		}
-	}
-
     public static class Templates {
         public static JObject MissingArguments = new JObject() {
             {"requestData", new JObject(){
@@ -26,5 +15,18 @@ namespace API.Requests {
                 {"reason", "InvalidToken"}
             }}
         };
+        public static JObject InvalidRequestType = new JObject() {
+            {"requestData", new JObject(){
+                {"reason", "InvalidRequestType"}
+            }}
+        };
+        public static JObject ServerError(string message) {
+            return new JObject() {
+                {"requestData", new JObject(){
+                    {"reason", "ServerError"},
+                    {"message", message}
+                }}
+            };
+        }
     }
 }
