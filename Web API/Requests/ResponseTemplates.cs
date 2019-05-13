@@ -6,32 +6,28 @@ using System.Text;
 namespace API.Requests {
     public static class Templates {
         public static JObject MissingArguments = new JObject() {
-            {"requestData", new JObject(){
-                {"reason", "MissingArguments" }
-            }}
+            {"reason", "MissingArguments" }
         };
         public static JObject ExpiredToken = new JObject() {
-            {"requestData", new JObject(){
-                {"reason", "InvalidToken"}
-            }}
+            {"reason", "ExpiredToken"}
         };
         public static JObject InvalidRequestType = new JObject() {
-            {"requestData", new JObject(){
-                {"reason", "InvalidRequestType"}
-            }}
+            {"reason", "InvalidRequestType"}
         };
         public static JObject AccessDenied = new JObject() {
-            {"requestData", new JObject(){
-                {"reason", "AccessDenied"}
-            }}
+            {"reason", "AccessDenied"}
         };
+        public static JObject InvalidLogin = new JObject() {
+            {"reason" , "InvalidLogin"}
+        };
+		public static JObject NoSuchProduct = new JObject() {
+			{"reason", "NoSuchProduct" }
+		};
 
         public static JObject ServerError(string message) {
             return new JObject() {
-                {"requestData", new JObject(){
-                    {"reason", "ServerError"},
-                    {"message", message}
-                }}
+                {"reason", "ServerError"},
+                {"message", message}
             };
         }
     }

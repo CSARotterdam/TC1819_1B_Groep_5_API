@@ -52,9 +52,9 @@ while True:
 		try:
 			r = requests.post(address, json={
 				"requestType": "logout",
+				"username": username,
+				"token": token,
 				"requestData": {
-					"token": token,
-					"username": username
 				}
 			})
 		except Exception:
@@ -65,10 +65,10 @@ while True:
 			ID = input("Product ID:")
 			r = requests.post(address, json={
 				"requestType": "getProduct",
+				"username": username,
+				"token": token,
 				"requestData": {
 					"productID": ID,
-					"token": token,
-					"username": username,
 					"sendImage": True
 				}
 			})
@@ -79,9 +79,9 @@ while True:
 		try:
 			r = requests.post(address, json={
 				"requestType": "getProductList",
+				"username": username,
+				"token": token,
 				"requestData": {
-					"username": username,
-					"token": token,
 					"criteria": {
 						"id": "LIKE %",
 						"manufacturer": "me",
@@ -96,9 +96,9 @@ while True:
 			ID = input("Product ID:")
 			r = requests.post(address, json={
 				"requestType": "deleteProduct",
+				"username": username,
+				"token": token,
 				"requestData": {
-					"username": username,
-					"token": token,
 					"productID": ID
 				}
 			})
