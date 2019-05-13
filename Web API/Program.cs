@@ -15,7 +15,7 @@ namespace API {
 	class Program {
 		public static TechlabMySQL wrapper;
 		public static bool ManualError = false;
-		public static Logger log = new Logger(Level.ALL, Console.Out);
+		public static Logger log = new Logger(Level.ALL, Console.Out, new AdvancingWriter("Logs/latest.log") { Compression = true, Archive = "Logs/{0:dd-MM-yyyy}.{1}.zip" });
 		private static int _errorCode;
         public static dynamic Settings;
 
@@ -36,15 +36,6 @@ namespace API {
 			log.Info("Server is starting!");
 
             //Start logger
-            Directory.CreateDirectory("Logs");
-            if (File.Exists("Logs\\latest.log")) {
-                API.Threads.Logging.compressLogs();
-            }
-            Logger child = new Logger(Level.ALL, File.CreateText("Logs\\latest.log"));
-            log.Attach(child);
-            Thread LoggerThread = new Thread(() => API.Threads.Logging.main(log, child)) {
-                Name = "LoggerThread"
-            };
             Requests.RequestMethods.log = log;
 
             //Load configuration file
@@ -156,6 +147,15 @@ namespace API {
 			};
 			ListenerThread.Start();
 			log.Info("Setup complete.");
+
+			// Wait until all threads are terminated
+			consoleThread.Join();
+			databaseMaintainerThread.Join();
+			ListenerThread.Join();
+			foreach (var t in threadList) t.Join();
+
+			// Exit main thread
+			log.Dispose();
 		}
 	}
 }

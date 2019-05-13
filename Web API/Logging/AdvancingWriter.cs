@@ -88,7 +88,7 @@ namespace Logging
 				FileTimeStamp += (int)((DateTime.Now - FileTimeStamp) / Duration + 1) * Duration;
 			Stream = new StreamWriter(File) { AutoFlush = true };
 			_Files.Add(File);
-			FileAdvancerThread = new Thread(new ThreadStart(AdvanceFile));
+			FileAdvancerThread = new Thread(new ThreadStart(AdvanceFile)) { Name = "FileAdvancerThread" };
 			FileAdvancerThread.Start();
 		}
 
