@@ -53,16 +53,16 @@ namespace API.Requests {
                 long token = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                 User user = new User(username, password, token, User.UserPermission.User);
                 user.Upload(wrapper);
-                response["requestData"]["registerUserSuccessful"] = true;
-                response["requestData"]["token"] = token;
-                response["requestData"]["permissionLevel"] = 0;
+                response["registerUserSuccessful"] = true;
+                response["token"] = token;
+                response["permissionLevel"] = 0;
             } else {
                 if (usernameExists) {
-                    response["requestData"]["reason"] = "User already exists.";
-                    response["requestData"]["registerUserSuccessful"] = false;
+                    response["reason"] = "User already exists.";
+                    response["registerUserSuccessful"] = false;
                 } else if (invalidPassword) {
-                    response["requestData"]["reason"] = "Password not valid.";
-                    response["requestData"]["registerUserSuccessful"] = false;
+                    response["reason"] = "Password not valid.";
+                    response["registerUserSuccessful"] = false;
                 }
             }
 

@@ -52,7 +52,7 @@ namespace API.Requests {
 
             //Get image, if necessary
             Image image;
-            response["requestData"]["productData"] = new JObject() {
+            response["productData"] = new JObject() {
                 {"id",  product.Id},
                 {"manufacturer", product.Manufacturer},
                 {"category", product.Category},
@@ -68,7 +68,7 @@ namespace API.Requests {
                 ).ToList();
                 image = images[0];
 
-                response["requestData"]["productData"]["image"] = new JObject() {
+                response["productData"]["image"] = new JObject() {
                     {"data" , image.Data },
                     {"id", image.Id },
                     {"extension", image.Extension }

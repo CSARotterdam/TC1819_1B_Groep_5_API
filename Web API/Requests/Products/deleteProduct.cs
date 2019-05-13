@@ -35,13 +35,13 @@ namespace API.Requests {
                .Operand(ID, MySql.Data.MySqlClient.MySqlDbType.VarChar)
             ).ToList();
             if (products.Count == 0) {
-                response["requestData"]["reason"] = "NoSuchProduct.";
+                response["reason"] = "NoSuchProduct.";
                 return response;
             }
 
             Product product = products[0];
             product.Delete(wrapper);
-            response["requestData"]["success"] = true;
+            response["success"] = true;
 
             return response;
         }
