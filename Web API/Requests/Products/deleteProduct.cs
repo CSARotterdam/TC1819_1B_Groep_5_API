@@ -17,7 +17,7 @@ namespace API.Requests {
             JObject requestData = request["requestData"].ToObject<JObject>();
             requestData.TryGetValue("productID", out JToken idValue);
             if (idValue == null || idValue.Type != JTokenType.String) {
-                return Templates.MissingArguments;
+				return Templates.MissingArguments("productID");
             }
 
             string ID = idValue.ToString();

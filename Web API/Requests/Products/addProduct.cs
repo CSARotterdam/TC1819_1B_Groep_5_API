@@ -18,10 +18,10 @@ namespace API.Requests {
             if (
                 !requestData.TryGetValue("productInfo", out JToken infoValue)
             ) {
-                return Templates.MissingArguments;
+                return Templates.MissingArguments("productInfo");
             }
             if (infoValue.Type == JTokenType.Null) {
-                return Templates.MissingArguments;
+                return Templates.MissingArguments("productInfo");
             }
 
             //Create base response

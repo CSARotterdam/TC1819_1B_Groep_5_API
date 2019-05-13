@@ -20,7 +20,7 @@ namespace API.Requests {
             requestData.TryGetValue("username", out JToken usernameValue);
             requestData.TryGetValue("password", out JToken passwordValue);
             if (usernameValue.Type == JTokenType.Null || passwordValue.Type == JTokenType.Null) {
-                return Templates.MissingArguments;
+				return Templates.MissingArguments("username, password");
             }
             string username = usernameValue.ToString();
             string password = passwordValue.ToString();

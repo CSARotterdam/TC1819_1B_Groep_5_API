@@ -69,7 +69,11 @@ while True:
 				"token": token,
 				"requestData": {
 					"productID": ID,
-					"sendImage": True
+					"sendImage": True,
+					"language": [
+						"ISO_en",
+						"ISO_nl"
+					]
 				}
 			})
 		except Exception:

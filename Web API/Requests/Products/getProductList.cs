@@ -17,7 +17,7 @@ namespace API.Requests {
             JObject requestData = request["requestData"].ToObject<JObject>();
             requestData.TryGetValue("criteria", out JToken criteriaValue);
             if (criteriaValue.Type != JTokenType.Object) {
-                return Templates.MissingArguments;
+				return Templates.MissingArguments("criteria");
             }
 
             //Parse criteria and use them to build a query;

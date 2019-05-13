@@ -21,7 +21,7 @@ namespace API.Requests {
             requestData.TryGetValue("username", out JToken usernameValue);
             requestData.TryGetValue("token", out JToken tokenValue);
             if (usernameValue.Type == JTokenType.Null || tokenValue.Type == JTokenType.Null) {
-                return Templates.MissingArguments;
+				return Templates.MissingArguments("username, token");
             }
             string username = usernameValue.ToString();
 

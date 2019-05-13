@@ -90,7 +90,7 @@ namespace API.Threads {
                         requestContent.TryGetValue("token", out JToken tokenValue);
 
                         if (usernameValue == null || tokenValue == null || usernameValue.Type != JTokenType.String || tokenValue.Type != JTokenType.Integer) {
-                            responseJson["requestData"] = Templates.MissingArguments;
+							responseJson["requestData"] = Templates.MissingArguments("username, token");
                             sendResponse = true;
                         } else {
                             token = tokenValue.ToObject<long>();
