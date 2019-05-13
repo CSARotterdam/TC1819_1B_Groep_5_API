@@ -1,7 +1,111 @@
 import requests
+import hashlib
+
+address = "http://localhost"
+token = ""
+username = ""
 
 while True:
-	r = requests.post("http://localhost", json={"hello": "world"})
-	print(r.status_code)
-	print(r.text["goodbye"])
-	input()
+	print('''
+1. Login
+2. Register
+3. Logout
+4. GetProduct
+5. GetProductList
+6. DeleteProduct
+	''')
+	answer = input()
+	if answer == "1":
+		try:
+			username = input("Username:")
+			password = input("Password:")
+			password = str(hashlib.sha512(username.encode("utf-8") + password.encode("utf-8")).hexdigest())
+
+			r = requests.post(address, json={
+				"requestType": "login",
+				"requestData": {
+					"password": password,
+					"username": username
+				}
+			})
+			token = r.json()["requestData"]["token"]
+			print("Token: "+str(token))
+		except Exception:
+			print("Failed")
+
+	elif answer == "2":
+		try:
+			u = input("Username:")
+			p = input("Password:")
+			p = hashlib.sha512(u + p).hexdigest()
+			r = requests.post(address, json={
+				"requestType": "login",
+				"requestData": {
+					"password": p,
+					"username": u
+				}
+			})
+		except Exception:
+			print("Failed")
+
+	elif answer == "3":
+		try:
+			r = requests.post(address, json={
+				"requestType": "logout",
+				"username": username,
+				"token": token,
+				"requestData": {
+				}
+			})
+		except Exception:
+			print("Failed")
+
+	elif answer == "4":
+		try:
+			ID = input("Product ID:")
+			r = requests.post(address, json={
+				"requestType": "getProduct",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productID": ID,
+					"sendImage": True
+				}
+			})
+		except Exception:
+			print("Failed")
+
+	elif answer == "5":
+		try:
+			r = requests.post(address, json={
+				"requestType": "getProductList",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"criteria": {
+						"id": "LIKE %",
+						"manufacturer": "me",
+					}
+				}
+			})
+		except Exception:
+			print("Failed")
+
+	elif answer == "6":
+		try:
+			ID = input("Product ID:")
+			r = requests.post(address, json={
+				"requestType": "deleteProduct",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productID": ID
+				}
+			})
+		except Exception:
+			print("Failed")
+
+	try:
+		print(r.text)
+	except Exception:
+		pass

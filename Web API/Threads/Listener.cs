@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
-namespace API {
+namespace API.Threads {
 	class Listener {
 
 		//For someone called the 'Listener,' you do an awful lot of shouting...

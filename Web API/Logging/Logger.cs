@@ -374,8 +374,8 @@ namespace Logging
 				// trim chained logging calls from the stacktrace. These calls are after the first logging call and are irrelevant.
 				var stacklines = stackTrace.Split("\r\n");
 				stackTrace = stacklines[i-1];
-				for (i = i; i < stacklines.Length; i++)
-					stackTrace += "\r\n" + stacklines[i];
+                for (; i < stacklines.Length; i++)
+                    stackTrace += "\r\n" + stacklines[i];
 			}
 
 			// format all attributes 

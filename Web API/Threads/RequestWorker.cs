@@ -8,6 +8,8 @@ using System.Threading;
 using Logging;
 using API.Requests;
 using System.Reflection;
+using MySQLWrapper.Data;
+using static API.Requests.RequestMethodAttributes;
 
 namespace API.Threads {
 	class RequestWorker {
@@ -38,6 +40,7 @@ namespace API.Threads {
 				if (!request.HasEntityBody) {
 					log.Error("Request has no body data. Sending error response and ignoring!");
 					sendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
+                    continue;
 				}
 
 				//Convert request data to JObject
@@ -46,32 +49,95 @@ namespace API.Threads {
 				System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
 				JObject requestContent = JObject.Parse(reader.ReadToEnd());
 
-				// Handle request
-				HttpStatusCode statusCode = HttpStatusCode.OK;
+                //Create base response JObject
+                bool sendResponse = false;
+                JObject responseJson = new JObject() {
+                    {"requestData", new JObject() }
+                };
+
+                // Select request handler
+                HttpStatusCode statusCode = HttpStatusCode.OK;
 				MethodInfo requestMethod = null;
 				foreach (MethodInfo method in methods) {
 					if (method.Name == requestContent["requestType"].ToString()){
 						requestMethod = method;
+                        break;
 					}
 				}
+                
+                //If no request handler was found, send an error response
+                if (requestMethod == null) {
+                    log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
+                    statusCode = HttpStatusCode.BadRequest;
+                    responseJson["requestData"] = Templates.InvalidRequestType;
+                    sendResponse = true;
+                }
 
-				JObject responseJson;
-				if (requestMethod != null) {
-					Object[] methodParams = new object[1] { requestContent };
-					responseJson = (JObject)requestMethod.Invoke(null, methodParams);
-				} else {
-					log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
-					statusCode = HttpStatusCode.BadRequest;
-					responseJson = new JObject(){
-						{"requestID", requestContent["requestID"].ToString()},
-						{"requestData", new JObject(){
-							{"Error", "Invalid requestType value"}
-						}}
-					};
-				}
+                //If the request handler requires the user token or permission level to be verified first, do that now.
+                bool verifyToken = false;
+                bool verifyPermission = false;
+                User user = null;
+                long token = 0;
+                string username;
 
-				// Create & send response
-				HttpListenerResponse response = context.Response;
+                //If either token or permission verification is required, get the username, token and user object.
+                if (!sendResponse) {
+                    verifyToken = requestMethod.GetCustomAttribute<skipTokenVerification>() == null;
+                    verifyPermission = requestMethod.GetCustomAttribute<verifyPermission>() != null;
+
+                    if (verifyToken || verifyPermission) {
+                        requestContent.TryGetValue("username", out JToken usernameValue);
+                        requestContent.TryGetValue("token", out JToken tokenValue);
+
+                        if (usernameValue == null || tokenValue == null || usernameValue.Type != JTokenType.String || tokenValue.Type != JTokenType.Integer) {
+                            responseJson["requestData"] = Templates.MissingArguments;
+                            sendResponse = true;
+                        } else {
+                            token = tokenValue.ToObject<long>();
+                            username = usernameValue.ToObject<string>();
+                            user = RequestMethods.getUser(username);
+                            if (user == null) {
+                                responseJson["requestData"] = Templates.InvalidLogin;
+                                sendResponse = true;
+                            }
+                        }
+                    }
+                }
+
+                //Check the user's permission level, unless the requesttype doesn't require it.
+                if(!sendResponse && verifyToken) {
+                    System.DateTime tokenDT = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+                    tokenDT = tokenDT.AddSeconds(token).ToLocalTime();
+                    bool validToken = !((DateTime.Today - tokenDT).TotalSeconds > (double)Program.Settings["authenticationSettings"]["expiration"]);
+
+                    if (!(validToken && token == user.Token)) {
+                        responseJson["requestData"] = Templates.ExpiredToken;
+                        sendResponse = true;
+                    }
+                }
+                
+                //Check the user's permission level if the requesttype requires it.
+                if(!sendResponse && verifyPermission) {
+                    if(user.Permission < requestMethod.GetCustomAttribute<verifyPermission>().permission) {
+                        responseJson["requestData"] = Templates.AccessDenied;
+                        sendResponse = true;
+                    }
+                }
+                
+                //Check if the database is available, just in case.
+                if (!API.Threads.DatabaseMaintainer.Ping()) {
+                    responseJson["requestData"] = Templates.ServerError("DatabaseConnectionError");
+                    sendResponse = true;
+                }
+
+                if (!sendResponse) {
+                    //Attempt to process the request
+                    Object[] methodParams = new object[1] { requestContent };
+                    responseJson["requestData"] = (JObject)requestMethod.Invoke(null, methodParams);
+                }
+
+                // Create & send response
+                HttpListenerResponse response = context.Response;
 				response.ContentType = "application/json";
 				sendMessage(context, responseJson.ToString(), statusCode);
 				log.Fine("Request processed successfully.");

@@ -21,7 +21,10 @@ namespace API {
 			},
 			'performanceSettings':{
 				'workerThreadCount': 5,
-			}
+			},
+            'authenticationSettings':{
+                'expiration': 7200
+            }
 		}";
 
 		public static dynamic loadConfig(){
