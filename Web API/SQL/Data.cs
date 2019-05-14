@@ -290,7 +290,7 @@ namespace MySQLWrapper.Data
 						// Return all values
 						var values = new object[reader.FieldCount];
 						reader.GetValues(values);
-						yield return values;
+						yield return values.Select(x => x.GetType() == typeof(DBNull) ? null : x).ToArray();
 					}
 			}
 		}
