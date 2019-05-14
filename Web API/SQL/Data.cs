@@ -501,7 +501,7 @@ namespace MySQLWrapper.Data
 		});
 		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
 		{
-			new Index("PRIMARY", Index.IndexType.PRIMARY, true, _metadata[0]),
+			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0]),
 			new Index("category", Index.IndexType.INDEX, _metadata[1]),
 			new Index("name", Index.IndexType.INDEX, _metadata[2]),
 			new Index("image", Index.IndexType.INDEX, _metadata[4])
@@ -662,7 +662,7 @@ namespace MySQLWrapper.Data
 		});
 		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
 		{
-			new Index("PRIMARY", Index.IndexType.PRIMARY, true, _metadata[0]),
+			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0]),
 			new Index("name", Index.IndexType.INDEX, _metadata[1])
 		});
 		private readonly object[] _fields = new object[_metadata.Count];
