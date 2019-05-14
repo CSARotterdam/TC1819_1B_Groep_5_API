@@ -417,7 +417,7 @@ namespace MySQLWrapper.Data
 		#region Properties
 		public int? Id
 		{
-			get { return (int)Fields[0]; }
+			get { return (int?)Fields[0]; }
 			set { _fields[0] = value; }
 		}
 		public string ProductId
@@ -492,7 +492,7 @@ namespace MySQLWrapper.Data
 		private const string _schema = "products";
 		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
-			new ColumnMetadata("id", 11, MySqlDbType.Int32),
+			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("manufacturer", 80, MySqlDbType.VarChar),
 			new ColumnMetadata("category", 11, MySqlDbType.Int32),
 			new ColumnMetadata("name", 50, MySqlDbType.VarChar),
@@ -524,7 +524,7 @@ namespace MySQLWrapper.Data
 		/// <param name="category">The id of a <see cref="ProductCategory"/>.</param>
 		/// <param name="name">The id of a <see cref="LanguageItem"/>.</param>
 		/// <param name="image">The id of a <see cref="Data.Image"/>.</param>
-		public Product(int id, string manufacturer, int category, string name, string image = "default")
+		public Product(int? id, string manufacturer, int category, string name, string image = "default")
 		{
 			Id = id;
 			Manufacturer = manufacturer;
@@ -534,9 +534,9 @@ namespace MySQLWrapper.Data
 		}
 
 		#region Properties
-		public int Id
+		public int? Id
 		{
-			get { return (int)Fields[0]; }
+			get { return (int?)Fields[0]; }
 			set { _fields[0] = value; }
 		}
 		public string Manufacturer
@@ -646,15 +646,13 @@ namespace MySQLWrapper.Data
 		private const string _schema = "product_categories";
 		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
-			new ColumnMetadata("id", 11, MySqlDbType.Int32),
-			new ColumnMetadata("category", 50, MySqlDbType.VarChar),
+			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("name", 50, MySqlDbType.VarChar),
 		});
 		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
 		{
 			new Index("PRIMARY", Index.IndexType.PRIMARY, true, _metadata[0]),
-			new Index("category", Index.IndexType.UNIQUE, _metadata[1]),
-			new Index("name", Index.IndexType.INDEX, _metadata[2])
+			new Index("name", Index.IndexType.INDEX, _metadata[1])
 		});
 		private readonly object[] _fields = new object[_metadata.Count];
 		#endregion
@@ -673,20 +671,19 @@ namespace MySQLWrapper.Data
 		/// <param name="id">The id of the category. If null, the id will be assigned upon uploading this item.</param>
 		/// <param name="category">A unique name identifier for the category.</param>
 		/// <param name="name">The id of a <see cref="LanguageItem"/>.</param>
-		public ProductCategory(int? id, string category, string name)
+		public ProductCategory(string id, string name)
 		{
 			Id = id;
-			Category = category;
 			Name = name;
 		}
 
 		#region Properties
-		public int? Id
+		public string Id
 		{
-			get { return (int)Fields[0]; }
+			get { return (string)Fields[0]; }
 			set { _fields[0] = value; }
 		}
-		public string Category
+		public string Name
 		{
 			get { return (string)Fields[1]; }
 			set
@@ -694,16 +691,6 @@ namespace MySQLWrapper.Data
 				if (value != null && value.Length > Metadata[1].Length)
 					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
 				_fields[1] = value;
-			}
-		}
-		public string Name
-		{
-			get { return (string)Fields[2]; }
-			set
-			{
-				if (value != null && value.Length > Metadata[2].Length)
-					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
-				_fields[2] = value;
 			}
 		}
 		#endregion
