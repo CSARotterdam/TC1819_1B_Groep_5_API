@@ -418,7 +418,7 @@ namespace MySQLWrapper.Data
 		#region Properties
 		public int? Id
 		{
-			get { return (int)Fields[0]; }
+			get { return (int?)Fields[0]; }
 			set { _fields[0] = value; }
 		}
 		public string ProductId
@@ -525,7 +525,7 @@ namespace MySQLWrapper.Data
 		/// <param name="category">The id of a <see cref="ProductCategory"/>.</param>
 		/// <param name="name">The id of a <see cref="LanguageItem"/>.</param>
 		/// <param name="image">The id of a <see cref="Data.Image"/>.</param>
-		public Product(int id, string manufacturer, int category, string name, string image = "default")
+		public Product(int? id, string manufacturer, int category, string name, string image = "default")
 		{
 			Id = id;
 			Manufacturer = manufacturer;
@@ -535,9 +535,9 @@ namespace MySQLWrapper.Data
 		}
 
 		#region Properties
-		public int Id
+		public int? Id
 		{
-			get { return (int)Fields[0]; }
+			get { return (int?)Fields[0]; }
 			set { _fields[0] = value; }
 		}
 		public string Manufacturer
@@ -684,7 +684,7 @@ namespace MySQLWrapper.Data
 		#region Properties
 		public int? Id
 		{
-			get { return (int)Fields[0]; }
+			get { return (int?)Fields[0]; }
 			set { _fields[0] = value; }
 		}
 		public string Category
