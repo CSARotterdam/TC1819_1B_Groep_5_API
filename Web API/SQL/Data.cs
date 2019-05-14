@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Drawing;
 
 namespace MySQLWrapper.Data
 {
@@ -493,7 +492,7 @@ namespace MySQLWrapper.Data
 		private const string _schema = "products";
 		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
-			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
+			new ColumnMetadata("id", 11, MySqlDbType.Int32),
 			new ColumnMetadata("manufacturer", 80, MySqlDbType.VarChar),
 			new ColumnMetadata("category", 11, MySqlDbType.Int32),
 			new ColumnMetadata("name", 50, MySqlDbType.VarChar),
@@ -501,7 +500,7 @@ namespace MySQLWrapper.Data
 		});
 		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
 		{
-			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0]),
+			new Index("PRIMARY", Index.IndexType.PRIMARY, true, _metadata[0]),
 			new Index("category", Index.IndexType.INDEX, _metadata[1]),
 			new Index("name", Index.IndexType.INDEX, _metadata[2]),
 			new Index("image", Index.IndexType.INDEX, _metadata[4])
@@ -525,7 +524,7 @@ namespace MySQLWrapper.Data
 		/// <param name="category">The id of a <see cref="ProductCategory"/>.</param>
 		/// <param name="name">The id of a <see cref="LanguageItem"/>.</param>
 		/// <param name="image">The id of a <see cref="Data.Image"/>.</param>
-		public Product(string id, string manufacturer, int category, string name, string image = "default")
+		public Product(int id, string manufacturer, int category, string name, string image = "default")
 		{
 			Id = id;
 			Manufacturer = manufacturer;
@@ -535,15 +534,10 @@ namespace MySQLWrapper.Data
 		}
 
 		#region Properties
-		public string Id
+		public int Id
 		{
-			get { return (string)Fields[0]; }
-			set
-			{
-				if (value != null && value.Length > Metadata[0].Length)
-					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
-				_fields[0] = value;
-			}
+			get { return (int)Fields[0]; }
+			set { _fields[0] = value; }
 		}
 		public string Manufacturer
 		{
