@@ -52,9 +52,9 @@ namespace API.Requests {
 				{"manufacturer", product.Manufacturer},
 				{"category", product.Category},
 				{"name", new JObject(){
-					{ "ISO_en", null },
-					{ "ISO_nl", null },
-					{ "ISO_ar", null },
+					{ "en", null },
+					{ "nl", null },
+					{ "ar", null },
 				}},
 				{"image", null }
 			};
@@ -62,14 +62,14 @@ namespace API.Requests {
 			//Add product names, if any.
 			LanguageItem item = product.GetName(wrapper);
 			List<string> language = requestData["language"].ToObject<List<string>>();
-			if (language.Contains("ISO_en")) {
-				response["productData"]["name"]["ISO_en"] = item.ISO_en;
+			if (language.Contains("en")) {
+				response["productData"]["name"]["en"] = item.en;
 			}
-			if (language.Contains("ISO_nl")) {
-				response["productData"]["name"]["ISO_nl"] = item.ISO_nl;
+			if (language.Contains("nl")) {
+				response["productData"]["name"]["nl"] = item.nl;
 			}
-			if (language.Contains("ISO_ar")) {
-				response["productData"]["name"]["ISO_ar"] = item.ISO_ar;
+			if (language.Contains("ar")) {
+				response["productData"]["name"]["ar"] = item.ar;
 			}
 
 			//Get image, if necessary

@@ -53,6 +53,8 @@ namespace API.Requests {
                 long token = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                 User user = new User(username, password, token, User.UserPermission.User);
                 user.Upload(wrapper);
+
+				//TODO Consistency
                 response["registerUserSuccessful"] = true;
                 response["token"] = token;
                 response["permissionLevel"] = 0;

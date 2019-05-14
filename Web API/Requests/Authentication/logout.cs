@@ -16,11 +16,9 @@ namespace API.Requests {
         /// <returns>A <see cref="JObject"/> containing the request response, which can then be sent to the client.</returns>
          
         public static JObject logout(JObject request) {
-            //Verify user details
-            JObject requestData = request["requestData"].ToObject<JObject>();
-            requestData.TryGetValue("username", out JToken usernameValue);
-            requestData.TryGetValue("token", out JToken tokenValue);
-            if (usernameValue.Type == JTokenType.Null || tokenValue.Type == JTokenType.Null) {
+			//Verify user details
+			request.TryGetValue("username", out JToken usernameValue);
+            if (usernameValue == null || usernameValue.Type == JTokenType.Null) {
 				return Templates.MissingArguments("username, token");
             }
             string username = usernameValue.ToString();

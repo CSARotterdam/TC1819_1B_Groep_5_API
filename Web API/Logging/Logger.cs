@@ -114,13 +114,13 @@ namespace Logging
 		/// A read-only collection of associated loggers
 		/// </summary>
 		public IReadOnlyCollection<Logger> Children => _children.AsReadOnly();
-		private List<Logger> _children = new List<Logger>();
+		private readonly List<Logger> _children = new List<Logger>();
 
 		/// <summary>
 		/// A read-only collection of loggers this object is associated with.
 		/// </summary>
 		public IReadOnlyCollection<Logger> Parents => _parents.AsReadOnly();
-		private List<Logger> _parents = new List<Logger>();
+		private readonly List<Logger> _parents = new List<Logger>();
 
 		/// <summary>
 		/// The collection of <see cref="TextWriter"/> objects this logger writes to.
@@ -138,7 +138,7 @@ namespace Logging
 		/// <summary>
 		/// The format used for log records.
 		/// </summary>
-		public string Format { get; private set; } = "{asctime:HH:mm:ss} {classname,-10} {levelname,5}: {message}";
+		public string Format { get; private set; } = "{asctime:HH:mm:ss} {classname,-15} {levelname,5}: {message}";
 		/// <summary>
 		/// Sets whether or not the log record stacktraces will use file info.
 		/// </summary>

@@ -15,7 +15,10 @@ namespace API {
 	class Program {
 		public static TechlabMySQL wrapper;
 		public static bool ManualError = false;
-		public static Logger log = new Logger(Level.ALL, Console.Out, new AdvancingWriter("Logs/latest.log") { Compression = true, Archive = "Logs/{0:dd-MM-yyyy}.{1}.zip" });
+		public static Logger log = new Logger(Level.ALL, Console.Out, new AdvancingWriter("Logs/latest.log") {
+			Compression = true,
+			Archive = "Logs/{0:dd-MM-yyyy}.{1}.zip"
+		});
 		private static int _errorCode;
         public static dynamic Settings;
 

@@ -7,12 +7,10 @@ username = ""
 
 while True:
 	print('''
-1. Login
-2. Register
-3. Logout
-4. GetProduct
-5. GetProductList
-6. DeleteProduct
+1. Login		5. GetProductList
+2. Register		6. DeleteProduct
+3. Logout		7. AddProduct
+4. GetProduct		8. UpdateProduct
 	''')
 	answer = input()
 	if answer == "1":
@@ -37,9 +35,9 @@ while True:
 		try:
 			u = input("Username:")
 			p = input("Password:")
-			p = hashlib.sha512(u + p).hexdigest()
+			p = str(hashlib.sha512(u.encode("utf-8") + p.encode("utf-8")).hexdigest())
 			r = requests.post(address, json={
-				"requestType": "login",
+				"requestType": "registerUser",
 				"requestData": {
 					"password": p,
 					"username": u
@@ -108,6 +106,47 @@ while True:
 			})
 		except Exception:
 			print("Failed")
+
+	elif answer == "7":
+		try:
+			r = requests.post(address, json={
+				"requestType": "addProduct",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productID": "example_produc22222t",
+					"categoryID": "uncategorized",
+					"manufacturer": "thelol",
+					"name" : {
+						"en": "Defenestrated Potato"
+					}
+				}
+			})
+		except Exception:
+			print("Failed")
+
+	elif answer == "8":
+		try:
+			r = requests.post(address, json={
+				"requestType": "updateProduct",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productID": "example_product",
+					#"newProductID": "example_product",
+					"categoryID": "yes",
+					"manufacturer": "Slave labour.",
+					"name" : {
+						"en": "An egg, in more ways than one.",
+						"nl": "banaan",
+						"ar": "¯\\_(ツ)_/¯"
+					}
+				}
+			})
+		except Exception:
+			print("Failed")
+
+
 
 	try:
 		print(r.text)

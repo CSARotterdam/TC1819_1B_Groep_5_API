@@ -20,6 +20,12 @@ namespace API.Requests {
 		public static JObject NoSuchProduct = new JObject() {
 			{"reason", "NoSuchProduct" }
 		};
+		public static JObject NoSuchProductCategory = new JObject() {
+			{"reason", "NoSuchProductCategory" }
+		};
+		public static JObject AlreadyExists = new JObject() {
+			{"reason", "AlreadyExists" }
+		};
 
 		public static JObject MissingArguments(string message) {
 			return new JObject() {

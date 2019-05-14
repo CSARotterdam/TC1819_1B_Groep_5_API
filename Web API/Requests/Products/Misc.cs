@@ -26,6 +26,20 @@ namespace API.Requests {
 			}
 		}
 
+		public static ProductCategory getProductCategory(string ID) {
+			List<ProductCategory> selection = RequestMethods.wrapper.Select<ProductCategory>(new MySqlConditionBuilder()
+					.Column("ID")
+					.Equals()
+					.Operand(ID, MySql.Data.MySqlClient.MySqlDbType.VarChar)
+			).ToList();
+
+			if (selection.Count == 0) {
+				return null;
+			} else {
+				return selection[0];
+			}
+		}
+
 
 	}
 }

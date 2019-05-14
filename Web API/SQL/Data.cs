@@ -783,7 +783,7 @@ namespace MySQLWrapper.Data
 		public LanguageItem(string id, string uniDef)
 		{
 			Id = id;
-			ISO_en = uniDef;
+			en = uniDef;
 			for (int i = 2; i < _fields.Length; i++)
 				_fields[i] = uniDef;
 		}
@@ -793,9 +793,9 @@ namespace MySQLWrapper.Data
 		public LanguageItem(string id, string en, string nl, string ar)
 		{
 			Id = id;
-			ISO_en = en;
-			ISO_nl = nl;
-			ISO_ar = ar;
+			this.en = en;
+			this.nl = nl;
+			this.ar = ar;
 		}
 
 		#region Properties
@@ -809,7 +809,7 @@ namespace MySQLWrapper.Data
 				_fields[0] = value;
 			}
 		}
-		public string ISO_en
+		public string en
 		{
 			get { return (string)Fields[1]; }
 			set
@@ -819,7 +819,7 @@ namespace MySQLWrapper.Data
 				_fields[1] = value;
 			}
 		}
-		public string ISO_nl
+		public string nl
 		{
 			get { return (string)Fields[2]; }
 			set
@@ -829,7 +829,7 @@ namespace MySQLWrapper.Data
 				_fields[2] = value;
 			}
 		}
-		public string ISO_ar
+		public string ar
 		{
 			get { return (string)Fields[3]; }
 			set
