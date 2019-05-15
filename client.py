@@ -180,4 +180,18 @@ while True:
 		except requests.RequestException:
 			print("Failed")
 
+	elif answer == "10":
+		try:
+			ID = input("Category ID:")
+			r = requests.post(address, json={
+				"requestType": "deleteProductCategory",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"categoryID": ID
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
 	print(r.text)

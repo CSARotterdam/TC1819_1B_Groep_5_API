@@ -20,30 +20,24 @@ namespace API.Requests {
 				return Templates.MissingArguments("productID");
             }
 
-            string ID = idValue.ToString();
+            string productID = idValue.ToString();
 
-            //Create base response
-            JObject response = new JObject() {
-                {"reason", null },
-                {"success", false}
-            };
+			//Check if product exists
+			Product product = Requests.getObject<Product>(productID);
+			if (product == null) {
+				return Templates.NoSuchProduct;
+			}
 
-            //Get product info
-            List<Product> products = wrapper.Select<Product>(new MySqlConditionBuilder()
-               .Column("id")
-               .Equals()
-               .Operand(ID, MySql.Data.MySqlClient.MySqlDbType.VarChar)
-            ).ToList();
-            if (products.Count == 0) {
-                response["reason"] = "NoSuchProduct.";
-                return response;
-            }
+			product.Delete(wrapper);
+			product.GetImage(wrapper).Delete(wrapper);
+			product.GetName(wrapper).Delete(wrapper);
 
-            Product product = products[0];
-            product.Delete(wrapper);
-            response["success"] = true;
+			//Create base response
+			return new JObject() {
+				{"reason", null },
+				{"success", true}
+			};
 
-            return response;
-        }
-    }
+		}
+	}
 }
