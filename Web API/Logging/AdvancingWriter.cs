@@ -18,7 +18,7 @@ namespace Logging
 		public readonly TimeSpan Duration;
 		private DateTime FileTimeStamp;
 
-		private Thread FileAdvancerThread;
+		private readonly Thread FileAdvancerThread;
 		private TextWriter Stream;
 		private string File
 		{
@@ -57,7 +57,7 @@ namespace Logging
 		/// An array of files that this <see cref="AdvancingWriter"/> has created. Compressed archives replace their uncompressed counterparts.
 		/// </summary>
 		public string[] Files => _Files.ToArray();
-		private List<string> _Files = new List<string>();
+		private readonly List<string> _Files = new List<string>();
 
 		/// <summary>
 		/// Creates a new instance of <see cref="AdvancingWriter"/> that advances it's file at midnight.
