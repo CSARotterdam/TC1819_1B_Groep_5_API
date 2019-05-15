@@ -22,7 +22,7 @@ namespace API.Requests {
             JObject requestData = request["requestData"].ToObject<JObject>();
             requestData.TryGetValue("productID", out JToken idValue);
             requestData.TryGetValue("sendImage", out JToken sendImageValue);
-			requestData.TryGetValue("language", out JToken languageValue);
+			requestData.TryGetValue("name", out JToken languageValue);
             if (idValue == null || idValue.Type != JTokenType.String || languageValue == null || languageValue.Type != JTokenType.Array) {
 				return Templates.MissingArguments("productID, language");
             }
@@ -30,7 +30,7 @@ namespace API.Requests {
                 sendImageValue = false;
             }
 
-            string ID = idValue.ToString();
+            string productID = idValue.ToString();
             bool sendImage = sendImageValue.ToObject<bool>();
 
 			//Create base response
@@ -40,7 +40,7 @@ namespace API.Requests {
             };
 
 			//Get product info
-			Product product = Requests.getObject<Product>(ID);
+			Product product = Requests.getObject<Product>(productID);
             if (product == null) {
 				response = Templates.NoSuchProduct;
                 return response;
@@ -61,7 +61,7 @@ namespace API.Requests {
 
 			//Add product names, if any.
 			LanguageItem item = product.GetName(wrapper);
-			List<string> language = requestData["language"].ToObject<List<string>>();
+			List<string> language = requestData["name"].ToObject<List<string>>();
 			if (language.Contains("en")) {
 				response["productData"]["name"]["en"] = item.en;
 			}
@@ -73,15 +73,8 @@ namespace API.Requests {
 			}
 
 			//Get image, if necessary
-			Image image;
 			if (sendImage) {
-                List<Image> images = wrapper.Select<Image>(new MySqlConditionBuilder()
-                   .Column("id")
-                   .Equals()
-                   .Operand(product.Image, MySql.Data.MySqlClient.MySqlDbType.VarChar)
-                ).ToList();
-                image = images[0];
-
+				Image image = Requests.getObject<Image>(productID + "_image");
                 response["productData"]["image"] = new JObject() {
                     {"data" , image.Data },
                     {"extension", image.Extension }

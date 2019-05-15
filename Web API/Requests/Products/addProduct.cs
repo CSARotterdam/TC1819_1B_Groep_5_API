@@ -91,16 +91,13 @@ namespace API.Requests {
 			//Create product, languageItem, image
 			LanguageItem item = new LanguageItem(productID + "_name", en, nl, ar);
 			item.Upload(wrapper);
-			log.Debug(item.ToString());
 			if (imageData != null) {
 				Image image = new Image(productID + "_image", imageData, extension);
-				log.Debug(image.ToString());
 				image.Upload(wrapper);
 				product = new Product(productID, manufacturer, categoryID, productID + "_name", image.Id);
 			} else {
 				product = new Product(productID, manufacturer, categoryID, productID + "_name");
 			}
-			log.Debug(product.ToString());
 			product.Upload(wrapper);
 
             //Create response

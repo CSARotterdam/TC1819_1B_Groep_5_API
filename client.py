@@ -8,8 +8,8 @@ username = ""
 
 while True:
 	print('''
-1. Login		6. DeleteProduct
-2. Register		7. AddProduct
+1. Login		6. DeleteProduct		11. getProductCategory
+2. Register		7. AddProduct			12. getProductCategoryList
 3. Logout		8. UpdateProduct
 4. GetProduct		9. AddCategory
 5. GetProductList	10. DeleteCategory
@@ -70,9 +70,9 @@ while True:
 				"requestData": {
 					"productID": ID,
 					"sendImage": True,
-					"language": [
-						"ISO_en",
-						"ISO_nl"
+					"name": [
+						"en",
+						"nl"
 					]
 				}
 			})
@@ -189,6 +189,24 @@ while True:
 				"token": token,
 				"requestData": {
 					"categoryID": ID
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "11":
+		try:
+			ID = input("Product ID:")
+			r = requests.post(address, json={
+				"requestType": "getProductCategory",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"categoryID": ID,
+					"name": [
+						"en",
+						"nl"
+					]
 				}
 			})
 		except requests.RequestException:
