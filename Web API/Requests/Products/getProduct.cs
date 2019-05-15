@@ -84,7 +84,6 @@ namespace API.Requests {
 
                 response["productData"]["image"] = new JObject() {
                     {"data" , image.Data },
-                    {"id", image.Id },
                     {"extension", image.Extension }
                 };
             }

@@ -1,5 +1,6 @@
 import requests
 import hashlib
+import base64
 
 address = "http://localhost"
 token = ""
@@ -28,7 +29,7 @@ while True:
 			})
 			token = r.json()["requestData"]["token"]
 			print("Token: "+str(token))
-		except Exception:
+		except requests.RequestException:
 			print("Failed")
 
 	elif answer == "2":
@@ -43,7 +44,7 @@ while True:
 					"username": u
 				}
 			})
-		except Exception:
+		except requests.RequestException:
 			print("Failed")
 
 	elif answer == "3":
@@ -55,7 +56,7 @@ while True:
 				"requestData": {
 				}
 			})
-		except Exception:
+		except requests.RequestException:
 			print("Failed")
 
 	elif answer == "4":
@@ -74,7 +75,7 @@ while True:
 					]
 				}
 			})
-		except Exception:
+		except requests.RequestException:
 			print("Failed")
 
 	elif answer == "5":
@@ -90,7 +91,7 @@ while True:
 					}
 				}
 			})
-		except Exception:
+		except requests.RequestException:
 			print("Failed")
 
 	elif answer == "6":
@@ -104,7 +105,7 @@ while True:
 					"productID": ID
 				}
 			})
-		except Exception:
+		except requests.RequestException:
 			print("Failed")
 
 	elif answer == "7":
@@ -122,33 +123,35 @@ while True:
 					}
 				}
 			})
-		except Exception:
+		except requests.RequestException:
 			print("Failed")
 
 	elif answer == "8":
+		with open("test.jpg", "rb") as image:
+			b = base64.b64encode(image.read()).decode("utf-8")
+			b = b.replace("'", '"')
 		try:
 			r = requests.post(address, json={
 				"requestType": "updateProduct",
 				"username": username,
 				"token": token,
 				"requestData": {
-					"productID": "example_produc22222t",
-					"newProductID": "product lol",
-					"categoryID": "uncategorized",
-					"manufacturer": "kutkind",
-					"name" : {
-						"en": "ayy",
-						"nl": "lmao",
-						"ar": "yoloswaggins"
+					"productID": "example_product",
+					#"newProductID": "product lol",
+					#"categoryID": "uncategorized",
+					#"manufacturer": "kutkind",
+					#"name" : {
+					#	"en": "ayy",
+					#	"nl": "lmao",
+					#	"ar": "yoloswaggins"
+					#},
+					"image": {
+						"data": b,
+						"extension": ".jpg"
 					}
 				}
 			})
-		except Exception:
+		except requests.RequestException:
 			print("Failed")
 
-
-
-	try:
-		print(r.text)
-	except Exception:
-		pass
+	print(r.text)

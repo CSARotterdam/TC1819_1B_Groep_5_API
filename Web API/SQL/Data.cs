@@ -1005,7 +1005,7 @@ namespace MySQLWrapper.Data
 		/// <summary>
 		/// Array of image formats supported by android studio.
 		/// </summary>
-		private static readonly string[] ImageFormats = { ".jpeg", ".jpg", ".gif", ".bmp", ".png", ".webp", ".heif" };
+		public static readonly string[] ImageFormats = { ".jpeg", ".jpg", ".gif", ".bmp", ".png", ".webp", ".heif" };
 
 		/// <summary>
 		/// Creates a new instance of <see cref="Image"/>.

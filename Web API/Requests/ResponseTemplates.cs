@@ -39,5 +39,11 @@ namespace API.Requests {
                 {"message", message}
             };
         }
+		public static JObject InvalidArgument(string message) {
+			return new JObject() {
+				{"reason", "InvalidArgument"},
+				{"message", message}
+			};
+		}
     }
 }
