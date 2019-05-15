@@ -65,7 +65,7 @@ namespace API.Requests {
 			}
 
 			//Get product, if it exists
-			Product product = Requests.getProduct(productID);
+			Product product = Requests.getObject<Product>(productID);
 			if (product == null) {
 				return Templates.NoSuchProduct;
 			}
@@ -120,7 +120,7 @@ namespace API.Requests {
 
 			//If a new product ID was specified, check if it already exists. If it doesn't, change the product ID.
 			if (newProductID != null) {
-				Product newProduct = Requests.getProduct(newProductID);
+				Product newProduct = Requests.getObject<Product>(newProductID);
 				if (newProduct != null) {
 					return Templates.AlreadyExists;
 				} else {
@@ -138,7 +138,7 @@ namespace API.Requests {
 			///////////////Product
 			//If a new category was specified, check if it exists. If it does, change the product category
 			if (categoryID != null) {
-				ProductCategory category = Requests.getProductCategory(categoryID);
+				ProductCategory category = Requests.getObject<ProductCategory>(categoryID);
 				if (category == null) {
 					return Templates.NoSuchProductCategory;
 				} else {

@@ -8,10 +8,11 @@ username = ""
 
 while True:
 	print('''
-1. Login		5. GetProductList
-2. Register		6. DeleteProduct
-3. Logout		7. AddProduct
-4. GetProduct		8. UpdateProduct
+1. Login		6. DeleteProduct
+2. Register		7. AddProduct
+3. Logout		8. UpdateProduct
+4. GetProduct		9. AddCategory
+5. GetProductList	10. DeleteCategory
 	''')
 	answer = input()
 	if answer == "1":
@@ -157,6 +158,22 @@ while True:
 					"image": {
 						"data": b,
 						"extension": ".jpg"
+					}
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "9":
+		try:
+			r = requests.post(address, json={
+				"requestType": "addProductCategory",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"categoryID": "yeet",
+					"name" : {
+						"en": "ayy lmao"
 					}
 				}
 			})

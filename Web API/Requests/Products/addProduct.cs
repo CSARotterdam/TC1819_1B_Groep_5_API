@@ -77,13 +77,13 @@ namespace API.Requests {
 			
 
 			//Check if product already exists
-			Product product = Requests.getProduct(productID);
+			Product product = Requests.getObject<Product>(productID);
 			if(product != null) {
 				return Templates.AlreadyExists;
 			}
 
 			//Check if category exists
-			ProductCategory category = Requests.getProductCategory(productID);
+			ProductCategory category = Requests.getObject<ProductCategory>(productID);
 			if (category != null) {
 				return Templates.NoSuchProductCategory;
 			}

@@ -40,7 +40,7 @@ namespace API.Requests {
             };
 
 			//Get product info
-			Product product = Requests.getProduct(ID);
+			Product product = Requests.getObject<Product>(ID);
             if (product == null) {
 				response = Templates.NoSuchProduct;
                 return response;
