@@ -63,7 +63,7 @@ namespace MySQLWrapper.Data
 				// Append an AND
 				if (i != 0) And();
 				// Append conditions for each column
-				if (Fields[i] == null) Column(Metadata[i].Column).Equals().Null();
+				if (Fields[i] == null) Column(Metadata[i].Column).Is().Null();
 				else Column(Metadata[i].Column).Equals(Fields[i], Metadata[i].Type);
 			}
 		}
@@ -183,6 +183,22 @@ namespace MySQLWrapper.Data
 		/// <param name="value">The value to append.</param>
 		/// <param name="type">The type of the value.</param>
 		public MySqlConditionBuilder Equals(object value, MySqlDbType type) => Equals().Operand(value, type);
+		/// <summary>
+		/// Appends an Is operator and an operand the condition. Fails if it is not expected.
+		/// </summary>
+		/// <remarks>
+		/// 'IS' is the the only operator capable of checking if a value is NULL.
+		/// </remarks>
+		public MySqlConditionBuilder Is() => AppendOperator("IS");
+		/// <summary>
+		/// Appends an IS operator and an operand the condition. Fails if it is not expected.
+		/// </summary>
+		/// <remarks>
+		/// 'IS' is the the only operator capable of checking if a value is NULL.
+		/// </remarks>
+		/// <param name="value">The value to append.</param>
+		/// <param name="type">The type of the value.</param>
+		public MySqlConditionBuilder Is(object value, MySqlDbType type) => Is().Operand(value, type);
 		/// <summary>
 		/// Appends a Not Equals operator the condition. Fails if it is not expected.
 		/// </summary>
