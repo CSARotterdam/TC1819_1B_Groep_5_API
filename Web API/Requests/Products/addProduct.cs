@@ -34,6 +34,26 @@ namespace API.Requests {
 				categoryID = categoryIDValue.ToObject<string>();
 			}
 
+			//Get image
+			requestData.TryGetValue("image", out JToken imageValue);
+			string extension = null;
+			byte[] imageData = null;
+			if (imageValue != null && imageValue.Type == JTokenType.Object) {
+				JObject image = imageValue.ToObject<JObject>();
+				image.TryGetValue("data", out JToken dataValue);
+				image.TryGetValue("extension", out JToken extensionValue);
+				if (extensionValue != null && extensionValue.Type == JTokenType.String &&
+					dataValue != null && dataValue.Type == JTokenType.String) {
+					extension = extensionValue.ToObject<string>();
+					imageData = (byte[])dataValue;
+					if (!Image.ImageFormats.Contains(extension)) {
+						return Templates.InvalidArgument("extension");
+					}
+				} else {
+					return Templates.MissingArguments("data, extension");
+				}
+			}
+
 			//Get languages
 			string en;
 			string nl = null;
@@ -42,17 +62,19 @@ namespace API.Requests {
 			names.TryGetValue("en", out JToken enValue);
 			names.TryGetValue("nl", out JToken nlValue);
 			names.TryGetValue("ar", out JToken arValue);
-			if (enValue == null || enValue.Type != JTokenType.String) {
-				return Templates.MissingArguments("en");
-			} else {
+			if (enValue != null && enValue.Type == JTokenType.String) {
 				en = names["en"].ToObject<string>();
+			} else {
+				return Templates.MissingArguments("en");
 			}
-			if(nlValue != null && nlValue.Type == JTokenType.String) {
+			if (nlValue != null && nlValue.Type == JTokenType.String) {
 				nl = names["nl"].ToObject<string>();
 			}
 			if(arValue != null && arValue.Type == JTokenType.String) {
 				ar = names["ar"].ToObject<string>();
 			}
+
+			
 
 			//Check if product already exists
 			Product product = Requests.getProduct(productID);
@@ -66,10 +88,19 @@ namespace API.Requests {
 				return Templates.NoSuchProductCategory;
 			}
 
-			//Create product + languageItem
-			LanguageItem item = new LanguageItem(productID+"_name", en, nl, ar);
+			//Create product, languageItem, image
+			LanguageItem item = new LanguageItem(productID + "_name", en, nl, ar);
 			item.Upload(wrapper);
-			product = new Product(productID, manufacturer, categoryID, productID + "_name");
+			log.Debug(item.ToString());
+			if (imageData != null) {
+				Image image = new Image(productID + "_image", imageData, extension);
+				log.Debug(image.ToString());
+				image.Upload(wrapper);
+				product = new Product(productID, manufacturer, categoryID, productID + "_name", image.Id);
+			} else {
+				product = new Product(productID, manufacturer, categoryID, productID + "_name");
+			}
+			log.Debug(product.ToString());
 			product.Upload(wrapper);
 
             //Create response

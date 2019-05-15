@@ -109,17 +109,26 @@ while True:
 			print("Failed")
 
 	elif answer == "7":
+		with open("test.jpg", "rb") as image:
+			b = base64.b64encode(image.read()).decode("utf-8")
+			b = b.replace("'", '"')
 		try:
 			r = requests.post(address, json={
 				"requestType": "addProduct",
 				"username": username,
 				"token": token,
 				"requestData": {
-					"productID": "example_produc22222t",
+					"productID": "La de da de da de da de day oh",
 					"categoryID": "uncategorized",
-					"manufacturer": "thelol",
+					"manufacturer": "ur mum",
 					"name" : {
-						"en": "Defenestrated Potato"
+						"en": "ayy lmao",
+						"nl": "test",
+						"ar": "test2"
+					},
+					"image": {
+						"data": b,
+						"extension": ".jpg"
 					}
 				}
 			})
