@@ -13,7 +13,6 @@ using System.Collections;
 
 namespace API {
 	class Program {
-		public static TechlabMySQL wrapper;
 		public static bool ManualError = false;
 		public static Logger log = new Logger(Level.ALL, Console.Out, new AdvancingWriter("Logs/latest.log") {
 			Compression = true,
@@ -101,32 +100,6 @@ namespace API {
 			Thread consoleThread = new Thread(() => API.Threads.ConsoleCommand.main(log));
 			consoleThread.Start();
 
-			//Connect to database
-			string databaseAddress = Settings.databaseSettings.serverAddress;
-			string databasePort = "";
-			string[] splitAddress = databaseAddress.Split(":");
-			if(databaseAddress == splitAddress[0]){
-				databasePort = "3306";
-			} else {
-				databaseAddress = splitAddress[0];
-				databasePort = splitAddress[1];
-			}
-			wrapper = new TechlabMySQL( //TODO: Catch access denied, other exceptions.
-				databaseAddress,
-				databasePort,
-				(string)Settings.databaseSettings.username,
-				(string)Settings.databaseSettings.password,
-				(string)Settings.databaseSettings.database,
-				(int)Settings.databaseSettings.connectionTimeout,
-				(bool)Settings.databaseSettings.persistLogin
-			);
-			Requests.RequestMethods.wrapper = wrapper;
-			wrapper.Open();
-
-            //Create database maintainer thread
-            Thread databaseMaintainerThread = new Thread(() => API.Threads.DatabaseMaintainer.main());
-			databaseMaintainerThread.Start();
-
 			//Create worker threads
 			log.Info("Creating worker threads.");
 			int threadCount = (int)Settings.performanceSettings.workerThreadCount;
@@ -153,7 +126,6 @@ namespace API {
 
 			// Wait until all threads are terminated
 			consoleThread.Join();
-			databaseMaintainerThread.Join();
 			ListenerThread.Join();
 			foreach (var t in threadList) t.Join();
 
