@@ -132,14 +132,14 @@ while True:
 				"username": username,
 				"token": token,
 				"requestData": {
-					"productID": "example_product",
-					#"newProductID": "example_product",
-					"categoryID": "yes",
-					"manufacturer": "Slave labour.",
+					"productID": "example_produc22222t",
+					"newProductID": "product lol",
+					"categoryID": "uncategorized",
+					"manufacturer": "kutkind",
 					"name" : {
-						"en": "An egg, in more ways than one.",
-						"nl": "banaan",
-						"ar": "¯\\_(ツ)_/¯"
+						"en": "ayy",
+						"nl": "lmao",
+						"ar": "yoloswaggins"
 					}
 				}
 			})

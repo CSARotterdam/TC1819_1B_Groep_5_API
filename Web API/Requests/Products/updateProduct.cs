@@ -32,16 +32,16 @@ namespace API.Requests {
 			} else {
 				productID = idValue.ToObject<string>();
 			}
-			if(newIDValue != null && newIDValue.Type == JTokenType.String) {
+			if (newIDValue != null && newIDValue.Type == JTokenType.String) {
 				newProductID = newIDValue.ToObject<string>();
 			}
-			if(categoryIDValue != null && categoryIDValue.Type == JTokenType.String) {
+			if (categoryIDValue != null && categoryIDValue.Type == JTokenType.String) {
 				categoryID = categoryIDValue.ToObject<string>();
 			}
-			if(manufacturerValue != null && manufacturerValue.Type == JTokenType.String) {
+			if (manufacturerValue != null && manufacturerValue.Type == JTokenType.String) {
 				manufacturer = manufacturerValue.ToObject<string>();
 			}
-			if(nameValue != null && nameValue.Type == JTokenType.Object) {
+			if (nameValue != null && nameValue.Type == JTokenType.Object) {
 				names = nameValue.ToObject<JObject>();
 			}
 
@@ -53,7 +53,6 @@ namespace API.Requests {
 
 			//Edit the LanguageItem if needed;
 			LanguageItem item = product.GetName(wrapper);
-			log.Debug(item.en);
 			if (names != null) {
 				if (names.TryGetValue("en", out JToken enValue)) {
 					if (enValue.Type == JTokenType.String) {
@@ -65,30 +64,32 @@ namespace API.Requests {
 						item.nl = nlValue.ToObject<string>();
 					}
 				}
-
 				if (names.TryGetValue("ar", out JToken arValue)) {
 					if (arValue.Type == JTokenType.String) {
 						item.ar = arValue.ToObject<string>();
 					}
 				}
-				log.Debug("success");
+				item.Update(wrapper);
 			}
 
 			//If a new product ID was specified, check if it already exists. If it doesn't, change the product ID.
 			if (newProductID != null) {
 				Product newProduct = Requests.getProduct(newProductID);
-				if(newProduct != null) {
+				if (newProduct != null) {
 					return Templates.AlreadyExists;
 				} else {
-					product.Id = newProductID;
 					item.Id = newProductID + "_name";
+					item.Update(wrapper);
+					product.Name = item.Id;
+					product.UpdateTrace();
+					product.Id = newProductID;
 				}
 			}
 
 			//If a new category was specified, check if it exists. If it does, change the product category
 			if (categoryID != null) {
 				ProductCategory category = Requests.getProductCategory(categoryID);
-				if(category == null) {
+				if (category == null) {
 					return Templates.NoSuchProductCategory;
 				} else {
 					product.Category = categoryID;
@@ -96,13 +97,10 @@ namespace API.Requests {
 			}
 
 			//If a new manufacturer was specified, change it.
-			if(manufacturer != null) {
+			if (manufacturer != null) {
 				product.Manufacturer = manufacturer;
 			}
 
-			log.Debug(item.en);
-
-			item.Update(wrapper);
 			product.Update(wrapper);
 
 			//Create response
