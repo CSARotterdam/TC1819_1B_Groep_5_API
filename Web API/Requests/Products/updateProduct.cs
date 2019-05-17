@@ -36,6 +36,9 @@ namespace API.Requests {
 				return Templates.MissingArguments("productID");
 			} else {
 				productID = idValue.ToObject<string>();
+				if (productID == "default") {
+					return Templates.InvalidArgument("categoryID");
+				}
 			}
 			if (newIDValue != null && newIDValue.Type == JTokenType.String) {
 				newProductID = newIDValue.ToObject<string>();
@@ -124,7 +127,7 @@ namespace API.Requests {
 				if (newProduct != null) {
 					return Templates.AlreadyExists;
 				} else {
-					image.Id = newProductID + "_name";
+					image.Id = newProductID + "_image";
 					image.Update(wrapper);
 					product.Image = image.Id;
 					item.Id = newProductID + "_name";

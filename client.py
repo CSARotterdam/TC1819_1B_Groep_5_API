@@ -10,7 +10,7 @@ while True:
 	print('''
 1. Login		6. DeleteProduct		11. getProductCategory
 2. Register		7. AddProduct			12. getProductCategoryList
-3. Logout		8. UpdateProduct
+3. Logout		8. UpdateProduct		13. updateCategory
 4. GetProduct		9. AddCategory
 5. GetProductList	10. DeleteCategory
 	''')
@@ -207,6 +207,40 @@ while True:
 						"en",
 						"nl"
 					]
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "12":
+		try:
+			r = requests.post(address, json={
+				"requestType": "getProductCategoryList",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"criteria": {
+						"id": "LIKE %",
+					}
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "13":
+		try:
+			r = requests.post(address, json={
+				"requestType": "updateProductCategory",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"categoryID": "yeet",
+					"newCategoryID": "yote",
+					"name" : {
+						"en": "1",
+						"nl": "2",
+						"ar": "3"
+					}
 				}
 			})
 		except requests.RequestException:

@@ -25,7 +25,9 @@ namespace API.Requests {
             JObject criteria = (JObject)criteriaValue;
             int i = 0;
             foreach (KeyValuePair<string, JToken> pair in criteria) {
-                if (i > 0) {
+				//TODO restrict to only valid fields
+
+				if (i > 0) {
                     query.And();
                 }
                 query.NewGroup();
