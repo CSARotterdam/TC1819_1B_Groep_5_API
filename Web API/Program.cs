@@ -18,21 +18,7 @@ namespace API {
 			Compression = true,
 			Archive = "Logs/{0:dd-MM-yyyy}.{1}.zip"
 		});
-		private static int _errorCode;
         public static dynamic Settings;
-
-        public static int ErrorCode{
-			get { return _errorCode; }
-			set {
-				_errorCode = value;
-				log.Error("Error code changed to " + _errorCode.ToString());
-				if(_errorCode == 0){
-					log.Error("Error state disabled. Now accepting requests.");
-				} else {
-					log.Error("Error state enabled. All requests will be refused.");
-				}
-			}
-		}
 
 		public static void Main() {
 			log.Info("Server is starting!");

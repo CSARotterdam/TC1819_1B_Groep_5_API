@@ -49,11 +49,18 @@ namespace API.Threads {
 				HttpListenerRequest request = context.Request;
 				log.Fine("Processing request.");
 
-				// If API error state is true, cancel the request (because it'll fail anyway) and send an error.
-				if (Program.ErrorCode != 0) {
-					sendMessage(context, "Code" + Program.ErrorCode.ToString(), HttpStatusCode.InternalServerError);
-					continue;
-				}
+				//Convert request data to JObject
+				System.IO.Stream body = request.InputStream;
+				System.Text.Encoding encoding = request.ContentEncoding;
+				System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
+				JObject requestContent = JObject.Parse(reader.ReadToEnd());
+
+				//Create base response JObject
+				bool sendResponse = false;
+				JObject responseJson = new JObject() {
+					{"requestData", new JObject() }
+				};
+
 				// Check if content type is application/json. Send a HTTP 415 UnsupportedMediaType if it isn't.
 				if (request.ContentType != "application/json") {
 					log.Error("Request has invalid content type. Sending error response and ignoring!");
@@ -67,34 +74,29 @@ namespace API.Threads {
 					continue;
 				}
 
-				//Convert request data to JObject
-				System.IO.Stream body = request.InputStream;
-				System.Text.Encoding encoding = request.ContentEncoding;
-				System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
-				JObject requestContent = JObject.Parse(reader.ReadToEnd());
-
-				//Create base response JObject
-				bool sendResponse = false;
-				JObject responseJson = new JObject() {
-					{"requestData", new JObject() }
-				};
-
-				// Select request handler
-				HttpStatusCode statusCode = HttpStatusCode.OK;
-				MethodInfo requestMethod = null;
-				foreach (MethodInfo method in methods) {
-					if (method.Name == requestContent["requestType"].ToString()) {
-						requestMethod = method;
-						break;
-					}
+				//Check if the database is available. If it isn't, send an error.
+				if (!wrapper.Ping()) {
+					log.Error("Database connection failed for worker "+Thread.CurrentThread.Name);
+					responseJson["requestData"] = Templates.ServerError("DatabaseConnectionError");
+					sendResponse = true;
 				}
 
-				//If no request handler was found, send an error response
-				if (requestMethod == null) {
-					log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
-					statusCode = HttpStatusCode.BadRequest;
-					responseJson["requestData"] = Templates.InvalidRequestType;
-					sendResponse = true;
+				// Select request handler
+				MethodInfo requestMethod = null;
+				if (!sendResponse) {
+					foreach (MethodInfo method in methods) {
+						if (method.Name == requestContent["requestType"].ToString()) {
+							requestMethod = method;
+							break;
+						}
+					}
+
+					//If no request handler was found, send an error response
+					if (requestMethod == null) {
+						log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
+						responseJson["requestData"] = Templates.InvalidRequestType;
+						sendResponse = true;
+					}
 				}
 
 				//If the request handler requires the user token or permission level to be verified first, do that now.
@@ -145,13 +147,8 @@ namespace API.Threads {
 					if (user.Permission < requestMethod.GetCustomAttribute<verifyPermission>().permission) {
 						responseJson["requestData"] = Templates.AccessDenied;
 						sendResponse = true;
+						log.Warning("User "+user.Username+" attempted to use requestType "+requestMethod.Name+" without the required permissions.");
 					}
-				}
-
-				//Check if the database is available, just in case.
-				if (!Ping()) {
-					responseJson["requestData"] = Templates.ServerError("DatabaseConnectionError");
-					sendResponse = true;
 				}
 
 				if (!sendResponse) {
@@ -163,7 +160,7 @@ namespace API.Threads {
 				// Create & send response
 				HttpListenerResponse response = context.Response;
 				response.ContentType = "application/json";
-				sendMessage(context, responseJson.ToString(), statusCode);
+				sendMessage(context, responseJson.ToString(), HttpStatusCode.OK);
 				log.Fine("Request processed successfully.");
 			}
 		}
@@ -181,22 +178,6 @@ namespace API.Threads {
 			System.IO.Stream output = response.OutputStream;
 			output.Write(buffer, 0, buffer.Length);
 			output.Close();
-		}
-
-		/// <summary>
-		/// Returns True if the database connection is working, otherwise returns False.
-		/// </summary>
-		/// <returns></returns>
-		static bool Ping() {
-			if (wrapper.Ping()) {
-				if (Program.ErrorCode == 1 && !Program.ManualError) {
-					Program.ErrorCode = 0;
-				}
-				return true;
-			} else if (Program.ErrorCode == 0) {
-				Program.ErrorCode = 1;
-			}
-			return false;
 		}
 	}
 }
