@@ -151,8 +151,8 @@ namespace API.Threads {
 					}
 				}
 
+				//Attempt to process the request
 				if (!sendResponse) {
-					//Attempt to process the request
 					Object[] methodParams = new object[1] { requestContent };
 					responseJson["requestData"] = (JObject)requestMethod.Invoke(null, methodParams);
 				}
