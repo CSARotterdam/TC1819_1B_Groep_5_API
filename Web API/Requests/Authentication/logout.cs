@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using static API.Requests.RequestMethodFunctions;
 
 namespace API.Requests {
     static partial class RequestMethods {
@@ -23,7 +24,10 @@ namespace API.Requests {
             }
             string username = usernameValue.ToString();
 
-            User user = getUser(username);
+			User user = getUser(username);
+			if(user == null) {
+				return Templates.NoSuchUser;
+			}
 
             //Create response object
             JObject response = new JObject() {

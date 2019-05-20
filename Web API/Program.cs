@@ -118,5 +118,29 @@ namespace API {
 			// Exit main thread
 			log.Dispose();
 		}
+
+		public static TechlabMySQL createWrapper() {
+			string databaseAddress = Program.Settings.databaseSettings.serverAddress;
+			string databasePort;
+			string[] splitAddress = databaseAddress.Split(":");
+			if (databaseAddress == splitAddress[0]) {
+				databasePort = "3306";
+			} else {
+				databaseAddress = splitAddress[0];
+				databasePort = splitAddress[1];
+			}
+			TechlabMySQL wrapper = new TechlabMySQL( //TODO: Catch access denied, other exceptions.
+				databaseAddress,
+				databasePort,
+				(string)Program.Settings.databaseSettings.username,
+				(string)Program.Settings.databaseSettings.password,
+				(string)Program.Settings.databaseSettings.database,
+				(int)Program.Settings.databaseSettings.connectionTimeout,
+				(bool)Program.Settings.databaseSettings.persistLogin
+			);
+			Requests.RequestMethods.wrapper = wrapper;
+			wrapper.Open();
+			return wrapper;
+		}
 	}
 }

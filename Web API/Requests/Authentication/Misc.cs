@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	static partial class RequestMethodFunctions {
        
         /// <summary>
         /// Given a user and token, checks if the token is valid.
@@ -41,7 +41,7 @@ namespace API.Requests {
         /// <param name="username"></param> The username of the user
         /// <returns></returns> The User object of the user. If no user was found, returns null.
         public static User getUser(string username) {
-            List<User> selection = wrapper.Select<User>(new MySqlConditionBuilder()
+            List<User> selection = RequestMethods.wrapper.Select<User>(new MySqlConditionBuilder()
                    .Column("Username")
                    .Equals()
                    .Operand(username, MySql.Data.MySqlClient.MySqlDbType.VarChar)
