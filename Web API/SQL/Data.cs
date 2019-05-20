@@ -378,19 +378,19 @@ namespace MySQLWrapper.Data
 	sealed class Item : SchemaItem
 	{
 		#region Schema Metadata
-		private const string _schema = "items";
-		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
+		public const string _schema = "items";
+		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("id", 11, MySqlDbType.Int32),
 			new ColumnMetadata("product", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("serial_id", 50, MySqlDbType.VarChar),
 		});
-		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
+		public static readonly ReadOnlyCollection<Index> indexes = Array.AsReadOnly(new Index[]
 		{
-			new Index("PRIMARY", Index.IndexType.PRIMARY, true, _metadata[0]),
-			new Index("product", Index.IndexType.INDEX, _metadata[1]),
+			new Index("PRIMARY", Index.IndexType.PRIMARY, true, metadata[0]),
+			new Index("product", Index.IndexType.INDEX, metadata[1]),
 		});
-		private readonly object[] _fields = new object[_metadata.Count];
+		private readonly object[] _fields = new object[metadata.Count];
 		#endregion
 
 		/// <summary>
@@ -444,8 +444,8 @@ namespace MySQLWrapper.Data
 
 		#region SchemaItem Support
 		public override string Schema => _schema;
-		public override ReadOnlyCollection<ColumnMetadata> Metadata => _metadata;
-		public override ReadOnlyCollection<Index> Indexes => _indexes;
+		public override ReadOnlyCollection<ColumnMetadata> Metadata => metadata;
+		public override ReadOnlyCollection<Index> Indexes => indexes;
 		public override object[] Fields => _fields;
 		#endregion
 
@@ -489,8 +489,8 @@ namespace MySQLWrapper.Data
 	sealed class Product : SchemaItem
 	{
 		#region Schema Metadata
-		private const string _schema = "products";
-		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
+		public const string _schema = "products";
+		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("manufacturer", 80, MySqlDbType.VarChar),
@@ -498,14 +498,14 @@ namespace MySQLWrapper.Data
 			new ColumnMetadata("name", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("image", 50, MySqlDbType.VarChar),
 		});
-		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
+		public static readonly ReadOnlyCollection<Index> indexes = Array.AsReadOnly(new Index[]
 		{
-			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0]),
-			new Index("category", Index.IndexType.INDEX, _metadata[1]),
-			new Index("name", Index.IndexType.INDEX, _metadata[2]),
-			new Index("image", Index.IndexType.INDEX, _metadata[4])
+			new Index("PRIMARY", Index.IndexType.PRIMARY, metadata[0]),
+			new Index("category", Index.IndexType.INDEX, metadata[1]),
+			new Index("name", Index.IndexType.INDEX, metadata[2]),
+			new Index("image", Index.IndexType.INDEX, metadata[4])
 		});
-		private readonly object[] _fields = new object[_metadata.Count];
+		private readonly object[] _fields = new object[metadata.Count];
 		#endregion
 
 		/// <summary>
@@ -588,8 +588,8 @@ namespace MySQLWrapper.Data
 
 		#region SchemaItem Support
 		public override string Schema => _schema;
-		public override ReadOnlyCollection<ColumnMetadata> Metadata => _metadata;
-		public override ReadOnlyCollection<Index> Indexes => _indexes;
+		public override ReadOnlyCollection<ColumnMetadata> Metadata => metadata;
+		public override ReadOnlyCollection<Index> Indexes => indexes;
 		public override object[] Fields => _fields;
 		#endregion
 
@@ -653,18 +653,18 @@ namespace MySQLWrapper.Data
 	sealed class ProductCategory : SchemaItem
 	{
 		#region Schema Metadata
-		private const string _schema = "product_categories";
-		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
+		public const string _schema = "product_categories";
+		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("name", 50, MySqlDbType.VarChar),
 		});
-		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
+		public static readonly ReadOnlyCollection<Index> indexes = Array.AsReadOnly(new Index[]
 		{
-			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0]),
-			new Index("name", Index.IndexType.INDEX, _metadata[1])
+			new Index("PRIMARY", Index.IndexType.PRIMARY, metadata[0]),
+			new Index("name", Index.IndexType.INDEX, metadata[1])
 		});
-		private readonly object[] _fields = new object[_metadata.Count];
+		private readonly object[] _fields = new object[metadata.Count];
 		#endregion
 
 		/// <summary>
@@ -707,8 +707,8 @@ namespace MySQLWrapper.Data
 
 		#region SchemaItem Support
 		public override string Schema => _schema;
-		public override ReadOnlyCollection<ColumnMetadata> Metadata => _metadata;
-		public override ReadOnlyCollection<Index> Indexes => _indexes;
+		public override ReadOnlyCollection<ColumnMetadata> Metadata => metadata;
+		public override ReadOnlyCollection<Index> Indexes => indexes;
 		public override object[] Fields => _fields;
 		#endregion
 
@@ -752,19 +752,19 @@ namespace MySQLWrapper.Data
 	sealed class LanguageItem : SchemaItem
 	{
 		#region Schema Metadata
-		private const string _schema = "language";
-		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
+		public const string _schema = "language";
+		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("en", char.MaxValue, MySqlDbType.Text),
 			new ColumnMetadata("nl", char.MaxValue, MySqlDbType.Text),
 			new ColumnMetadata("ar", char.MaxValue, MySqlDbType.Text),
 		});
-		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
+		public static readonly ReadOnlyCollection<Index> indexes = Array.AsReadOnly(new Index[]
 		{
-			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0])
+			new Index("PRIMARY", Index.IndexType.PRIMARY, metadata[0])
 		});
-		private readonly object[] _fields = new object[_metadata.Count];
+		private readonly object[] _fields = new object[metadata.Count];
 		#endregion
 
 		/// <summary>
@@ -843,8 +843,8 @@ namespace MySQLWrapper.Data
 
 		#region SchemaItem Support
 		public override string Schema => _schema;
-		public override ReadOnlyCollection<ColumnMetadata> Metadata => _metadata;
-		public override ReadOnlyCollection<Index> Indexes => _indexes;
+		public override ReadOnlyCollection<ColumnMetadata> Metadata => metadata;
+		public override ReadOnlyCollection<Index> Indexes => indexes;
 		public override object[] Fields => _fields;
 		#endregion
 
@@ -883,19 +883,19 @@ namespace MySQLWrapper.Data
 		}
 
 		#region Schema Metadata
-		private const string _schema = "users";
-		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
+		public const string _schema = "users";
+		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("username", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("password", char.MaxValue, MySqlDbType.Text),
 			new ColumnMetadata("permissions", 3, MySqlDbType.Enum),
 			new ColumnMetadata("token", 20, MySqlDbType.Int64),
  		});
-		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
+		public static readonly ReadOnlyCollection<Index> indexes = Array.AsReadOnly(new Index[]
 		{
-			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0])
+			new Index("PRIMARY", Index.IndexType.PRIMARY, metadata[0])
 		});
-		private readonly object[] _fields = new object[_metadata.Count];
+		private readonly object[] _fields = new object[metadata.Count];
 		#endregion
 
 		/// <summary>
@@ -956,8 +956,8 @@ namespace MySQLWrapper.Data
 
 		#region SchemaItem Support
 		public override string Schema => _schema;
-		public override ReadOnlyCollection<ColumnMetadata> Metadata => _metadata;
-		public override ReadOnlyCollection<Index> Indexes => _indexes;
+		public override ReadOnlyCollection<ColumnMetadata> Metadata => metadata;
+		public override ReadOnlyCollection<Index> Indexes => indexes;
 		public override object[] Fields => _fields;
 		#endregion
 
@@ -988,18 +988,18 @@ namespace MySQLWrapper.Data
 	class Image : SchemaItem
 	{
 		#region Schema Metadata
-		private const string _schema = "images";
-		private static readonly ReadOnlyCollection<ColumnMetadata> _metadata = Array.AsReadOnly(new ColumnMetadata[]
+		public const string _schema = "images";
+		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("data", (int)Math.Pow(byte.MaxValue, 3) - 1, MySqlDbType.MediumBlob),
 			new ColumnMetadata("extension", 10, MySqlDbType.VarChar),
  		});
-		private static readonly ReadOnlyCollection<Index> _indexes = Array.AsReadOnly(new Index[]
+		public static readonly ReadOnlyCollection<Index> indexes = Array.AsReadOnly(new Index[]
 		{
-			new Index("PRIMARY", Index.IndexType.PRIMARY, _metadata[0])
+			new Index("PRIMARY", Index.IndexType.PRIMARY, metadata[0])
 		});
-		private readonly object[] _fields = new object[_metadata.Count];
+		private readonly object[] _fields = new object[metadata.Count];
 		#endregion
 
 		/// <summary>
@@ -1072,8 +1072,8 @@ namespace MySQLWrapper.Data
 
 		#region SchemaItem Support
 		public override string Schema => _schema;
-		public override ReadOnlyCollection<ColumnMetadata> Metadata => _metadata;
-		public override ReadOnlyCollection<Index> Indexes => _indexes;
+		public override ReadOnlyCollection<ColumnMetadata> Metadata => metadata;
+		public override ReadOnlyCollection<Index> Indexes => indexes;
 		public override object[] Fields => _fields;
 		#endregion
 
