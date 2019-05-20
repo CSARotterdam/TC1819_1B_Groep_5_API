@@ -4,6 +4,7 @@ using MySQLWrapper.MySQL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MySQLWrapper
 {
@@ -87,45 +88,51 @@ namespace MySQLWrapper
 			=> SchemaItem.Select<T>(Connection, condition, range);
 
 		#region Exposed connection properties
-
 		/// <summary>
 		/// Get whether or not the password for the underlying connection is expired.
 		/// </summary>
 		public bool IsPasswordExpired => Connection.IsPasswordExpired;
-
 		#endregion
 
 		#region Exposed connection methods
-
 		/// <summary>
 		/// Opens the underlying <see cref="MySqlConnection"/> instance.
 		/// </summary>
-		public void Open() => _connection.Open();
+		public void Open() => Connection.Open();
 		/// <summary>
 		/// Opens the underlying <see cref="MySqlConnection"/> instance asynchronously.
 		/// </summary>
-		public async void OpenAsync() => await _connection.OpenAsync();
+		public async void OpenAsync() => await Connection.OpenAsync();
 
 		/// <summary>
 		/// Opens the underlying <see cref="MySqlConnection"/> instance.
 		/// </summary>
-		public void Close() => _connection.Close();
+		public void Close() => Connection.Close();
 		/// <summary>
 		/// Closes the underlying <see cref="MySqlConnection"/> instance asynchronously.
 		/// </summary>
-		public async void CloseAsync() => await _connection.CloseAsync();
+		public async void CloseAsync() => await Connection.CloseAsync();
 
 		/// <summary>
 		/// Moves to the specified database at the server.
 		/// </summary>
 		/// <param name="databaseName">The name of the database to move to.</param>
-		public void ChangeDatabase(string databaseName) => _connection.ChangeDatabase(databaseName);
+		public void ChangeDatabase(string databaseName) => Connection.ChangeDatabase(databaseName);
+
+		/// <summary>
+		/// Begins a database transaction.
+		/// </summary>
+		/// <returns>An object representing the new transaction.</returns>
+		public MySqlTransaction BeginTransaction() => Connection.BeginTransaction();
+		/// <summary>
+		/// Initiates the asyncronous execution of a transaction.
+		/// </summary>
+		public async Task<MySqlTransaction> BeginTransactionAsync() => await Connection.BeginTransactionAsync();
 
 		/// <summary>
 		/// Returns true if the server was successfully pinged. False otherwise.
 		/// </summary>
-		public bool Ping() => _connection.Ping();
-		
+		public bool Ping() => Connection.Ping();
 		#endregion
 
 		#region IDisposable Support
