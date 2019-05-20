@@ -40,7 +40,11 @@ namespace API.Threads {
 				(bool)Program.Settings.databaseSettings.persistLogin
 			);
 			Requests.RequestMethods.wrapper = wrapper;
-			wrapper.Open();
+			try
+			{
+				wrapper.Open();
+			}
+			catch (Exception) { }
 
 			log.Info("Thread " + Thread.CurrentThread.Name + " now running.");
 			while (true) {
