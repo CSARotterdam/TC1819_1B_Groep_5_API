@@ -88,15 +88,28 @@ namespace API.Requests {
         }
 
 		/// <summary>
+		/// Sent when a client sends a request with an argument set to unacceptable values.
+		/// Examples include out of range integers, strings with an incorrect length, etc.
+		/// </summary>
+		/// <param name="argName">The name of the argument with an invalid value.</param>
+		/// <returns>The "Invalid Argument" response template.</returns>
+		public static JObject InvalidArgument(string argName) {
+			return new JObject() {
+				{"reason", "InvalidArgument"},
+				{"message", argName}
+			};
+		}
+
+		/// <summary>
 		/// Sent when a client sends a request with arguments set to unacceptable values.
 		/// Examples include out of range integers, strings with an incorrect length, etc.
 		/// </summary>
-		/// <param name="message">The argument that had an unacceptable value</param>
-		/// <returns></returns>
-		public static JObject InvalidArgument(string message) {
+		/// <param name="argNames">The names of the arguments with invalid values.</param>
+		/// <returns>The "Invalid Argument" response template.</returns>
+		public static JObject InvalidArguments(params string[] argNames) {
 			return new JObject() {
 				{"reason", "InvalidArgument"},
-				{"message", message}
+				{"message", string.Join(", ", argNames) }
 			};
 		}
     }
