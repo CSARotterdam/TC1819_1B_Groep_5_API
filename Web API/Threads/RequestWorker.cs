@@ -10,6 +10,7 @@ using API.Requests;
 using System.Reflection;
 using MySQLWrapper.Data;
 using static API.Requests.RequestMethodAttributes;
+using static API.Requests.RequestMethodFunctions;
 using MySQLWrapper;
 
 namespace API.Threads {
@@ -21,26 +22,7 @@ namespace API.Threads {
 			MethodInfo[] methods = typeof(RequestMethods).GetMethods();
 
 			//Connect to database
-			string databaseAddress = Program.Settings.databaseSettings.serverAddress;
-			string databasePort;
-			string[] splitAddress = databaseAddress.Split(":");
-			if (databaseAddress == splitAddress[0]) {
-				databasePort = "3306";
-			} else {
-				databaseAddress = splitAddress[0];
-				databasePort = splitAddress[1];
-			}
-			wrapper = new TechlabMySQL( //TODO: Catch access denied, other exceptions.
-				databaseAddress,
-				databasePort,
-				(string)Program.Settings.databaseSettings.username,
-				(string)Program.Settings.databaseSettings.password,
-				(string)Program.Settings.databaseSettings.database,
-				(int)Program.Settings.databaseSettings.connectionTimeout,
-				(bool)Program.Settings.databaseSettings.persistLogin
-			);
-			Requests.RequestMethods.wrapper = wrapper;
-			wrapper.Open();
+			wrapper = API.Program.createWrapper();
 
 			log.Info("Thread " + Thread.CurrentThread.Name + " now running.");
 			while (true) {
@@ -121,7 +103,7 @@ namespace API.Threads {
 						} else {
 							token = tokenValue.ToObject<long>();
 							username = usernameValue.ToObject<string>();
-							user = RequestMethods.getUser(username);
+							user = getUser(username);
 							if (user == null) {
 								responseJson["requestData"] = Templates.InvalidLogin;
 								sendResponse = true;

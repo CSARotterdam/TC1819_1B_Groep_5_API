@@ -1,4 +1,6 @@
-﻿using Logging;
+﻿using API.Commands;
+using Logging;
+using MySQLWrapper;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -7,10 +9,11 @@ using System.Text;
 namespace API.Threads {
 	class ConsoleCommand {
 		public static void main(Logger log) {
-			log.Info("Thread ConsoleCommands now running.");
-			MethodInfo[] methods = typeof(Commands).GetMethods();
+			MethodInfo[] methods = typeof(CommandMethods).GetMethods();
+			CommandMethods.wrapper = API.Program.createWrapper();
 
-			while (true){
+			log.Info("Thread ConsoleCommands now running.");
+			while (true) {
 				//Wait for input, then split it.
 				string text = Console.ReadLine();
 				string[] tokens = text.Split(" ");
@@ -25,7 +28,7 @@ namespace API.Threads {
 				}
 
 				//If no command was found, print an error and start over.
-				if(command == null) {
+				if (command == null) {
 					Console.WriteLine("Unknown Command");
 					continue;
 				}
@@ -36,8 +39,10 @@ namespace API.Threads {
 			}
 		}
 	}
+}
 
-	partial class Commands {
-
+namespace API.Commands {
+	static partial class CommandMethods {
+		public static TechlabMySQL wrapper;
 	}
 }
