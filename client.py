@@ -21,6 +21,8 @@ while True:
 			password = input("Password:")
 			password = str(hashlib.sha512(username.encode("utf-8") + password.encode("utf-8")).hexdigest())
 
+			print(username)
+			print(password)
 			r = requests.post(address, json={
 				"requestType": "login",
 				"requestData": {

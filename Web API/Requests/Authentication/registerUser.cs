@@ -20,7 +20,7 @@ namespace API.Requests {
             JObject requestData = request["requestData"].ToObject<JObject>();
             requestData.TryGetValue("username", out JToken usernameValue);
             requestData.TryGetValue("password", out JToken passwordValue);
-            if (usernameValue.Type == JTokenType.Null || passwordValue.Type == JTokenType.Null) {
+            if (usernameValue == null || passwordValue == null || usernameValue.Type == JTokenType.Null || passwordValue.Type == JTokenType.Null) {
 				return Templates.MissingArguments("username, password");
             }
             string username = usernameValue.ToString();
@@ -61,10 +61,10 @@ namespace API.Requests {
                 response["permissionLevel"] = 0;
             } else {
                 if (usernameExists) {
-                    response["reason"] = "User already exists.";
+                    response["reason"] = "AlreadyExists";
                     response["registerUserSuccessful"] = false;
                 } else if (invalidPassword) {
-                    response["reason"] = "Password not valid.";
+                    response["reason"] = "InvalidPassword";
                     response["registerUserSuccessful"] = false;
                 }
             }
