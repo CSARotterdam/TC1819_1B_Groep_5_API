@@ -10,7 +10,7 @@ namespace API.Threads {
 	class ConsoleCommand {
 		public static void main(Logger log) {
 			MethodInfo[] methods = typeof(CommandMethods).GetMethods();
-			CommandMethods.wrapper = API.Program.createWrapper();
+			CommandMethods.wrapper = API.Program.CreateWrapper();
 
 			log.Info("Thread ConsoleCommands now running.");
 			while (true) {

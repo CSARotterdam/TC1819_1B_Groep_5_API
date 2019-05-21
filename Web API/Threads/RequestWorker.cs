@@ -19,11 +19,11 @@ namespace API.Threads {
 		private static TechlabMySQL wrapper;
 		
 		//RequestWorker threads takes and processes incoming requests from the requestQueue (which are added to the queue by the Listener thread.
-		public static void main(Logger log, BlockingCollection<HttpListenerContext> requestQueue) {
+		public static void Main(Logger log, BlockingCollection<HttpListenerContext> requestQueue) {
 			MethodInfo[] methods = typeof(RequestMethods).GetMethods();
 
 			//Connect to database
-			wrapper = API.Program.createWrapper();
+			wrapper = API.Program.CreateWrapper();
 
 			log.Info("Thread " + Thread.CurrentThread.Name + " now running.");
 			while (true) {
@@ -51,13 +51,13 @@ namespace API.Threads {
 				// Check if content type is application/json. Send a HTTP 415 UnsupportedMediaType if it isn't.
 				if (request.ContentType != "application/json") {
 					log.Error("Request has invalid content type. Sending error response and ignoring!");
-					sendHTMLError(context, "If at first you don't succeed, fail 5 more times.", HttpStatusCode.UnsupportedMediaType);
+					SendHTMLError(context, "If at first you don't succeed, fail 5 more times.", HttpStatusCode.UnsupportedMediaType);
 					continue;
 				}
 				// Check if request has body data. Send a 400 BadRequest if it doesn't.
 				if (!request.HasEntityBody) {
 					log.Error("Request has no body data. Sending error response and ignoring!");
-					sendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
+					SendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
 					continue;
 				}
 
@@ -150,20 +150,20 @@ namespace API.Threads {
 				// Create & send response
 				HttpListenerResponse response = context.Response;
 				response.ContentType = "application/json";
-				int size = sendMessage(context, responseJson.ToString(), HttpStatusCode.OK);
+				int size = SendMessage(context, responseJson.ToString(), HttpStatusCode.OK);
 				timer.Stop();
 				log.Trace($"({FormatDelay(timer)}) Sent response with {size} bytes.");
 				log.Fine("Request processed successfully.");
 			}
 		}
 
-		static void sendHTMLError(HttpListenerContext context, string message, HttpStatusCode statusCode) {
+		static void SendHTMLError(HttpListenerContext context, string message, HttpStatusCode statusCode) {
 			//Send error page
 			string responseString = "<HTML><BODY><H1>" + (int)statusCode + " " + statusCode + "</H1>" + message + "</BODY></HTML>";
-			sendMessage(context, responseString, statusCode);
+			SendMessage(context, responseString, statusCode);
 		}
 
-		static int sendMessage(HttpListenerContext context, string message, HttpStatusCode statusCode = HttpStatusCode.OK) {
+		static int SendMessage(HttpListenerContext context, string message, HttpStatusCode statusCode = HttpStatusCode.OK) {
 			HttpListenerResponse response = context.Response;
 			response.StatusCode = (int)statusCode;
 			byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);

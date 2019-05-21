@@ -3,8 +3,10 @@ using MySQLWrapper.Data;
 using MySQLWrapper.MySQL;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using API;
 
 namespace MySQLWrapper
 {
@@ -13,8 +15,12 @@ namespace MySQLWrapper
 		/// <summary>
 		/// Convenience property that raises an error if this instance is disposed. Otherwise returns _connection.\
 		/// </summary>
-		private MySqlConnection Connection => RaiseIfDisposed()._connection;
-		private readonly MySqlConnection _connection;
+		private MySqlConnection Connection => RaiseIfInvalid()._connection;
+		private MySqlConnection _connection;
+
+		private MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder();
+
+		public bool AutoReconnect { get; set; } = false;
 		
 		/// <summary>
 		/// Creates a new instance of TechlabMySQL.
@@ -26,24 +32,9 @@ namespace MySQLWrapper
 		/// <param name="database">(Optional) The desired database. Can be changed with <seealso cref="ChangeDatabase(string)"/></param>
 		/// <param name="timeout">(Optional) The connection timeout in seconds. -1 by default.</param>
 		/// <param name="persistLogin">(Optional) Set whether to stay logged in for an extended amount of time. Off by default.</param>
-		/// <param name="logging">(Optional) Set logging on or off. Off by default.</param>
-		public TechlabMySQL(string server, string port, string username = null, string password = null, string database = null, int timeout = -1, bool persistLogin = false, bool logging = false)
+		public TechlabMySQL(string server, string port, string username = null, string password = null, string database = null, int timeout = -1, bool persistLogin = false)
 		{
-			if (server == null) throw new ArgumentNullException("server");
-			if (port == null) throw new ArgumentNullException("port");
-
-			var builder = new MySqlConnectionStringBuilder {
-				{ "server", server },
-				{ "port", port }
-			};
-			if (username != null) builder.Add("username", username);
-			if (password != null) builder.Add("password", password);
-			if (database != null) builder.Add("database", database);
-			if (timeout > 0) builder.Add("connect timeout", timeout);
-			builder.Add("persist security info", persistLogin);
-			builder.Add("logging", logging);
-
-			_connection = new MySqlConnection(builder.GetConnectionString(true));
+			Reconnect(server, port, username, password, database, timeout, persistLogin);
 		}
 
 		/// <summary>
@@ -134,41 +125,62 @@ namespace MySQLWrapper
 		/// </summary>
 		public bool Ping() => Connection.Ping();
 		#endregion
-
-		#region IDisposable Support
-
-		private bool disposed = false; // To detect redundant calls
-
-		protected virtual void Dispose(bool disposing)
-		{
-			if (!disposed)
-			{
-				if (disposing)
-				{
-					_connection.Dispose();
-				}
-				disposed = true;
-			}
-		}
 		
+		public void Reconnect()
+		{
+			Dispose();
+			_connection = new MySqlConnection(builder.ToString());
+		}
+
+		public void Reconnect(string server, string port, string username = null, string password = null, string database = null, int timeout = -1, bool persistLogin = false)
+		{
+			if (server == null) throw new ArgumentNullException("server");
+			if (port == null) throw new ArgumentNullException("port");
+
+			Dispose();
+
+			var builder = new MySqlConnectionStringBuilder {
+				{ "server", server },
+				{ "port", port },
+			};
+			builder.TreatTinyAsBoolean = true;
+			if (username != null) builder.UserID = username;
+			if (password != null) builder.Password = password;
+			if (database != null) builder.Database = database;
+			if (timeout >= 0) builder.ConnectionTimeout = (uint)timeout;
+			builder.PersistSecurityInfo = persistLogin;
+
+			_connection = new MySqlConnection(builder.GetConnectionString(true));
+			this.builder = builder;
+		}
+
 		/// <summary>
 		/// Disposes this object and the underlying <see cref="MySqlConnection"/>.
 		/// </summary>
 		public void Dispose()
 		{
-			Dispose(true);
+			if (_connection != null) // Avoids errors on redundant calls
+			{
+				_connection.Dispose();
+				_connection = null;
+			}
 		}
 
 		/// <summary>
 		/// Raises an <see cref="ObjectDisposedException"/> if it has been disposed.
 		/// </summary>
 		/// <returns>The object. Useful for chaining functions.</returns>
-		private TechlabMySQL RaiseIfDisposed()
+		private TechlabMySQL RaiseIfInvalid()
 		{
-			if (disposed) throw new ObjectDisposedException(ToString());
+			if (AutoReconnect && _connection != null && _connection.State == ConnectionState.Open && !_connection.Ping())
+			{
+				Program.log.Fine("Reconnecting to database...");
+				Reconnect();
+				_connection.Open();
+			}
+			else if (_connection == null)
+				throw new ObjectDisposedException("The database connections is disposed.");
 			return this;
 		}
-
-		#endregion
 	}
 }
