@@ -137,7 +137,9 @@ namespace API {
 				(string)Program.Settings.databaseSettings.database,
 				(int)Program.Settings.databaseSettings.connectionTimeout,
 				(bool)Program.Settings.databaseSettings.persistLogin
-			);
+			) {
+				AutoReconnect = true
+			};
 			Requests.RequestMethods.wrapper = wrapper;
 			wrapper.Open();
 			return wrapper;
