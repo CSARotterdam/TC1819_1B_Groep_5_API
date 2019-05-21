@@ -103,7 +103,6 @@ namespace API.Requests {
             //Create response
             return new JObject() {
                 {"reason", null },
-                {"success", true}
             };
         }
     }
