@@ -26,7 +26,7 @@ namespace API.Requests
 		/// <param name="request">The request from the client.</param>
 		/// <returns>The contents of the requestData field, which is to be returned to the client.</returns>
 		[verifyPermission(User.UserPermission.User)]
-		public static JObject GetProducts(JObject request)
+		public static JObject getProducts(JObject request)
 		{
 			// Get request arguments
 			JObject requestData = request["requestData"].ToObject<JObject>();
