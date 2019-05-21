@@ -107,7 +107,10 @@ namespace API.Requests
 				for (int i = 0; i < responseData.Count; i++)
 				{
 					var nameData = names.First(x => x[0].Equals(nameIds[i]));
-					responseData[i]["name"] = new JArray(nameData.TakeLast(nameData.Length - 1));
+					var translations = new JObject();
+					for (int j = 1; j < languageColumns.Count; j++)
+						translations[languageColumns[j]] = new JValue(nameData[j]);
+					responseData[i]["name"] = translations;
 				}
 			}
 
