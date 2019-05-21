@@ -29,13 +29,18 @@ namespace API.Requests {
 			}
 
 			product.Delete(wrapper);
-			product.GetImage(wrapper).Delete(wrapper);
-			product.GetName(wrapper).Delete(wrapper);
+			Image image = product.GetImage(wrapper);
+			if(image.Id != "default") {
+				image.Delete(wrapper);
+			}
+			LanguageItem name = product.GetName(wrapper);
+			if(name.Id != "0") {
+				name.Delete(wrapper);
+			}
 
 			//Create base response
 			return new JObject() {
 				{"reason", null },
-				{"success", true}
 			};
 
 		}

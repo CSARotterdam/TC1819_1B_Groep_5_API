@@ -21,8 +21,6 @@ while True:
 			password = input("Password:")
 			password = str(hashlib.sha512(username.encode("utf-8") + password.encode("utf-8")).hexdigest())
 
-			print(username)
-			print(password)
 			r = requests.post(address, json={
 				"requestType": "login",
 				"requestData": {
@@ -31,7 +29,6 @@ while True:
 				}
 			})
 			token = r.json()["requestData"]["token"]
-			print("Token: "+str(token))
 		except requests.RequestException:
 			print("Failed")
 
@@ -112,26 +109,22 @@ while True:
 			print("Failed")
 
 	elif answer == "7":
-		with open("test.jpg", "rb") as image:
-			b = base64.b64encode(image.read()).decode("utf-8")
-			b = b.replace("'", '"')
+		#with open("test.jpg", "rb") as image:
+		#	b = base64.b64encode(image.read()).decode("utf-8")
+		#	b = b.replace("'", '"')
 		try:
 			r = requests.post(address, json={
 				"requestType": "addProduct",
 				"username": username,
 				"token": token,
 				"requestData": {
-					"productID": "La de da de da de da de day oh",
+					"productID": "lizard",
 					"categoryID": "uncategorized",
-					"manufacturer": "ur mum",
+					"manufacturer": "12345",
 					"name" : {
 						"en": "ayy lmao",
 						"nl": "test",
 						"ar": "test2"
-					},
-					"image": {
-						"data": b,
-						"extension": ".jpg"
 					}
 				}
 			})
@@ -248,4 +241,7 @@ while True:
 		except requests.RequestException:
 			print("Failed")
 
-	print(r.text)
+	try:
+		print(r.text)
+	except NameError:
+		pass
