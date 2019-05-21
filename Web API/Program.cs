@@ -91,7 +91,7 @@ namespace API {
 			int threadCount = (int)Settings.performanceSettings.workerThreadCount;
 			Thread[] threadList = new Thread[threadCount];
 			for (int i = 0; i != threadCount; i++) {
-				Thread workerThread = new Thread(() => API.Threads.RequestWorker.main(log, requestQueue)) {
+				Thread workerThread = new Thread(() => API.Threads.RequestWorker.Main(log, requestQueue)) {
 					Name = "WorkerThread" + i.ToString()
 				};
 				workerThread.Start();
@@ -119,7 +119,7 @@ namespace API {
 			log.Dispose();
 		}
 
-		public static TechlabMySQL createWrapper() {
+		public static TechlabMySQL CreateWrapper() {
 			string databaseAddress = Program.Settings.databaseSettings.serverAddress;
 			string databasePort;
 			string[] splitAddress = databaseAddress.Split(":");
