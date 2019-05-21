@@ -1,5 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
+using System.Linq;
 
 namespace MySQLWrapper.Data
 {
