@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
@@ -16,7 +17,7 @@ using MySQLWrapper;
 namespace API.Threads {
 	class RequestWorker {
 		private static TechlabMySQL wrapper;
-
+		
 		//RequestWorker threads takes and processes incoming requests from the requestQueue (which are added to the queue by the Listener thread.
 		public static void main(Logger log, BlockingCollection<HttpListenerContext> requestQueue) {
 			MethodInfo[] methods = typeof(RequestMethods).GetMethods();
@@ -30,6 +31,10 @@ namespace API.Threads {
 				HttpListenerContext context = requestQueue.Take();
 				HttpListenerRequest request = context.Request;
 				log.Fine("Processing request.");
+
+				// timer for diagnostics
+				var timer = new Stopwatch();
+				timer.Start();
 
 				//Convert request data to JObject
 				System.IO.Stream body = request.InputStream;
@@ -137,12 +142,17 @@ namespace API.Threads {
 				if (!sendResponse) {
 					Object[] methodParams = new object[1] { requestContent };
 					responseJson["requestData"] = (JObject)requestMethod.Invoke(null, methodParams);
+					timer.Stop();
+					log.Trace($"({FormatDelay(timer)}) Processed request '{requestMethod.Name}' with {request.ContentLength64} bytes.");
+					timer.Restart();
 				}
 
 				// Create & send response
 				HttpListenerResponse response = context.Response;
 				response.ContentType = "application/json";
-				sendMessage(context, responseJson.ToString(), HttpStatusCode.OK);
+				int size = sendMessage(context, responseJson.ToString(), HttpStatusCode.OK);
+				timer.Stop();
+				log.Trace($"({FormatDelay(timer)}) Sent response with {size} bytes.");
 				log.Fine("Request processed successfully.");
 			}
 		}
@@ -153,13 +163,23 @@ namespace API.Threads {
 			sendMessage(context, responseString, statusCode);
 		}
 
-		static void sendMessage(HttpListenerContext context, string message, HttpStatusCode statusCode = HttpStatusCode.OK) {
+		static int sendMessage(HttpListenerContext context, string message, HttpStatusCode statusCode = HttpStatusCode.OK) {
 			HttpListenerResponse response = context.Response;
 			response.StatusCode = (int)statusCode;
 			byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
 			System.IO.Stream output = response.OutputStream;
 			output.Write(buffer, 0, buffer.Length);
 			output.Close();
+			return buffer.Length;
+		}
+
+		private static string FormatDelay(Stopwatch timer)
+		{
+			if (timer.ElapsedMilliseconds != 0)
+				return timer.ElapsedMilliseconds + " ms";
+			if (timer.ElapsedTicks >= 10) // 1 tick is 100 nanoseconds, so 10 ticks is 1 microsecond
+				return (timer.ElapsedTicks / 10) + " us";
+			return (timer.ElapsedTicks * 100) + " ns";
 		}
 	}
 }
