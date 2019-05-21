@@ -9,7 +9,7 @@ namespace MySQLWrapper.Data
 	sealed class Item : SchemaItem
 	{
 		#region Schema Metadata
-		public const string _schema = "items";
+		public const string schema = "items";
 		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("id", 11, MySqlDbType.Int32),
@@ -74,7 +74,7 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		#region SchemaItem Support
-		public override string Schema => _schema;
+		public override string Schema => schema;
 		public override ReadOnlyCollection<ColumnMetadata> Metadata => metadata;
 		public override ReadOnlyCollection<Index> Indexes => indexes;
 		public override object[] Fields => _fields;

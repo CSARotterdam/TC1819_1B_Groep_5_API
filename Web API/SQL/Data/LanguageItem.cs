@@ -8,7 +8,7 @@ namespace MySQLWrapper.Data
 	sealed class LanguageItem : SchemaItem
 	{
 		#region Schema Metadata
-		public const string _schema = "language";
+		public const string schema = "language";
 		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
@@ -98,7 +98,7 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		#region SchemaItem Support
-		public override string Schema => _schema;
+		public override string Schema => schema;
 		public override ReadOnlyCollection<ColumnMetadata> Metadata => metadata;
 		public override ReadOnlyCollection<Index> Indexes => indexes;
 		public override object[] Fields => _fields;

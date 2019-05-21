@@ -10,7 +10,7 @@ namespace MySQLWrapper.Data
 	class Image : SchemaItem
 	{
 		#region Schema Metadata
-		public const string _schema = "images";
+		public const string schema = "images";
 		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
@@ -93,7 +93,7 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		#region SchemaItem Support
-		public override string Schema => _schema;
+		public override string Schema => schema;
 		public override ReadOnlyCollection<ColumnMetadata> Metadata => metadata;
 		public override ReadOnlyCollection<Index> Indexes => indexes;
 		public override object[] Fields => _fields;
