@@ -10,17 +10,32 @@ using Logging;
 using Newtonsoft.Json;
 using System.IO;
 using System.Collections;
+using System.IO.Compression;
 
 namespace API {
 	class Program {
 		public static bool ManualError = false;
-		public static Logger log = new Logger(Level.ALL, Console.Out, new AdvancingWriter("Logs/latest.log") {
-			Compression = true,
-			Archive = "Logs/{0:dd-MM-yyyy}.{1}.zip"
-		});
+		public static Logger log = new Logger(Level.ALL, Console.Out);
         public static dynamic Settings;
 
 		public static void Main() {
+			// Compress previous log
+			if (File.Exists("Logs/latest.log"))
+			{
+				DateTime created = File.GetCreationTime("Logs/latest.log");
+				log.Info(created);
+				var archiveName = string.Format("Logs/{0:dd-MM-yyyy}.zip", created);
+				using (var archive = ZipFile.Open(archiveName, ZipArchiveMode.Update))
+					archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
+				File.Delete("Logs/latest.log");
+			}
+
+			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log", new TimeSpan(0,0,2))
+			{
+				Compression = true,
+				Archive = "Logs/{0:dd-MM-yyyy}.zip"
+			});
+
 			log.Info("Server is starting!");
 
             //Start logger

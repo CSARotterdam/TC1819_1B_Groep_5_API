@@ -24,7 +24,7 @@ namespace Logging
 		{
 			get
 			{
-				return string.Format(_file, FileTimeStamp, _Files.Count);
+				return string.Format(_file, FileTimeStamp, Files.Count);
 			}
 		}
 		private readonly string _file;
@@ -37,7 +37,7 @@ namespace Logging
 		{
 			private get
 			{
-				return string.Format(_Archive, FileTimeStamp, _Files.Count);
+				return string.Format(_Archive, FileTimeStamp, Files.Count);
 			}
 			set
 			{
@@ -53,11 +53,9 @@ namespace Logging
 		/// Gets or sets whether this <see cref="AdvancingWriter"/> compresses it's files after closing their streams.
 		/// </summary>
 		public bool Compression { get; set; } = false;
-		/// <summary>
-		/// An array of files that this <see cref="AdvancingWriter"/> has created. Compressed archives replace their uncompressed counterparts.
-		/// </summary>
-		public string[] Files => _Files.ToArray();
-		private readonly List<string> _Files = new List<string>();
+
+		private readonly List<string> Files = new List<string>();
+		private readonly List<string> Archives = new List<string>();
 
 		/// <summary>
 		/// Creates a new instance of <see cref="AdvancingWriter"/> that advances it's file at midnight.
@@ -86,8 +84,12 @@ namespace Logging
 			FileTimeStamp = DateTime.Now.Date.Add(timeOfDay);
 			if (FileTimeStamp <= DateTime.Now)
 				FileTimeStamp += (int)((DateTime.Now - FileTimeStamp) / Duration + 1) * Duration;
+
+			// in case of overwriting, reset the creation time
+			if (System.IO.File.Exists(File)) System.IO.File.SetCreationTime(File, FileTimeStamp);
+
 			Stream = new StreamWriter(File) { AutoFlush = true };
-			_Files.Add(File);
+			Files.Add(File);
 			FileAdvancerThread = new Thread(new ThreadStart(AdvanceFile)) { Name = "FileAdvancerThread" };
 			FileAdvancerThread.Start();
 		}
@@ -108,7 +110,8 @@ namespace Logging
 					FinalizeStream();
 					FileTimeStamp += Duration;
 					Stream = new StreamWriter(File) { AutoFlush = true };
-					_Files.Add(File);
+					if (!Files.Contains(File))
+						Files.Add(File);
 				}
 			}
 		}
@@ -119,12 +122,29 @@ namespace Logging
 			{
 				Stream.Dispose();
 				if (!Compression) return;
-				var file = _Files.Last();
+
+				var file = Files.Last();
 				var archiveName = Archive ?? Path.ChangeExtension(file, "zip");
-				using (var archive = ZipFile.Open(archiveName, ZipArchiveMode.Create))
-					archive.CreateEntryFromFile(file, Path.GetFileName(file));
-				_Files[_Files.Count - 1] = archiveName;
+
+				var mode = ZipArchiveMode.Update;
+				if (!Files.Contains(archiveName) && System.IO.File.Exists(archiveName))
+				{
+					System.IO.File.Delete(archiveName);
+					mode = ZipArchiveMode.Create;
+				}
+
+				using (var archive = ZipFile.Open(archiveName, mode))
+				{
+					archive.CreateEntryFromFile(
+						file,
+						$"{Path.GetFileNameWithoutExtension(file)}.{(mode == ZipArchiveMode.Update ? archive.Entries.Count : 0)}{Path.GetExtension(file)}"
+					);
+				}
+
 				System.IO.File.Delete(file);
+				Files.Remove(file);
+				if (!Files.Contains(archiveName))
+					Files.Add(archiveName);
 			}
 		}
 
