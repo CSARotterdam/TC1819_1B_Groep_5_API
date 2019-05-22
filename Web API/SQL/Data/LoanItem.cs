@@ -16,7 +16,8 @@ namespace MySQLWrapper.Data
 			new ColumnMetadata("user", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("product", 10, MySqlDbType.VarChar),
 			new ColumnMetadata("start", 0, MySqlDbType.DateTime),
-			new ColumnMetadata("end", 0, MySqlDbType.DateTime)
+			new ColumnMetadata("end", 0, MySqlDbType.DateTime),
+			new ColumnMetadata("is_item_acquired", 1, MySqlDbType.Int16)
  		});
 		public static readonly ReadOnlyCollection<Index> indexes = Array.AsReadOnly(new Index[]
 		{
@@ -43,7 +44,8 @@ namespace MySQLWrapper.Data
 		/// <param name="productItem">The id of the item that is being loaned.</param>
 		/// <param name="start">The date when this loan starts. This must be less than <paramref name="end"/>.</param>
 		/// <param name="end">The date when this loan ends.</param>
-		public LoanItem(int? id, string user, string productItem, DateTime start, DateTime end)
+		/// <param name="isAcquired">Set whether or not the item associated with this loan has been aquired by the user.</param>
+		public LoanItem(int? id, string user, string productItem, DateTime start, DateTime end, bool isAcquired)
 		{
 			if (start <= end)
 				throw new ArgumentException("The start date must be less than the end date.");
@@ -88,6 +90,11 @@ namespace MySQLWrapper.Data
 		public DateTime End
 		{
 			get { return (DateTime)Fields[4]; }
+			set { _fields[4] = value; }
+		}
+		public bool IsAcquired
+		{
+			get { return (bool)Fields[5]; }
 			set { _fields[4] = value; }
 		}
 		#endregion
