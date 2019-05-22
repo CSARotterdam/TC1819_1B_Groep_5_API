@@ -23,7 +23,6 @@ namespace API {
 			if (File.Exists("Logs/latest.log"))
 			{
 				DateTime created = File.GetCreationTime("Logs/latest.log");
-				log.Info(created);
 				var archiveName = string.Format("Logs/{0:dd-MM-yyyy}.zip", created);
 				using (var archive = ZipFile.Open(archiveName, ZipArchiveMode.Update))
 					archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
