@@ -371,7 +371,7 @@ namespace MySQLWrapper.Data
 		/// <summary>
 		/// Returns whether or not the condition is empty.
 		/// </summary>
-		public bool IsEmpty() => conditionString.Any();
+		public bool IsEmpty() => !conditionString.Any();
 
 		/// <summary>
 		/// Adds text at the cursor position and advances the cursor by the length of the text.
