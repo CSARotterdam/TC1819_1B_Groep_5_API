@@ -6,15 +6,14 @@ using System.Linq;
 
 namespace MySQLWrapper.Data
 {
-	sealed class Item : SchemaItem
+	sealed class ProductItem : SchemaItem
 	{
 		#region Schema Metadata
-		public const string schema = "items";
+		public const string schema = "product_items";
 		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
 			new ColumnMetadata("id", 11, MySqlDbType.Int32),
 			new ColumnMetadata("product", 50, MySqlDbType.VarChar),
-			new ColumnMetadata("serial_id", 50, MySqlDbType.VarChar),
 		});
 		public static readonly ReadOnlyCollection<Index> indexes = Array.AsReadOnly(new Index[]
 		{
@@ -25,24 +24,22 @@ namespace MySQLWrapper.Data
 		#endregion
 
 		/// <summary>
-		/// Creates a new blank instance of <see cref="Item"/>.
+		/// Creates a new blank instance of <see cref="ProductItem"/>.
 		/// </summary>
 		/// <remarks>
 		/// This constructor is intended for generic functions. Setting the fields
 		/// should be done with the <see cref="Fields"/> property.
 		/// </remarks>
-		public Item() { }
+		public ProductItem() { }
 		/// <summary>
-		/// Creates a new instance of <see cref="Item"/>.
+		/// Creates a new instance of <see cref="ProductItem"/>.
 		/// </summary>
 		/// <param name="id">A unique id to give this item. If null, a unique id will automatically be assigned after uploading.</param>
 		/// <param name="product">The id of a <see cref="Product"/></param>
-		/// <param name="serial_id">The serial id of the physical item.</param>
-		public Item(int? id, string product, string serial_id)
+		public ProductItem(int? id, string product)
 		{
 			Id = id;
 			ProductId = product;
-			SerialId = serial_id;
 		}
 
 		#region Properties
@@ -59,16 +56,6 @@ namespace MySQLWrapper.Data
 				if (value != null && value.Length > Metadata[1].Length)
 					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
 				_fields[1] = value;
-			}
-		}
-		public string SerialId
-		{
-			get { return (string)Fields[2]; }
-			set
-			{
-				if (value != null && value.Length > Metadata[2].Length)
-					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
-				_fields[2] = value;
 			}
 		}
 		#endregion
@@ -90,7 +77,7 @@ namespace MySQLWrapper.Data
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
 		/// <returns>An <see cref="IEnumerable{T}"/> filled with the results as object arrays.</returns>
 		public static IEnumerable<object[]> Select(TechlabMySQL connection, string[] columns, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
-			=> Select<Item>(connection, columns, condition, range);
+			=> Select<ProductItem>(connection, columns, condition, range);
 
 		/// <summary>
 		/// Selects all columns based on the given condition.
@@ -98,9 +85,9 @@ namespace MySQLWrapper.Data
 		/// <param name="connection">An opened <see cref="TechlabMySQL"/> object.</param>
 		/// <param name="condition">A <see cref="MySqlConditionBuilder"/>. Passing <c>null</c> will select everything.</param>
 		/// <param name="range">A nullable (ulong, ulong) tuple, specifying the range of results to return. Passing <c>null</c> will leave the range unspecified.</param>
-		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <see cref="Item"/>.</returns>
-		public static IEnumerable<Item> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
-			=> Select<Item>(connection, condition, range);
+		/// <returns>An <see cref="IEnumerable{T}"/> containing instances of <see cref="ProductItem"/>.</returns>
+		public static IEnumerable<ProductItem> Select(TechlabMySQL connection, MySqlConditionBuilder condition = null, (ulong Start, ulong Amount)? range = null)
+			=> Select<ProductItem>(connection, condition, range);
 		#endregion
 
 		#region Foreign Key Getters

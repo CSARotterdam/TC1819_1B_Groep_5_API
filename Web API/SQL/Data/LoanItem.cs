@@ -133,16 +133,16 @@ namespace MySQLWrapper.Data
 			var reference = new User();
 			return connection.Select<User>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { User })).FirstOrDefault();
 		}
-		
+
 		/// <summary>
-		/// Gets the <see cref="Item"/> object associated with this <see cref="LoanItem"/>.
+		/// Gets the <see cref="Data.ProductItem"/> object associated with this <see cref="LoanItem"/>.
 		/// </summary>
 		/// <param name="connection">The connection to perform the query on.</param>
-		/// <returns>A <see cref="Item"/> instance whose id is equal to <see cref="ProductItem"/>, or null if none are found.</returns>
-		public Item GetProductItem(TechlabMySQL connection)
+		/// <returns>A <see cref="Data.ProductItem"/> instance whose id is equal to <see cref="ProductItem"/>, or null if none are found.</returns>
+		public ProductItem GetProductItem(TechlabMySQL connection)
 		{
-			var reference = new Item();
-			return connection.Select<Item>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { ProductItem })).FirstOrDefault();
+			var reference = new ProductItem();
+			return connection.Select<ProductItem>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { ProductItem })).FirstOrDefault();
 		}
 		#endregion
 	}
