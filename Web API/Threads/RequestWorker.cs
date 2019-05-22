@@ -45,7 +45,7 @@ namespace API.Threads {
 				//Create base response JObject
 				bool sendResponse = false;
 				JObject responseJson = new JObject() {
-					{"responseData", new JObject() }
+					{"body", new JObject() }
 				};
 
 				// Check if content type is application/json. Send a HTTP 415 UnsupportedMediaType if it isn't.
@@ -64,7 +64,7 @@ namespace API.Threads {
 				//Check if the database is available. If it isn't, send an error.
 				if (!wrapper.Ping()) {
 					log.Error("Database connection failed for worker "+Thread.CurrentThread.Name);
-					responseJson["responseData"] = Templates.ServerError("DatabaseConnectionError");
+					responseJson["body"] = Templates.ServerError("DatabaseConnectionError");
 					sendResponse = true;
 				}
 
@@ -81,7 +81,7 @@ namespace API.Threads {
 					//If no request handler was found, send an error response
 					if (requestMethod == null) {
 						log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
-						responseJson["responseData"] = Templates.InvalidRequestType;
+						responseJson["body"] = Templates.InvalidRequestType;
 						sendResponse = true;
 					}
 				}
@@ -103,14 +103,14 @@ namespace API.Threads {
 						requestContent.TryGetValue("token", out JToken tokenValue);
 
 						if (usernameValue == null || tokenValue == null || usernameValue.Type != JTokenType.String || tokenValue.Type != JTokenType.Integer) {
-							responseJson["responseData"] = Templates.MissingArguments("username, token");
+							responseJson["body"] = Templates.MissingArguments("username, token");
 							sendResponse = true;
 						} else {
 							token = tokenValue.ToObject<long>();
 							username = usernameValue.ToObject<string>();
 							user = getUser(username);
 							if (user == null) {
-								responseJson["responseData"] = Templates.InvalidLogin;
+								responseJson["body"] = Templates.InvalidLogin;
 								sendResponse = true;
 							}
 						}
@@ -124,7 +124,7 @@ namespace API.Threads {
 					bool validToken = !((DateTime.Today - tokenDT).TotalSeconds > (double)Program.Settings["authenticationSettings"]["expiration"]);
 
 					if (!(validToken && token == user.Token)) {
-						responseJson["responseData"] = Templates.ExpiredToken;
+						responseJson["body"] = Templates.ExpiredToken;
 						sendResponse = true;
 					}
 				}
@@ -132,7 +132,7 @@ namespace API.Threads {
 				//Check the user's permission level if the requesttype requires it.
 				if (!sendResponse && verifyPermission) {
 					if (user.Permission < requestMethod.GetCustomAttribute<verifyPermission>().permission) {
-						responseJson["responseData"] = Templates.AccessDenied;
+						responseJson["body"] = Templates.AccessDenied;
 						sendResponse = true;
 						log.Warning("User "+user.Username+" attempted to use requestType "+requestMethod.Name+" without the required permissions.");
 					}
@@ -141,8 +141,7 @@ namespace API.Threads {
 				//Attempt to process the request
 				if (!sendResponse) {
 					Object[] methodParams = new object[1] { requestContent };
-					responseJson["response" +
-						"Data"] = (JObject)requestMethod.Invoke(null, methodParams);
+					responseJson["body"] = (JObject)requestMethod.Invoke(null, methodParams);
 					timer.Stop();
 					log.Trace($"({FormatDelay(timer)}) Processed request '{requestMethod.Name}' with {request.ContentLength64} bytes.");
 					timer.Restart();
