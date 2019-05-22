@@ -40,7 +40,6 @@ namespace API.Threads {
 				System.IO.Stream body = request.InputStream;
 				System.Text.Encoding encoding = request.ContentEncoding;
 				System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
-				JObject requestContent = JObject.Parse(reader.ReadToEnd());
 
 				//Create base response JObject
 				bool sendResponse = false;
@@ -54,6 +53,9 @@ namespace API.Threads {
 					SendHTMLError(context, "If at first you don't succeed, fail 5 more times.", HttpStatusCode.UnsupportedMediaType);
 					continue;
 				}
+
+				JObject requestContent = JObject.Parse(reader.ReadToEnd());
+				
 				// Check if request has body data. Send a 400 BadRequest if it doesn't.
 				if (!request.HasEntityBody) {
 					log.Error("Request has no body data. Sending error response and ignoring!");
@@ -81,7 +83,7 @@ namespace API.Threads {
 					//If no request handler was found, send an error response
 					if (requestMethod == null) {
 						log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
-						responseJson["body"] = Templates.InvalidRequestType;
+						responseJson["body"] = Templates.InvalidRequestType(requestContent["requestType"].ToString());
 						sendResponse = true;
 					}
 				}
