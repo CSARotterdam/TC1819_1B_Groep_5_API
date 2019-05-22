@@ -52,7 +52,7 @@ namespace API.Requests {
 			//Get user
 			User user = getUser(username);
 			if(user == null) {
-				return Templates.NoSuchUser;
+				return Templates.NoSuchUser(username);
 			}
 
 			//Edit user

@@ -70,7 +70,7 @@ namespace API.Requests {
 			//Get product, if it exists
 			Product product = Requests.getObject<Product>(productID);
 			if (product == null) {
-				return Templates.NoSuchProduct;
+				return Templates.NoSuchProduct(productID);
 			}
 
 			///////////////Image
@@ -125,7 +125,7 @@ namespace API.Requests {
 			if (newProductID != null) {
 				Product newProduct = Requests.getObject<Product>(newProductID);
 				if (newProduct != null) {
-					return Templates.AlreadyExists;
+					return Templates.AlreadyExists(productID);
 				} else {
 					image.Id = newProductID + "_image";
 					image.Update(wrapper);
@@ -143,7 +143,7 @@ namespace API.Requests {
 			if (categoryID != null) {
 				ProductCategory category = Requests.getObject<ProductCategory>(categoryID);
 				if (category == null) {
-					return Templates.NoSuchProductCategory;
+					return Templates.NoSuchProductCategory(categoryID);
 				} else {
 					product.Category = categoryID;
 				}

@@ -28,7 +28,7 @@ namespace API.Requests {
 
             //Check if username already exists
             if (getUser(username) != null) {
-				return Templates.AlreadyExists;
+				return Templates.AlreadyExists(username);
             }
 
             //Check if password is a SHA-512 hash.

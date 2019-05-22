@@ -28,7 +28,7 @@ namespace API.Requests {
 			//Check if user exists
 			User user = getUser(username);
 			if(user == null) {
-				return Templates.NoSuchUser;
+				return Templates.NoSuchUser(username);
 			}
 
 			user.Delete(wrapper);

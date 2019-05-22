@@ -42,7 +42,7 @@ namespace API.Requests {
 			//Get product, if it exists
 			ProductCategory category = Requests.getObject<ProductCategory>(categoryID);
 			if (category == null) {
-				return Templates.NoSuchProductCategory;
+				return Templates.NoSuchProductCategory(categoryID);
 			}
 
 			///////////////LanguageItem
@@ -71,7 +71,7 @@ namespace API.Requests {
 			if (newCategoryID != null) {
 				ProductCategory newProduct = Requests.getObject<ProductCategory>(newCategoryID);
 				if (newProduct != null) {
-					return Templates.AlreadyExists;
+					return Templates.AlreadyExists(categoryID);
 				} else {
 					item.Id = newCategoryID + "_name";
 					item.Update(wrapper);
