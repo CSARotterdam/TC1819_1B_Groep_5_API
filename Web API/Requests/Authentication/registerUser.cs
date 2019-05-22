@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using static API.Requests.RequestMethodAttributes;
-using static API.Requests.RequestMethodFunctions;
+using static API.Requests.Requests;
 
 namespace API.Requests {
     static partial class RequestMethods {
@@ -27,47 +27,28 @@ namespace API.Requests {
             string password = passwordValue.ToString();
 
             //Check if username already exists
-            bool usernameExists = false;
             if (getUser(username) != null) {
-                usernameExists = true;
+				return Templates.AlreadyExists;
             }
 
             //Check if password is a SHA-512 hash.
             //This checks whether the password string is the correct length for a SHA-512 hash, and if it is a proper hexadecimal number.
             //It's possible for people directly calling the API to create a user with a password that wasn't salted with their username (should we fix this?), but I doubt anyone would do that.
             //Also regex is weird and I do not like it.
-            bool invalidPassword = false;
             if (password.Length != 128 && !System.Text.RegularExpressions.Regex.IsMatch(password, @"\A\b[0-9a-fA-F]+\b\Z")) {
-                invalidPassword = true;
+				return Templates.InvalidPassword;
             }
 
-            //Create response object
-            JObject response = new JObject() {
-                {"registerUserSuccessful", null},
-                {"userToken", null},
-                {"permissionLevel", null},
+			long token = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+			User user = new User(username, password, token, User.UserPermission.User);
+			user.Upload(wrapper);
+
+			//Create response object
+			JObject response = new JObject() {
+                {"userToken", (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds },
+                { "permissionLevel",  0},
                 {"reason", null},
             };
-
-            //If the above checks passed, register the user.
-            if (!invalidPassword && !usernameExists) {
-                long token = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-                User user = new User(username, password, token, User.UserPermission.User);
-                user.Upload(wrapper);
-
-				//TODO Consistency
-                response["registerUserSuccessful"] = true;
-                response["token"] = token;
-                response["permissionLevel"] = 0;
-            } else {
-                if (usernameExists) {
-                    response["reason"] = "AlreadyExists";
-                    response["registerUserSuccessful"] = false;
-                } else if (invalidPassword) {
-                    response["reason"] = "InvalidPassword";
-                    response["registerUserSuccessful"] = false;
-                }
-            }
 
             return response;
         }

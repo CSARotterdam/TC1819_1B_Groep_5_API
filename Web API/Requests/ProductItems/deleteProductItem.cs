@@ -36,7 +36,6 @@ namespace API.Requests {
 			return new JObject() {
 				{"reason", null },
 			};
-
 		}
 	}
 }

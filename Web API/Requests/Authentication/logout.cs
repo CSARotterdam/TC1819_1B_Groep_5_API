@@ -4,7 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using static API.Requests.RequestMethodFunctions;
+using static API.Requests.Requests;
+
 
 namespace API.Requests {
     static partial class RequestMethods {

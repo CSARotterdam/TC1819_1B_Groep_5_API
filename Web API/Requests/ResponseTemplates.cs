@@ -68,6 +68,14 @@ namespace API.Requests {
 			{"reason", "AlreadyExists" }
 		};
 
+		/// <summary>
+		/// Sent when a client attempts to use a password with an invalid format.
+		/// Passwords must be 128 character hexadecimal strings (@"\A\b[0-9a-fA-F]+\b\Z")
+		/// </summary>
+		public static JObject InvalidPassword = new JObject() {
+			{"reason", "InvalidPassword" }
+		};
+
 
 		/// <summary>
 		/// Sent when a client sends a request without including the data necessary to fullfil it.

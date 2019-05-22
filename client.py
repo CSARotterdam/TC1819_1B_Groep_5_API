@@ -9,11 +9,11 @@ objectid = ""
 
 while True:
 	print('''
-1. Login		6. DeleteProduct		11. getProductCategory
-2. Register		7. AddProduct			12. getProductCategoryList
-3. Logout		8. UpdateProduct		13. updateCategory
-4. GetProduct		9. AddCategory
-5. GetProductList	10. DeleteCategory
+1. Login		6. DeleteProduct		11. getProductCategory		16. deleteProductItem
+2. Register		7. AddProduct			12. getProductCategoryList	17. deleteUser
+3. Logout		8. UpdateProduct		13. updateCategory		18. updateUser
+4. GetProduct		9. AddCategory			14. addProductItem
+5. GetProductList	10. DeleteCategory		15. updateProductItem
 	''')
 	answer = input()
 	if answer == "1":
@@ -282,6 +282,32 @@ while True:
 				"token": token,
 				"requestData": {
 					"productItemID": "21"
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "17":
+		try:
+			r = requests.post(address, json={
+				"requestType": "deleteUser",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"username": "KONO DIO DA"
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+	elif answer == "18":
+		try:
+			r = requests.post(address, json={
+				"requestType": "updateUser",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"username": "Administrator",
+					"permission": 2
 				}
 			})
 		except requests.RequestException:
