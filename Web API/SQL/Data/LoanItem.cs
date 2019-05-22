@@ -14,7 +14,7 @@ namespace MySQLWrapper.Data
 		{
 			new ColumnMetadata("id", 11, MySqlDbType.Int32),
 			new ColumnMetadata("user", 50, MySqlDbType.VarChar),
-			new ColumnMetadata("product", 10, MySqlDbType.VarChar),
+			new ColumnMetadata("product_item", 10, MySqlDbType.VarChar),
 			new ColumnMetadata("start", 0, MySqlDbType.DateTime),
 			new ColumnMetadata("end", 0, MySqlDbType.DateTime),
 			new ColumnMetadata("is_item_acquired", 1, MySqlDbType.Int16)
