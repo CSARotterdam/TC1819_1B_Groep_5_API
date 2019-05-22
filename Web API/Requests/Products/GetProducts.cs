@@ -1,4 +1,5 @@
-﻿using MySQLWrapper.Data;
+﻿using MySql.Data.MySqlClient;
+using MySQLWrapper.Data;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -36,7 +37,7 @@ namespace API.Requests
 			requestData.TryGetValue("start", out JToken requestRangeStart);
 			requestData.TryGetValue("amount", out JToken requestRangeAmount);
 
-			MySqlConditionBuilder condition = null;
+			MySqlConditionBuilder condition = new MySqlConditionBuilder();
 
 			// Verify the types of the arguments
 			List<string> failedVerifications = new List<string>();
@@ -44,7 +45,7 @@ namespace API.Requests
 				failedVerifications.Add("colums");
 			if (requestCriteria != null)
 				try
-				{ condition = Misc.CreateCondition((JObject)requestCriteria); }
+				{ condition = Misc.CreateCondition((JObject)requestCriteria, condition); }
 				catch (Exception)
 				{ failedVerifications.Add("criteria"); }
 			if (requestLanguages != null && (requestLanguages.Type != JTokenType.Array || requestLanguages.Any(x => x.Type != JTokenType.String)))
@@ -65,6 +66,10 @@ namespace API.Requests
 			};
 
 			// Prepare values for database call
+			if (!condition.IsEmpty()) condition.And();
+			condition.Not()
+				.Column(Product.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0].Column)
+				.Equals(0, MySqlDbType.Int32);
 			(ulong, ulong) range = (requestRangeStart?.ToObject<ulong>() ?? 0, requestRangeAmount?.ToObject<ulong>() ?? ulong.MaxValue);
 			if (requestColumns == null || requestColumns.Count() == 0) requestColumns = new JArray(Product.metadata.Select(x => x.Column));
 			else if (requestLanguages != null && !requestColumns.Contains("name")) ((JArray)requestColumns).Add("name");
@@ -93,7 +98,7 @@ namespace API.Requests
 				{
 					if (!first) nameCondition.Or();
 					nameCondition.Column("id");
-					nameCondition.Equals(name, MySql.Data.MySqlClient.MySqlDbType.String);
+					nameCondition.Equals(name, MySqlDbType.String);
 					first = false;
 				}
 				// If the condition is empty, insert a condition that is false

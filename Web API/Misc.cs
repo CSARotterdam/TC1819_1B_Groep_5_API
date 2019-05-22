@@ -6,14 +6,14 @@ using System.Linq;
 namespace API
 {
 	class Misc {
-		public static MySqlConditionBuilder CreateCondition(JObject criteria)
+		public static MySqlConditionBuilder CreateCondition(JObject criteria, MySqlConditionBuilder condition = null)
 		{
-			var condition = new MySqlConditionBuilder();
+			condition = condition ?? new MySqlConditionBuilder();
+			condition.NewGroup();
 			int i = 0;
 			foreach (KeyValuePair<string, JToken> pair in criteria)
 			{
 				if (i > 0) condition.And();
-				condition.NewGroup();
 				condition.Column(pair.Key);
 				string value = (string)pair.Value;
 				string[] operands = value.Split("OR");
@@ -33,10 +33,9 @@ namespace API
 						condition.Or();
 					}
 				}
-				condition.ExitGroup();
 				i++;
 			}
-			return condition;
+			return condition.ExitGroup();
 		}
     }
 }

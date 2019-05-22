@@ -44,7 +44,7 @@ namespace API.Requests
 					failedVerifications.Add("colums");
 			if (requestCriteria != null)
 				try
-				{ condition = Misc.CreateCondition((JObject) requestCriteria); }
+				{ Misc.CreateCondition((JObject) requestCriteria, condition); }
 				catch (Exception)
 				{ failedVerifications.Add("criteria"); }
 			if (requestLanguages != null && (requestLanguages.Type != JTokenType.Array || requestLanguages.Any(x => x.Type != JTokenType.String)))
