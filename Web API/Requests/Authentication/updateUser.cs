@@ -17,7 +17,6 @@ namespace API.Requests {
 			//Get arguments
 			string username;
 			string password;
-			string newUsername = null;
 			int permission = -2;
 			JObject requestData = request["requestData"].ToObject<JObject>();
 			requestData.TryGetValue("username", out JToken usernameValue);
