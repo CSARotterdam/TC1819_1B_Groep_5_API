@@ -76,7 +76,26 @@ namespace MySQLWrapper.Data
 				);
 				cmd.ExecuteNonQuery();
 				var scalar = cmd.LastInsertedId;
-				if (AutoIncrement != null) Fields[Metadata.IndexOf(AutoIncrement.Columns[0])] = scalar;
+				if (AutoIncrement != null)
+				{
+					object o;
+					switch (AutoIncrement.Columns[0].Type)
+					{
+						// Convert type because for some reason casting a long that is an object to int is invalid, but casting a regular long is fine???
+						case MySqlDbType.Byte: o = (sbyte)scalar; break;
+						case MySqlDbType.UByte: o = (byte)scalar; break;
+						case MySqlDbType.Int16: o = (short)scalar; break;
+						case MySqlDbType.UInt16: o = (ushort)scalar; break;
+						case MySqlDbType.Int24:
+						case MySqlDbType.Int32: o = (int)scalar; break;
+						case MySqlDbType.UInt24:
+						case MySqlDbType.UInt32: o = (uint)scalar; break;
+						default:
+						case MySqlDbType.Int64: o = scalar; break;
+						case MySqlDbType.UInt64: o = (ulong)scalar; break;
+					}
+					Fields[Metadata.IndexOf(AutoIncrement.Columns[0])] = o;
+				}
 
 				UpdateTrace();
 				return scalar;
