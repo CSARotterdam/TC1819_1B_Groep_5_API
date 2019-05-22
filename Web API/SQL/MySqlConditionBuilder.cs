@@ -333,7 +333,8 @@ namespace MySQLWrapper.Data
 			// Append the operator text to the condition with spaces.
 			Append($" {_operator.ToString()} ");
 
-			// Set regulatory flags to true
+			// Set regulatory flags
+			modifyingOperand = false;
 			expectingOperand = true;
 			unfinished = true;
 
