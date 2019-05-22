@@ -24,6 +24,9 @@ namespace API.Requests {
 				return Templates.MissingArguments("categoryID, name");
 			} else {
 				categoryID = categoryIDValue.ToObject<string>();
+				if (categoryID == "default" || categoryID == "uncategorized") {
+					return Templates.InvalidArgument("categoryID");
+				}
 			}
 
 			//Get languages

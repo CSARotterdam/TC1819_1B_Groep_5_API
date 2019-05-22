@@ -1,8 +1,8 @@
-﻿using static API.Requests.RequestMethodFunctions;
-using MySQLWrapper.Data;
+﻿using MySQLWrapper.Data;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using static API.Requests.Requests;
 
 namespace API.Commands {
 	static partial class CommandMethods {

@@ -4,7 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using static API.Requests.RequestMethodAttributes;
-using static API.Requests.RequestMethodFunctions;
+using static API.Requests.Requests;
+
 
 namespace API.Requests {
     static partial class RequestMethods {
@@ -26,28 +27,21 @@ namespace API.Requests {
             string username = usernameValue.ToString();
             string password = passwordValue.ToString();
 
-            bool loginSuccessful = false;
             User user = getUser(username);
-            if (user != null && user.Password == password) {
-                loginSuccessful = true;
-            }
+            if (user == null || user.Password != password) {
+				return Templates.InvalidLogin;
+			}
 
-            //Create + return response object
-            JObject response = new JObject() {
-                {"loginSuccesful", loginSuccessful },
-                {"token", null},
-                {"permissionLevel", -1},
+			long token = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+			user.Token = token;
+			user.Update(wrapper);
+
+			//Create + return response object
+			JObject response = new JObject() {
+                {"token", token},
+                {"permissionLevel", (int)user.Permission},
                 {"reason", null }
             };
-            if (loginSuccessful) {
-                long token = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-                user.Token = token;
-                user.Update(wrapper);
-                response["token"] = token;
-                response["permissionLevel"] = (int)user.Permission;
-            } else {
-                response["reason"] = "Incorrect username/password";
-            }
             return response;
         }
     }

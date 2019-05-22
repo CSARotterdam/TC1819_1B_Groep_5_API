@@ -41,6 +41,13 @@ namespace API.Requests {
 		};
 
 		/// <summary>
+		/// Sent when a nonexistent product item was requested.
+		/// </summary>
+		public static JObject NoSuchProductItem = new JObject() {
+			{"reason", "NoSuchProductItem" }
+		};
+
+		/// <summary>
 		/// Sent when a nonexistent product category was requested.
 		/// </summary>
 		public static JObject NoSuchProductCategory = new JObject() {
@@ -59,6 +66,14 @@ namespace API.Requests {
 		/// </summary>
 		public static JObject AlreadyExists = new JObject() {
 			{"reason", "AlreadyExists" }
+		};
+
+		/// <summary>
+		/// Sent when a client attempts to use a password with an invalid format.
+		/// Passwords must be 128 character hexadecimal strings (@"\A\b[0-9a-fA-F]+\b\Z")
+		/// </summary>
+		public static JObject InvalidPassword = new JObject() {
+			{"reason", "InvalidPassword" }
 		};
 
 

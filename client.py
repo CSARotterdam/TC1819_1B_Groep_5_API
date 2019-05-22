@@ -5,14 +5,15 @@ import base64
 address = "http://localhost"
 token = ""
 username = ""
+objectid = ""
 
 while True:
 	print('''
-1. Login		6. DeleteProduct		11. getProductCategory
-2. Register		7. AddProduct			12. getProductCategoryList
-3. Logout		8. UpdateProduct		13. updateCategory
-4. GetProduct		9. AddCategory
-5. GetProductList	10. DeleteCategory
+1. Login		6. DeleteProduct		11. getProductCategory		16. deleteProductItem
+2. Register		7. AddProduct			12. getProductCategoryList	17. deleteUser
+3. Logout		8. UpdateProduct		13. updateCategory		18. updateUser
+4. GetProduct		9. AddCategory			14. addProductItem
+5. GetProductList	10. DeleteCategory		15. updateProductItem
 	''')
 	answer = input()
 	if answer == "1":
@@ -28,7 +29,8 @@ while True:
 					"username": username
 				}
 			})
-			token = r.json()["requestData"]["token"]
+			print(r.text)
+			token = r.json()["responseData"]["token"]
 		except requests.RequestException:
 			print("Failed")
 
@@ -236,6 +238,76 @@ while True:
 						"nl": "2",
 						"ar": "3"
 					}
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "14":
+		try:
+			r = requests.post(address, json={
+				"requestType": "addProductItem",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productID": "lizard"
+				}
+			})
+			try:
+				objectid = r.json()["responseData"]["productItemID"]
+			except:
+				pass
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "15":
+		try:
+			r = requests.post(address, json={
+				"requestType": "updateProductItem",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productItemID": "20",
+					"productID": "0"
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "16":
+		try:
+			r = requests.post(address, json={
+				"requestType": "deleteProductItem",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productItemID": "21"
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "17":
+		try:
+			r = requests.post(address, json={
+				"requestType": "deleteUser",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"username": "KONO DIO DA"
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+	elif answer == "18":
+		try:
+			r = requests.post(address, json={
+				"requestType": "updateUser",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"username": "Administrator",
+					"permission": 2
 				}
 			})
 		except requests.RequestException:

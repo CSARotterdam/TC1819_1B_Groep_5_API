@@ -11,7 +11,7 @@ using API.Requests;
 using System.Reflection;
 using MySQLWrapper.Data;
 using static API.Requests.RequestMethodAttributes;
-using static API.Requests.RequestMethodFunctions;
+using static API.Requests.Requests;
 using MySQLWrapper;
 
 namespace API.Threads {
