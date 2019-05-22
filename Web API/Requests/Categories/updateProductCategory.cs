@@ -42,7 +42,7 @@ namespace API.Requests {
 			//Get product, if it exists
 			ProductCategory category = Requests.getObject<ProductCategory>(categoryID);
 			if (category == null) {
-				return Templates.NoSuchProduct;
+				return Templates.NoSuchProductCategory;
 			}
 
 			///////////////LanguageItem
