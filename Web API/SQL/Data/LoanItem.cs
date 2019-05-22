@@ -45,7 +45,7 @@ namespace MySQLWrapper.Data
 		/// <param name="start">The date when this loan starts. This must be less than <paramref name="end"/>.</param>
 		/// <param name="end">The date when this loan ends.</param>
 		/// <param name="isAcquired">Set whether or not the item associated with this loan has been aquired by the user.</param>
-		public LoanItem(int? id, string user, string productItem, DateTime start, DateTime end, bool isAcquired)
+		public LoanItem(int? id, string user, string productItem, DateTime start, DateTime end, bool isAcquired = false)
 		{
 			if (start <= end)
 				throw new ArgumentException("The start date must be less than the end date.");
@@ -54,6 +54,7 @@ namespace MySQLWrapper.Data
 			ProductItem = productItem;
 			Start = start;
 			End = end;
+			IsAcquired = isAcquired;
 		}
 
 		#region Properties
@@ -95,7 +96,7 @@ namespace MySQLWrapper.Data
 		public bool IsAcquired
 		{
 			get { return (bool)Fields[5]; }
-			set { _fields[4] = value; }
+			set { _fields[5] = value; }
 		}
 		#endregion
 
