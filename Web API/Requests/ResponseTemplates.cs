@@ -41,6 +41,13 @@ namespace API.Requests {
 		};
 
 		/// <summary>
+		/// Sent when a nonexistent product item was requested.
+		/// </summary>
+		public static JObject NoSuchProductItem = new JObject() {
+			{"reason", "NoSuchProductItem" }
+		};
+
+		/// <summary>
 		/// Sent when a nonexistent product category was requested.
 		/// </summary>
 		public static JObject NoSuchProductCategory = new JObject() {

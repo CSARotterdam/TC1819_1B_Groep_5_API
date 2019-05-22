@@ -5,6 +5,7 @@ import base64
 address = "http://localhost"
 token = ""
 username = ""
+objectid = ""
 
 while True:
 	print('''
@@ -28,7 +29,8 @@ while True:
 					"username": username
 				}
 			})
-			token = r.json()["requestData"]["token"]
+			print(r.text)
+			token = r.json()["responseData"]["token"]
 		except requests.RequestException:
 			print("Failed")
 
@@ -236,6 +238,50 @@ while True:
 						"nl": "2",
 						"ar": "3"
 					}
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "14":
+		try:
+			r = requests.post(address, json={
+				"requestType": "addProductItem",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productID": "lizard"
+				}
+			})
+			try:
+				objectid = r.json()["responseData"]["productItemID"]
+			except:
+				pass
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "15":
+		try:
+			r = requests.post(address, json={
+				"requestType": "updateProductItem",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productItemID": "20",
+					"productID": "0"
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "16":
+		try:
+			r = requests.post(address, json={
+				"requestType": "deleteProductItem",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"productItemID": "21"
 				}
 			})
 		except requests.RequestException:
