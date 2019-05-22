@@ -29,7 +29,7 @@ namespace API {
 				File.Delete("Logs/latest.log");
 			}
 
-			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log", new TimeSpan(0,0,2))
+			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log")
 			{
 				Compression = true,
 				Archive = "Logs/{0:dd-MM-yyyy}.zip"
