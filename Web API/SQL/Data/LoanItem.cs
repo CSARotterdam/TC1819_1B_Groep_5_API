@@ -47,7 +47,7 @@ namespace MySQLWrapper.Data
 		/// <param name="isAcquired">Set whether or not the item associated with this loan has been aquired by the user.</param>
 		public LoanItem(int? id, string user, string productItem, DateTime start, DateTime end, bool isAcquired = false)
 		{
-			if (start <= end)
+			if (DateTime.Compare(start, end) > 0)
 				throw new ArgumentException("The start date must be less than the end date.");
 			Id = id;
 			User = user;
