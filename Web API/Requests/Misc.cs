@@ -11,7 +11,7 @@ namespace API.Requests {
 		public static Logger log;
 	}
 	static partial class Requests {
-		public static T getObject<T>(dynamic ID, string column = "ID") where T : SchemaItem, new() {
+		public static T getObject<T>(dynamic ID, string column = "id") where T : SchemaItem, new() {
 			MySqlDbType operandtype = MySqlDbType.VarChar;
 			if (ID is int) {
 				operandtype = MySqlDbType.Int64;
@@ -19,7 +19,7 @@ namespace API.Requests {
 
 			var selection = RequestMethods.wrapper.Select<T>(new MySqlConditionBuilder()
 					.Column(column)
-					.Equals((Object)ID, operandtype)
+					.Equals(ID, operandtype)
 				).ToList();
 			if (selection.Count == 0) {
 				return null;
