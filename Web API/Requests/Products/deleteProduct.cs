@@ -25,7 +25,7 @@ namespace API.Requests {
 			//Check if product exists
 			Product product = Requests.getObject<Product>(productID);
 			if (product == null) {
-				return Templates.NoSuchProduct;
+				return Templates.NoSuchProduct(productID);
 			}
 
 			product.Delete(wrapper);

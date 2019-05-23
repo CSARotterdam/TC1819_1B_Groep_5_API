@@ -67,9 +67,10 @@ namespace API.Requests
 
 			// Prepare values for database call
 			if (!condition.IsEmpty()) condition.And();
+			var productPrimary = Product.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0];
 			condition.Not()
-				.Column(Product.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0].Column)
-				.Equals(0, MySqlDbType.Int32);
+				.Column(productPrimary.Column)
+				.Equals(0, productPrimary.Type);
 			(ulong, ulong) range = (requestRangeStart?.ToObject<ulong>() ?? 0, requestRangeAmount?.ToObject<ulong>() ?? ulong.MaxValue);
 			if (requestColumns == null || requestColumns.Count() == 0) requestColumns = new JArray(Product.metadata.Select(x => x.Column));
 			else if (requestLanguages != null && !requestColumns.Contains("name")) ((JArray)requestColumns).Add("name");

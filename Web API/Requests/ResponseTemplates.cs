@@ -15,14 +15,17 @@ namespace API.Requests {
 		/// <summary>
 		/// Sent when a user is trying to call a nonexistent function.
 		/// </summary>
-        public static JObject InvalidRequestType = new JObject() {
-            {"reason", "InvalidRequestType"}
-        };
+        public static JObject InvalidRequestType(string message = null) {
+			return new JObject() {
+				{"reason", "InvalidRequestType" },
+				{"message", message },
+			};
+		}
 
 		/// <summary>
 		/// Sent when a user is trying to call a function without having enough permissions to do so.
 		/// </summary>
-        public static JObject AccessDenied = new JObject() {
+		public static JObject AccessDenied = new JObject() {
             {"reason", "AccessDenied"}
         };
 
@@ -36,37 +39,52 @@ namespace API.Requests {
 		/// <summary>
 		/// Sent when a nonexistent product was requested.
 		/// </summary>
-		public static JObject NoSuchProduct = new JObject() {
-			{"reason", "NoSuchProduct" }
-		};
+		public static JObject NoSuchProduct(string message = null) {
+			return new JObject() {
+				{"reason", "NoSuchProduct" },
+				{"message", message },
+			};
+		}
 
 		/// <summary>
 		/// Sent when a nonexistent product item was requested.
 		/// </summary>
-		public static JObject NoSuchProductItem = new JObject() {
-			{"reason", "NoSuchProductItem" }
-		};
+		public static JObject NoSuchProductItem(string message = null) {
+			return new JObject() {
+				{"reason", "NoSuchProductItem" },
+				{"message", message },
+			};
+		}
 
 		/// <summary>
 		/// Sent when a nonexistent product category was requested.
 		/// </summary>
-		public static JObject NoSuchProductCategory = new JObject() {
-			{"reason", "NoSuchProductCategory" }
-		};
+		public static JObject NoSuchProductCategory(string message = null) {
+			return new JObject() {
+				{"reason", "NoSuchProductCategory" },
+				{"message", message },
+			};
+		}
 
 		/// <summary>
 		/// Sent when a nonexistent user was requested.
 		/// </summary>
-		public static JObject NoSuchUser = new JObject() {
-			{"reason", "NoSuchUser" }
-		};
+		public static JObject NoSuchUser(string message = null) {
+			return new JObject() {
+				{"reason", "NoSuchUser" },
+				{"message", message },
+			};
+		}
 
 		/// <summary>
 		/// Sent when a user tries to add a new object (users, products, product categories, etc), but an object already existed with the specified ID.
 		/// </summary>
-		public static JObject AlreadyExists = new JObject() {
-			{"reason", "AlreadyExists" }
-		};
+		public static JObject AlreadyExists(string message = null) {
+			return new JObject() {
+				{"reason", "NoSuchProduct" },
+				{"message", message },
+			};
+		}
 
 		/// <summary>
 		/// Sent when a client attempts to use a password with an invalid format.

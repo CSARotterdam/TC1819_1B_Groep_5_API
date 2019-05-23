@@ -38,13 +38,13 @@ namespace API.Requests {
 			//Get product, if it exists
 			Product product = Requests.getObject<Product>(productID);
 			if (product == null) {
-				return Templates.NoSuchProduct;
+				return Templates.NoSuchProduct(productID);
 			}
 
 			//get productItem, if it exists
 			ProductItem item = Requests.getObject<ProductItem>(productItemID);
 			if (item == null) {
-				return Templates.NoSuchProductItem;
+				return Templates.NoSuchProductItem(productItemID);
 			}
 
 			//Change product ID, if necessary

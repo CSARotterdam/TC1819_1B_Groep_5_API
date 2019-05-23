@@ -53,7 +53,7 @@ namespace API.Requests {
 			//Check if category already exists
 			ProductCategory category = Requests.getObject<ProductCategory>(categoryID);
 			if (category != null) {
-				return Templates.AlreadyExists;
+				return Templates.AlreadyExists(categoryID);
 			}
 
 			//Create category, languageitem

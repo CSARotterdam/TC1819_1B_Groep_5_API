@@ -27,7 +27,7 @@ namespace API.Requests {
 
 			User user = getObject<User>(username);
 			if(user == null) {
-				return Templates.NoSuchUser;
+				return Templates.NoSuchUser(username);
 			}
 
             //Create response object

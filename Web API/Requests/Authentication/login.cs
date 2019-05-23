@@ -38,9 +38,11 @@ namespace API.Requests {
 
 			//Create + return response object
 			JObject response = new JObject() {
-                {"token", token},
-                {"permissionLevel", (int)user.Permission},
-                {"reason", null }
+                {"reason", null },
+				{"responseData", new JObject() {
+					{"token", token},
+					{"permissionLevel", (int)user.Permission}
+				}}
             };
             return response;
         }

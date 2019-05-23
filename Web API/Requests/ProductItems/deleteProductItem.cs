@@ -28,7 +28,7 @@ namespace API.Requests {
 			//Check if productItem exists
 			ProductItem item = Requests.getObject<ProductItem>(productID);
 			if (item == null) {
-				return Templates.NoSuchProduct;
+				return Templates.NoSuchProduct(productID);
 			}
 			item.Delete(wrapper);
 
