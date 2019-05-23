@@ -10,7 +10,10 @@ namespace API {
 			condition.NewGroup();
 			int i = 0;
 			foreach (KeyValuePair<string, JToken> pair in criteria) {
-				if (i > 0) condition.And();
+				if (i > 0) {
+					condition.And();
+				}
+
 				condition.Column(pair.Key);
 				string value = (string)pair.Value;
 				string[] operands = value.Split("OR");

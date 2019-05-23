@@ -21,8 +21,10 @@ namespace API {
 			if (File.Exists("Logs/latest.log")) {
 				DateTime created = File.GetCreationTime("Logs/latest.log");
 				var archiveName = string.Format("Logs/{0:dd-MM-yyyy}.zip", created);
-				using (var archive = ZipFile.Open(archiveName, ZipArchiveMode.Update))
+				using (var archive = ZipFile.Open(archiveName, ZipArchiveMode.Update)) {
 					archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
+				}
+
 				File.Delete("Logs/latest.log");
 			}
 
@@ -123,7 +125,9 @@ namespace API {
 			// Wait until all threads are terminated
 			consoleThread.Join();
 			ListenerThread.Join();
-			foreach (var t in threadList) t.Join();
+			foreach (var t in threadList) {
+				t.Join();
+			}
 
 			// Exit main thread
 			log.Dispose();

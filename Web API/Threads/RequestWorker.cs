@@ -174,10 +174,15 @@ namespace API.Threads {
 		}
 
 		private static string FormatDelay(Stopwatch timer) {
-			if (timer.ElapsedMilliseconds != 0)
+			if (timer.ElapsedMilliseconds != 0) {
 				return timer.ElapsedMilliseconds + " ms";
+			}
+
 			if (timer.ElapsedTicks >= 10) // 1 tick is 100 nanoseconds, so 10 ticks is 1 microsecond
+{
 				return (timer.ElapsedTicks / 10) + " us";
+			}
+
 			return (timer.ElapsedTicks * 100) + " ns";
 		}
 	}
