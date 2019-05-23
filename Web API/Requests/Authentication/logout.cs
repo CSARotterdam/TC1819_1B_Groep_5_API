@@ -21,7 +21,7 @@ namespace API.Requests {
 			}
 			string username = usernameValue.ToString();
 
-			User user = getObject<User>(username);
+			User user = getObject<User>(username, "Username");
 			if (user == null) {
 				return Templates.NoSuchUser(username);
 			}

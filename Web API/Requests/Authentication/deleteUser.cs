@@ -19,15 +19,15 @@ namespace API.Requests {
 			}
 
 			//Check if user exists
-			User user = getObject<User>(username);
+			User user = getObject<User>(username, "Username");
 			if (user == null) {
 				return Templates.NoSuchUser(username);
 			}
 
-			user.Delete(wrapper);
-			//Create base response
+			//Create + return response object
 			return new JObject() {
 				{"reason", null },
+				{"responseData", new JObject() }
 			};
 		}
 	}

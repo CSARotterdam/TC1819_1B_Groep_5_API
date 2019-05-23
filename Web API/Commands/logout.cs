@@ -12,7 +12,7 @@ namespace API.Commands {
 			}
 
 			//Get the user object. Show an error if doesn't exist.
-			User user = getObject<User>(tokens[1]);
+			User user = getObject<User>(tokens[1], "Username");
 			if (user == null) {
 				Console.WriteLine("No such user.");
 				return;

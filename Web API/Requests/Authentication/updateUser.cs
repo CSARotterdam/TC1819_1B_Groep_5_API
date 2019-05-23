@@ -32,7 +32,7 @@ namespace API.Requests {
 			}
 
 			//Check permission
-			User currentUser = getObject<User>(request["username"].ToObject<string>());
+			User currentUser = getObject<User>(request["username"].ToObject<string>(), "Username");
 			if (currentUser.Username != username) {
 				if (currentUser.Permission != User.UserPermission.Admin) {
 					return Templates.AccessDenied;
@@ -42,7 +42,7 @@ namespace API.Requests {
 			}
 
 			//Get user
-			User user = getObject<User>(username);
+			User user = getObject<User>(username, "Username");
 			if (user == null) {
 				return Templates.NoSuchUser(username);
 			}

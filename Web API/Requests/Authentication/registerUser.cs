@@ -24,7 +24,7 @@ namespace API.Requests {
 			string password = passwordValue.ToString();
 
 			//Check if username already exists
-			if (getObject<User>(username) != null) {
+			if (getObject<User>(username, "Username") != null) {
 				return Templates.AlreadyExists(username);
 			}
 
