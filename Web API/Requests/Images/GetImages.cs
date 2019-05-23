@@ -5,10 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using static API.Requests.RequestMethodAttributes;
 
-namespace API.Requests
-{
-	static partial class RequestMethods
-	{
+namespace API.Requests {
+	static partial class RequestMethods {
 		/// <summary>
 		/// Gets and returns a list of images from the database.
 		/// </summary>
@@ -20,8 +18,7 @@ namespace API.Requests
 		/// <param name="request"></param>
 		/// <returns></returns>
 		[verifyPermission(User.UserPermission.User)]
-		public static JObject GetImages(JObject request)
-		{
+		public static JObject GetImages(JObject request) {
 			//Get arguments
 			JObject requestData = request["requestData"].ToObject<JObject>();
 			requestData.TryGetValue("columns", out JToken requestColumns);
@@ -42,8 +39,7 @@ namespace API.Requests
 			// Build condition
 			var condition = new MySqlConditionBuilder();
 			bool first = true;
-			foreach (string id in requestImageIds)
-			{
+			foreach (string id in requestImageIds) {
 				if (!first) condition.Or();
 				condition.Column(Image.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0].Column);
 				condition.Equals(id, MySqlDbType.String);
@@ -68,8 +64,7 @@ namespace API.Requests
 				{"responseData", responseData }
 			};
 
-			foreach (var data in imageData)
-			{
+			foreach (var data in imageData) {
 				var item = new JObject();
 				for (int i = 1; i < requestColumns.Count(); i++)
 					item.Add((string)requestColumns[i], new JValue(data[i]));

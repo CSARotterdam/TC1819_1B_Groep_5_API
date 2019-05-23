@@ -1,18 +1,13 @@
 ﻿using MySql.Data.MySqlClient;
 using MySQLWrapper.Data;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using static API.Requests.RequestMethodAttributes;
 
-namespace API.Requests
-{
-	static partial class RequestMethods
-	{
+namespace API.Requests {
+	static partial class RequestMethods {
 		/// <summary>
 		/// Handles requests with requestType "GetProducts".
 		/// </summary>
@@ -27,8 +22,7 @@ namespace API.Requests
 		/// <param name="request">The request from the client.</param>
 		/// <returns>The contents of the requestData field, which is to be returned to the client.</returns>
 		[verifyPermission(User.UserPermission.User)]
-		public static JObject getProducts(JObject request)
-		{
+		public static JObject getProducts(JObject request) {
 			// Get request arguments
 			JObject requestData = request["requestData"].ToObject<JObject>();
 			requestData.TryGetValue("columns", out JToken requestColumns);
@@ -44,10 +38,7 @@ namespace API.Requests
 			if (requestColumns != null && (requestColumns.Type != JTokenType.Array || requestColumns.Any(x => x.Type != JTokenType.String)))
 				failedVerifications.Add("colums");
 			if (requestCriteria != null)
-				try
-				{ condition = Misc.CreateCondition((JObject)requestCriteria, condition); }
-				catch (Exception)
-				{ failedVerifications.Add("criteria"); }
+				try { condition = Misc.CreateCondition((JObject)requestCriteria, condition); } catch (Exception) { failedVerifications.Add("criteria"); }
 			if (requestLanguages != null && (requestLanguages.Type != JTokenType.Array || requestLanguages.Any(x => x.Type != JTokenType.String)))
 				failedVerifications.Add("language");
 			if (requestRangeStart != null && (requestRangeStart.Type != JTokenType.Integer))
@@ -79,8 +70,7 @@ namespace API.Requests
 			List<object[]> categoryData = wrapper.Select<Product>(requestColumns.ToObject<string[]>(), condition, range).ToList();
 
 			// Add all categories as dictionaries to responseData
-			foreach (var data in categoryData)
-			{
+			foreach (var data in categoryData) {
 				var item = new JObject();
 				for (int i = 0; i < requestColumns.Count(); i++)
 					item[(string)requestColumns[i]] = new JValue(data[i]);
@@ -88,15 +78,13 @@ namespace API.Requests
 			}
 
 			// Add translations if specified in the arguments
-			if (requestLanguages != null)
-			{
+			if (requestLanguages != null) {
 				List<string> nameIds = responseData.Select(x => x["name"].ToString()).ToList();
 
 				// Build a condition to get all language items in one query
 				bool first = true;
 				var nameCondition = new MySqlConditionBuilder();
-				foreach (var name in nameIds)
-				{
+				foreach (var name in nameIds) {
 					if (!first) nameCondition.Or();
 					nameCondition.Column("id");
 					nameCondition.Equals(name, MySqlDbType.String);
@@ -110,8 +98,7 @@ namespace API.Requests
 				if (languageColumns.Count == 0) languageColumns.AddRange(LanguageItem.metadata.Select(x => x.Column));
 				else languageColumns.Insert(0, "id");
 				List<object[]> names = wrapper.Select<LanguageItem>(languageColumns.ToArray(), nameCondition).ToList();
-				for (int i = 0; i < responseData.Count; i++)
-				{
+				for (int i = 0; i < responseData.Count; i++) {
 					var nameData = names.First(x => x[0].Equals(nameIds[i]));
 					var translations = new JObject();
 					for (int j = 1; j < languageColumns.Count; j++)

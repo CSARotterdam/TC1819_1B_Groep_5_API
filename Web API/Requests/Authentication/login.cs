@@ -1,34 +1,32 @@
 ﻿using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using static API.Requests.RequestMethodAttributes;
 using static API.Requests.Requests;
 
 
 namespace API.Requests {
-    static partial class RequestMethods {
-        /// <summary>
-        /// Handles requests with requestType "login".
-        /// </summary>
-        /// <param name="request">The JObject containing the request received from the client.</param>
-        /// <returns>A JObject containing the request response, which can then be sent to the client.</returns>
+	static partial class RequestMethods {
+		/// <summary>
+		/// Handles requests with requestType "login".
+		/// </summary>
+		/// <param name="request">The JObject containing the request received from the client.</param>
+		/// <returns>A JObject containing the request response, which can then be sent to the client.</returns>
 
-        [skipTokenVerification]
-        public static JObject login(JObject request) {
-            //Verify user details
-            JObject requestData = request["requestData"].ToObject<JObject>();
-            requestData.TryGetValue("username", out JToken usernameValue);
-            requestData.TryGetValue("password", out JToken passwordValue);
-            if (usernameValue.Type == JTokenType.Null || passwordValue.Type == JTokenType.Null) {
+		[skipTokenVerification]
+		public static JObject login(JObject request) {
+			//Verify user details
+			JObject requestData = request["requestData"].ToObject<JObject>();
+			requestData.TryGetValue("username", out JToken usernameValue);
+			requestData.TryGetValue("password", out JToken passwordValue);
+			if (usernameValue.Type == JTokenType.Null || passwordValue.Type == JTokenType.Null) {
 				return Templates.MissingArguments("username, password");
-            }
-            string username = usernameValue.ToString();
-            string password = passwordValue.ToString();
+			}
+			string username = usernameValue.ToString();
+			string password = passwordValue.ToString();
 
-            User user = getObject<User>(username);
-            if (user == null || user.Password != password) {
+			User user = getObject<User>(username);
+			if (user == null || user.Password != password) {
 				return Templates.InvalidLogin;
 			}
 
@@ -38,13 +36,13 @@ namespace API.Requests {
 
 			//Create + return response object
 			JObject response = new JObject() {
-                {"reason", null },
+				{"reason", null },
 				{"responseData", new JObject() {
 					{"token", token},
 					{"permissionLevel", (int)user.Permission}
 				}}
-            };
-            return response;
-        }
-    }
+			};
+			return response;
+		}
+	}
 }

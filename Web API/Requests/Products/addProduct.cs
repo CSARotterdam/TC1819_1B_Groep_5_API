@@ -1,11 +1,7 @@
 ﻿using MySQLWrapper.Data;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
@@ -70,15 +66,15 @@ namespace API.Requests {
 			if (nlValue != null && nlValue.Type == JTokenType.String) {
 				nl = names["nl"].ToObject<string>();
 			}
-			if(arValue != null && arValue.Type == JTokenType.String) {
+			if (arValue != null && arValue.Type == JTokenType.String) {
 				ar = names["ar"].ToObject<string>();
 			}
 
-			
+
 
 			//Check if product already exists
 			Product product = Requests.getObject<Product>(productID);
-			if(product != null) {
+			if (product != null) {
 				return Templates.AlreadyExists(productID);
 			}
 
@@ -100,10 +96,10 @@ namespace API.Requests {
 			}
 			product.Upload(wrapper);
 
-            //Create response
-            return new JObject() {
-                {"reason", null },
-            };
-        }
-    }
+			//Create response
+			return new JObject() {
+				{"reason", null },
+			};
+		}
+	}
 }

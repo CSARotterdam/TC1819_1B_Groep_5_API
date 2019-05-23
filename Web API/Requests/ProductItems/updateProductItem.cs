@@ -1,12 +1,5 @@
 ﻿using MySQLWrapper.Data;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
@@ -30,7 +23,7 @@ namespace API.Requests {
 			}
 			if (idValue != null || idValue.Type != JTokenType.String) {
 				productID = idValue.ToObject<string>();
-				if(productID == "0") {
+				if (productID == "0") {
 					return Templates.InvalidArgument("productID");
 				}
 			}
@@ -48,7 +41,7 @@ namespace API.Requests {
 			}
 
 			//Change product ID, if necessary
-			if(productID != null) {
+			if (productID != null) {
 				item.ProductId = productID;
 			}
 

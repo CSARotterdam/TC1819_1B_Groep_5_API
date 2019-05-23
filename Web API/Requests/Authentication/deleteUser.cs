@@ -1,14 +1,7 @@
 ﻿using MySQLWrapper.Data;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using static API.Requests.Requests;
 using static API.Requests.RequestMethodAttributes;
+using static API.Requests.Requests;
 
 namespace API.Requests {
 	static partial class RequestMethods {
@@ -27,7 +20,7 @@ namespace API.Requests {
 
 			//Check if user exists
 			User user = getObject<User>(username);
-			if(user == null) {
+			if (user == null) {
 				return Templates.NoSuchUser(username);
 			}
 

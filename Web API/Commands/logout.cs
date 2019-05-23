@@ -1,14 +1,12 @@
 ﻿using MySQLWrapper.Data;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using static API.Requests.Requests;
 
 namespace API.Commands {
 	static partial class CommandMethods {
 		public static void logout(string[] tokens) {
 			//Check if enough tokens were given
-			if(tokens.Length < 2) {
+			if (tokens.Length < 2) {
 				Console.WriteLine("Usage: logout <username>");
 				return;
 			}

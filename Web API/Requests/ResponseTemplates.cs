@@ -1,21 +1,18 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace API.Requests {
-    public static class Templates {
+	public static class Templates {
 		/// <summary>
 		/// Sent when a user is trying to call a function but doesn't have a valid token.
 		/// </summary>
-        public static JObject ExpiredToken = new JObject() {
-            {"reason", "ExpiredToken"}
-        };
+		public static JObject ExpiredToken = new JObject() {
+			{"reason", "ExpiredToken"}
+		};
 
 		/// <summary>
 		/// Sent when a user is trying to call a nonexistent function.
 		/// </summary>
-        public static JObject InvalidRequestType(string message = null) {
+		public static JObject InvalidRequestType(string message = null) {
 			return new JObject() {
 				{"reason", "InvalidRequestType" },
 				{"message", message },
@@ -26,15 +23,15 @@ namespace API.Requests {
 		/// Sent when a user is trying to call a function without having enough permissions to do so.
 		/// </summary>
 		public static JObject AccessDenied = new JObject() {
-            {"reason", "AccessDenied"}
-        };
+			{"reason", "AccessDenied"}
+		};
 
 		/// <summary>
 		/// Sent when a user is trying to login using incorrect user details.
 		/// </summary>
-        public static JObject InvalidLogin = new JObject() {
-            {"reason" , "InvalidLogin"}
-        };
+		public static JObject InvalidLogin = new JObject() {
+			{"reason" , "InvalidLogin"}
+		};
 
 		/// <summary>
 		/// Sent when a nonexistent product was requested.
@@ -113,12 +110,12 @@ namespace API.Requests {
 		/// </summary>
 		/// <param name="message">The error that caused this failure.</param>
 		/// <returns></returns>
-        public static JObject ServerError(string message) {
-            return new JObject() {
-                {"reason", "ServerError"},
-                {"message", message}
-            };
-        }
+		public static JObject ServerError(string message) {
+			return new JObject() {
+				{"reason", "ServerError"},
+				{"message", message}
+			};
+		}
 
 		/// <summary>
 		/// Sent when a client sends a request with an argument set to unacceptable values.
@@ -145,5 +142,5 @@ namespace API.Requests {
 				{"message", string.Join(", ", argNames) }
 			};
 		}
-    }
+	}
 }

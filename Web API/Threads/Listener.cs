@@ -1,9 +1,6 @@
 ﻿using Logging;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 
 namespace API.Threads {
 	class Listener {

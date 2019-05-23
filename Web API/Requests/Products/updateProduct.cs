@@ -1,16 +1,11 @@
 ﻿using MySQLWrapper.Data;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-    static partial class RequestMethods {
+	static partial class RequestMethods {
 
 		[verifyPermission(User.UserPermission.Collaborator)]
 		public static JObject updateProduct(JObject request) {
@@ -24,7 +19,7 @@ namespace API.Requests {
 			byte[] imageData = null;
 			JObject names = null;
 			JObject newImage = null;
-			
+
 			JObject requestData = request["requestData"].ToObject<JObject>();
 			requestData.TryGetValue("productID", out JToken idValue);
 			requestData.TryGetValue("newProductID", out JToken newIDValue);
@@ -56,13 +51,13 @@ namespace API.Requests {
 				newImage = imageValue.ToObject<JObject>();
 				newImage.TryGetValue("data", out JToken dataValue);
 				newImage.TryGetValue("extension", out JToken extensionValue);
-				if(extensionValue != null && extensionValue.Type == JTokenType.String) {
+				if (extensionValue != null && extensionValue.Type == JTokenType.String) {
 					extension = extensionValue.ToObject<string>();
 					if (!Image.ImageFormats.Contains(extension)) {
 						return Templates.InvalidArgument("extension");
 					}
 				}
-				if(dataValue != null && dataValue.Type == JTokenType.String) {
+				if (dataValue != null && dataValue.Type == JTokenType.String) {
 					imageData = (byte[])dataValue;
 				}
 			}
@@ -76,11 +71,11 @@ namespace API.Requests {
 			///////////////Image
 			//Edit image if needed;
 			Image image = product.GetImage(wrapper);
-			if(newImage != null) {
+			if (newImage != null) {
 
 				string oldID = image.Id;
 				if (image.Id == "default") {
-					image = new Image(product.Id + "_image", image.Data, image.Extension);				
+					image = new Image(product.Id + "_image", image.Data, image.Extension);
 				}
 				if (extension != null) {
 					image.Extension = extension;
@@ -88,15 +83,15 @@ namespace API.Requests {
 				if (imageData != null) {
 					image.Data = imageData;
 				}
-				
-				if(oldID != image.Id) {
+
+				if (oldID != image.Id) {
 					image.Upload(wrapper);
 					product.UpdateTrace();
 					product.Image = image.Id;
 					product.Update(wrapper);
 				} else {
 					image.Update(wrapper);
-				}				
+				}
 			}
 
 			///////////////LanguageItem
@@ -162,5 +157,5 @@ namespace API.Requests {
 				{"success", true}
 			};
 		}
-    }
+	}
 }

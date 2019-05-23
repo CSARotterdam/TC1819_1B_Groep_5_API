@@ -2,17 +2,14 @@
 using MySql.Data.MySqlClient;
 using MySQLWrapper;
 using MySQLWrapper.Data;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace API.Requests {
-    static partial class RequestMethods {
-        public static TechlabMySQL wrapper;
-        public static Logger log;
-    }
+	static partial class RequestMethods {
+		public static TechlabMySQL wrapper;
+		public static Logger log;
+	}
 	static partial class Requests {
 		public static T getObject<T>(dynamic ID, string column = "ID") where T : SchemaItem, new() {
 			MySqlDbType operandtype = MySqlDbType.VarChar;

@@ -27,11 +27,11 @@ namespace API {
             }
 		}";
 
-		public static dynamic loadConfig(){
+		public static dynamic loadConfig() {
 			string filename = "config.json";
 			dynamic Settings;
 
-			if (!File.Exists(filename)){
+			if (!File.Exists(filename)) {
 				Settings = JObject.Parse(defaultJson);
 				using (JsonTextWriter writer = new JsonTextWriter(File.CreateText(filename))) {
 					writer.Formatting = Formatting.Indented;

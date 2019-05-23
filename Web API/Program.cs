@@ -1,27 +1,24 @@
-﻿using System;
-using System.Linq;
+﻿using Logging;
+using MySQLWrapper;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using MySQLWrapper;
-using Logging;
-using Newtonsoft.Json;
-using System.IO;
-using System.Collections;
-using System.IO.Compression;
 
 namespace API {
 	class Program {
 		public static bool ManualError = false;
 		public static Logger log = new Logger(Level.ALL, Console.Out);
-        public static dynamic Settings;
+		public static dynamic Settings;
 
 		public static void Main() {
 			// Compress previous log
-			if (File.Exists("Logs/latest.log"))
-			{
+			if (File.Exists("Logs/latest.log")) {
 				DateTime created = File.GetCreationTime("Logs/latest.log");
 				var archiveName = string.Format("Logs/{0:dd-MM-yyyy}.zip", created);
 				using (var archive = ZipFile.Open(archiveName, ZipArchiveMode.Update))
@@ -29,59 +26,58 @@ namespace API {
 				File.Delete("Logs/latest.log");
 			}
 
-			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log")
-			{
+			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log") {
 				Compression = true,
 				Archive = "Logs/{0:dd-MM-yyyy}.zip"
 			});
 
 			log.Info("Server is starting!");
 
-            //Start logger
-            Requests.RequestMethods.log = log;
+			//Start logger
+			Requests.RequestMethods.log = log;
 
-            //Load configuration file
-            log.Info("Loading configuration file.");
-            bool validConfig = true;
+			//Load configuration file
+			log.Info("Loading configuration file.");
+			bool validConfig = true;
 
-            try {
-                Settings = Config.loadConfig();
-            } catch (JsonReaderException) {
-                log.Fatal("Configuration file is not a valid JSON file.");
-                log.Fatal("Validate the file at https://www.jsonschemavalidator.net/");
-                log.Fatal("Press the any key to exit.");
-                Console.ReadLine();
-                return;
-            }
+			try {
+				Settings = Config.loadConfig();
+			} catch (JsonReaderException) {
+				log.Fatal("Configuration file is not a valid JSON file.");
+				log.Fatal("Validate the file at https://www.jsonschemavalidator.net/");
+				log.Fatal("Press the any key to exit.");
+				Console.ReadLine();
+				return;
+			}
 
 			//Check if config contains all necessary info to start. If it doesn't, abort launch.
-			if(Settings.databaseSettings.username == null || Settings.databaseSettings.password == null || Settings.databaseSettings.serverAddress == null || Settings.databaseSettings.database == null) {
+			if (Settings.databaseSettings.username == null || Settings.databaseSettings.password == null || Settings.databaseSettings.serverAddress == null || Settings.databaseSettings.database == null) {
 				log.Fatal("Incomplete or missing database configuration.");
 				validConfig = false;
 			}
-			if((bool)Settings.connectionSettings.autodetect && Settings.connectionSettings.serverAddresses.Count == 0) {
+			if ((bool)Settings.connectionSettings.autodetect && Settings.connectionSettings.serverAddresses.Count == 0) {
 				log.Fatal("Missing server address.");
 				validConfig = false;
 			}
 
-            //If the config file is invalid, throw an error and abort.
+			//If the config file is invalid, throw an error and abort.
 			if (!validConfig) {
-                log.Fatal("\n");
+				log.Fatal("\n");
 				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
 				log.Fatal("Press the any key to exit.");
 				Console.ReadLine();
 				return;
 			}
-			
-            if((string)Settings["authenticationSettings"]["expiration"] == null) {
-                log.Info("User token expiration not set. Defaulting to 7200 (2 hours).");
-                Settings["authenticationSettings"]["expiration"] = 7200;
-            }
 
-            log.Info("Successfully loaded configuration file.");
+			if ((string)Settings["authenticationSettings"]["expiration"] == null) {
+				log.Info("User token expiration not set. Defaulting to 7200 (2 hours).");
+				Settings["authenticationSettings"]["expiration"] = 7200;
+			}
 
-            //Get local IP address, if autodetect is enabled in settings.
-            List<string> addresses = Settings.connectionSettings.serverAddresses.ToObject<List<string>>();
+			log.Info("Successfully loaded configuration file.");
+
+			//Get local IP address, if autodetect is enabled in settings.
+			List<string> addresses = Settings.connectionSettings.serverAddresses.ToObject<List<string>>();
 			if ((bool)Settings.connectionSettings.autodetect) {
 				string address;
 				using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0)) {

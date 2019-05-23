@@ -1,11 +1,5 @@
 ﻿using MySQLWrapper.Data;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
@@ -32,7 +26,7 @@ namespace API.Requests {
 			//Create productItem
 			ProductItem item = new ProductItem(null, productID);
 			item.Upload(wrapper);
-			
+
 			//Create response
 			return new JObject() {
 				{"reason", null },

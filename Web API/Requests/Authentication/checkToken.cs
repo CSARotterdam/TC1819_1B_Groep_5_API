@@ -1,9 +1,4 @@
-﻿using MySQLWrapper.Data;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using static API.Requests.RequestMethodAttributes;
+﻿using Newtonsoft.Json.Linq;
 
 namespace API.Requests {
 	static partial class RequestMethods {

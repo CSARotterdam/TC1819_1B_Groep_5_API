@@ -1,14 +1,6 @@
 ﻿using MySQLWrapper.Data;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using static API.Requests.Requests;
-using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
 	static partial class RequestMethods {
@@ -42,24 +34,24 @@ namespace API.Requests {
 			//Check permission
 			User currentUser = getObject<User>(request["username"].ToObject<string>());
 			if (currentUser.Username != username) {
-				if(currentUser.Permission != User.UserPermission.Admin) {
+				if (currentUser.Permission != User.UserPermission.Admin) {
 					return Templates.AccessDenied;
 				}
-			} else if(permission != -2) {
+			} else if (permission != -2) {
 				return Templates.AccessDenied;
 			}
 
 			//Get user
 			User user = getObject<User>(username);
-			if(user == null) {
+			if (user == null) {
 				return Templates.NoSuchUser(username);
 			}
 
 			//Edit user
-			if(password != null) {
+			if (password != null) {
 				user.Password = password;
 			}
-			if(permission != -2) {
+			if (permission != -2) {
 				user.Permission = (User.UserPermission)permission;
 			}
 			user.Update(wrapper);

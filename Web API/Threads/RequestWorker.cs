@@ -1,23 +1,21 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Diagnostics;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Threading;
+﻿using API.Requests;
 using Logging;
-using API.Requests;
-using System.Reflection;
+using MySQLWrapper;
 using MySQLWrapper.Data;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Net;
+using System.Reflection;
+using System.Threading;
 using static API.Requests.RequestMethodAttributes;
 using static API.Requests.Requests;
-using MySQLWrapper;
 
 namespace API.Threads {
 	class RequestWorker {
 		private static TechlabMySQL wrapper;
-		
+
 		//RequestWorker threads takes and processes incoming requests from the requestQueue (which are added to the queue by the Listener thread.
 		public static void Main(Logger log, BlockingCollection<HttpListenerContext> requestQueue) {
 			MethodInfo[] methods = typeof(RequestMethods).GetMethods();
@@ -55,7 +53,7 @@ namespace API.Threads {
 				}
 
 				JObject requestContent = JObject.Parse(reader.ReadToEnd());
-				
+
 				// Check if request has body data. Send a 400 BadRequest if it doesn't.
 				if (!request.HasEntityBody) {
 					log.Error("Request has no body data. Sending error response and ignoring!");
@@ -65,7 +63,7 @@ namespace API.Threads {
 
 				//Check if the database is available. If it isn't, send an error.
 				if (!wrapper.Ping()) {
-					log.Error("Database connection failed for worker "+Thread.CurrentThread.Name);
+					log.Error("Database connection failed for worker " + Thread.CurrentThread.Name);
 					responseJson["body"] = Templates.ServerError("DatabaseConnectionError");
 					sendResponse = true;
 				}
@@ -136,7 +134,7 @@ namespace API.Threads {
 					if (user.Permission < requestMethod.GetCustomAttribute<verifyPermission>().permission) {
 						responseJson["body"] = Templates.AccessDenied;
 						sendResponse = true;
-						log.Warning("User "+user.Username+" attempted to use requestType "+requestMethod.Name+" without the required permissions.");
+						log.Warning("User " + user.Username + " attempted to use requestType " + requestMethod.Name + " without the required permissions.");
 					}
 				}
 
@@ -175,8 +173,7 @@ namespace API.Threads {
 			return buffer.Length;
 		}
 
-		private static string FormatDelay(Stopwatch timer)
-		{
+		private static string FormatDelay(Stopwatch timer) {
 			if (timer.ElapsedMilliseconds != 0)
 				return timer.ElapsedMilliseconds + " ms";
 			if (timer.ElapsedTicks >= 10) // 1 tick is 100 nanoseconds, so 10 ticks is 1 microsecond
