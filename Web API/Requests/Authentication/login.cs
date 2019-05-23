@@ -27,7 +27,7 @@ namespace API.Requests {
             string username = usernameValue.ToString();
             string password = passwordValue.ToString();
 
-            User user = getUser(username);
+            User user = getObject<User>(username);
             if (user == null || user.Password != password) {
 				return Templates.InvalidLogin;
 			}

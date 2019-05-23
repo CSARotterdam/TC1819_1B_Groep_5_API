@@ -108,7 +108,7 @@ namespace API.Threads {
 						} else {
 							token = tokenValue.ToObject<long>();
 							username = usernameValue.ToObject<string>();
-							user = getUser(username);
+							user = getObject<User>(username);
 							if (user == null) {
 								responseJson["responseData"] = Templates.InvalidLogin;
 								sendResponse = true;
