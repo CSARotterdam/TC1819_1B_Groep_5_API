@@ -11,7 +11,7 @@ namespace API.Requests
 	static partial class RequestMethods
 	{
 		/// <summary>
-		/// Handles requests with requestType "GetProducts".
+		/// Handles requests with requestType "getProductItems".
 		/// </summary>
 		/// <remarks>
 		/// Optional arguments are:
