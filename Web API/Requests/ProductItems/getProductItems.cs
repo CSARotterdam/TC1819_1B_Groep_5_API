@@ -26,8 +26,6 @@ namespace API.Requests
 			JObject requestData = request["requestData"].ToObject<JObject>();
 			requestData.TryGetValue("products", out JToken requestProductIds);
 
-			MySqlConditionBuilder condition = new MySqlConditionBuilder();
-
 			// Verify the argument
 			if (requestProductIds != null && (requestProductIds.Type != JTokenType.Array || requestProductIds.Any(x => x.Type != JTokenType.String)))
 				return Templates.InvalidArgument("products");
@@ -42,22 +40,8 @@ namespace API.Requests
 			// Prepare values
 			requestProductIds = requestProductIds ?? new JArray();
 
-			// Build condition
-			foreach (var product in requestProductIds)
-			{
-				if (!condition.IsEmpty()) condition.Or();
-				condition.Column("product");
-				condition.Equals(product, MySqlDbType.String);
-			}
-			var itemPrimary = ProductItem.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0];
-			// Ignore default item
-			if (!condition.IsEmpty()) condition.And();
-			condition.Not()
-				.Column(itemPrimary.Column)
-				.Equals(0, itemPrimary.Type);
-
 			// Request ProductItem data from database
-			ILookup<string, ProductItem> categoryData = wrapper.Select<ProductItem>(condition).ToLookup(x => x.ProductId);
+			ILookup<string, ProductItem> categoryData = Core_getProductItems(requestProductIds.ToObject<string[]>());
 
 			// Add all categories as dictionaries to responseData
 			foreach (var data in categoryData)
@@ -70,6 +54,31 @@ namespace API.Requests
 			}
 
 			return response;
+		}
+
+		/// <summary>
+		/// Heart of the getProductItems function.
+		/// </summary>
+		/// <param name="productIds"></param>
+		/// <returns></returns>
+		private static ILookup<string, ProductItem> Core_getProductItems(params string[] productIds)
+		{
+			MySqlConditionBuilder condition = new MySqlConditionBuilder();
+
+			// Build condition
+			foreach (var id in productIds)
+			{
+				condition.Or();
+				condition.Column("product");
+				condition.Equals(id, MySqlDbType.String);
+			}
+			var itemPrimary = ProductItem.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0];
+			// Ignore default item
+			condition.And()
+				.Column(itemPrimary.Column)
+				.NotEquals(0, itemPrimary.Type);
+
+			return wrapper.Select<ProductItem>(condition).ToLookup(x => x.ProductId);
 		}
 	}
 }

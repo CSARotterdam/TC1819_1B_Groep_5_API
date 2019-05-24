@@ -35,29 +35,19 @@ namespace API.Requests {
 
 			// Verify the types of the arguments
 			List<string> failedVerifications = new List<string>();
-			if (requestColumns != null && (requestColumns.Type != JTokenType.Array || requestColumns.Any(x => x.Type != JTokenType.String))) {
+			if (requestColumns != null && (requestColumns.Type != JTokenType.Array || requestColumns.Any(x => x.Type != JTokenType.String)))
 				failedVerifications.Add("colums");
-			}
-
-			if (requestCriteria != null) {
+			if (requestCriteria != null)
 				try { condition = Misc.CreateCondition((JObject)requestCriteria, condition); } catch (Exception) { failedVerifications.Add("criteria"); }
-			}
-
-			if (requestLanguages != null && (requestLanguages.Type != JTokenType.Array || requestLanguages.Any(x => x.Type != JTokenType.String))) {
+			if (requestLanguages != null && (requestLanguages.Type != JTokenType.Array || requestLanguages.Any(x => x.Type != JTokenType.String)))
 				failedVerifications.Add("language");
-			}
-
-			if (requestRangeStart != null && (requestRangeStart.Type != JTokenType.Integer)) {
+			if (requestRangeStart != null && (requestRangeStart.Type != JTokenType.Integer))
 				failedVerifications.Add("start");
-			}
-
-			if (requestRangeAmount != null && (requestRangeAmount.Type != JTokenType.Integer)) {
+			if (requestRangeAmount != null && (requestRangeAmount.Type != JTokenType.Integer))
 				failedVerifications.Add("amount");
-			}
 
-			if (failedVerifications.Any()) {
+			if (failedVerifications.Any()) 
 				return Templates.InvalidArguments(failedVerifications.ToArray());
-			}
 
 			//Create base response
 			var responseData = new JArray();
@@ -67,20 +57,15 @@ namespace API.Requests {
 			};
 
 			// Prepare values for database call
-			if (!condition.IsEmpty()) {
-				condition.And();
-			}
-
 			var productPrimary = Product.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0];
-			condition.Not()
+			condition.And()
 				.Column(productPrimary.Column)
-				.Equals(0, productPrimary.Type);
+				.NotEquals(0, productPrimary.Type);
 			(ulong, ulong) range = (requestRangeStart?.ToObject<ulong>() ?? 0, requestRangeAmount?.ToObject<ulong>() ?? ulong.MaxValue);
-			if (requestColumns == null || requestColumns.Count() == 0) {
+			if (requestColumns == null || requestColumns.Count() == 0)
 				requestColumns = new JArray(Product.metadata.Select(x => x.Column));
-			} else if (requestLanguages != null && !requestColumns.Contains("name")) {
+			else if (requestLanguages != null && !requestColumns.Contains("name"))
 				((JArray)requestColumns).Add("name");
-			}
 
 			// Request category data from database
 			List<object[]> categoryData = wrapper.Select<Product>(requestColumns.ToObject<string[]>(), condition, range).ToList();
@@ -88,10 +73,8 @@ namespace API.Requests {
 			// Add all categories as dictionaries to responseData
 			foreach (var data in categoryData) {
 				var item = new JObject();
-				for (int i = 0; i < requestColumns.Count(); i++) {
+				for (int i = 0; i < requestColumns.Count(); i++)
 					item[(string)requestColumns[i]] = new JValue(data[i]);
-				}
-
 				responseData.Add(item);
 			}
 
@@ -100,36 +83,26 @@ namespace API.Requests {
 				List<string> nameIds = responseData.Select(x => x["name"].ToString()).ToList();
 
 				// Build a condition to get all language items in one query
-				bool first = true;
 				var nameCondition = new MySqlConditionBuilder();
 				foreach (var name in nameIds) {
-					if (!first) {
-						nameCondition.Or();
-					}
-
+					nameCondition.Or();
 					nameCondition.Column("id");
 					nameCondition.Equals(name, MySqlDbType.String);
-					first = false;
 				}
-				// If the condition is empty, insert a condition that is false
-				//if (first) nameCondition.Not().Null().Is().Null();
 
 				// Get the specified translations
 				var languageColumns = requestLanguages.ToObject<List<string>>();
-				if (languageColumns.Count == 0) {
+				if (languageColumns.Count == 0)
 					languageColumns.AddRange(LanguageItem.metadata.Select(x => x.Column));
-				} else {
+				else
 					languageColumns.Insert(0, "id");
-				}
 
 				List<object[]> names = wrapper.Select<LanguageItem>(languageColumns.ToArray(), nameCondition).ToList();
 				for (int i = 0; i < responseData.Count; i++) {
 					var nameData = names.First(x => x[0].Equals(nameIds[i]));
 					var translations = new JObject();
-					for (int j = 1; j < languageColumns.Count; j++) {
+					for (int j = 1; j < languageColumns.Count; j++)
 						translations[languageColumns[j]] = new JValue(nameData[j]);
-					}
-
 					responseData[i]["name"] = translations;
 				}
 			}
