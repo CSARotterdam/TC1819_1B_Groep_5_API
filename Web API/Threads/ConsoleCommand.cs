@@ -78,5 +78,12 @@ namespace API.Commands {
 			}
 			if (delays.Count > 1) log.Info($"Average: {Math.Round(delays.Average(), 2)} ms");
 		}
+
+		public static void ReloadConfig(string[] args)
+		{
+			lock (Program.Settings)
+				Program.Settings = Config.loadConfig();
+			log.Info("Successfully reloaded config");
+		}
 	}
 }
