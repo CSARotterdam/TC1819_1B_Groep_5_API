@@ -26,6 +26,7 @@ namespace API.Threads {
 						.Cast<Match>()
 						.Select(m => m.Value.Trim('"'))
 						.ToArray();
+				if (tokens.Length == 0) continue;
 
 				//Find the right command
 				MethodInfo command = null;
