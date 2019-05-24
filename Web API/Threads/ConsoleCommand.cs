@@ -1,13 +1,14 @@
 ﻿using API.Commands;
-using API.Requests;
 using Logging;
 using MySQLWrapper;
-using Newtonsoft.Json.Linq;
+using MySQLWrapper.Data;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace API.Threads {
@@ -21,7 +22,10 @@ namespace API.Threads {
 			while (true) {
 				//Wait for input, then split it.
 				string text = Console.ReadLine();
-				string[] tokens = text.Split(" ");
+				string[] tokens = Regex.Matches(text, @"[\""].+?[\""]|[^ ]+")
+						.Cast<Match>()
+						.Select(m => m.Value.Trim('"'))
+						.ToArray();
 
 				//Find the right command
 				MethodInfo command = null;
@@ -42,7 +46,10 @@ namespace API.Threads {
 				try
 				{ command.Invoke(null, new object[] { tokens.TakeLast(tokens.Length - 1).ToArray() }); }
 				catch (Exception e)
-				{ log.Error($"{e.GetType().Name}: {e.Message}", e, true); }
+				{
+					CommandMethods.timer.Reset();
+					log.Error($"{e.GetType().Name}: {e.Message}", e, true);
+				}
 			}
 		}
 	}
@@ -84,6 +91,26 @@ namespace API.Commands {
 			lock (Program.Settings)
 				Program.Settings = Config.loadConfig();
 			log.Info("Successfully reloaded config");
+		}
+
+		public static void UploadImage(string[] args)
+		{
+			if (args.Length < 1)
+			{
+				log.Error("UploadImage requires one argument");
+				return;
+			}
+			if (!File.Exists(args[0]))
+			{
+				log.Error($"{args[0]} is not a valid file path");
+				return;
+			}
+			var image = new Image(args[0]);
+			timer.Start();
+			wrapper.Upload(image);
+			timer.Stop();
+			log.Info($"({Misc.FormatDelay(timer)}) Uploaded {image}");
+			timer.Reset();
 		}
 	}
 }
