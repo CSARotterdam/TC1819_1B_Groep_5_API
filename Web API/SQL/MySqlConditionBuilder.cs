@@ -51,6 +51,21 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		public MySqlConditionBuilder() { }
 		/// <summary>
+		/// Auto-generates a condition that matches the primary key with the it's value in the
+		/// given <see cref="SchemaItem"/>.
+		/// </summary>
+		/// <param name="item">The schemaItem whose primary key to use for the new condition.</param>
+		public MySqlConditionBuilder(SchemaItem item)
+		{
+			Index PRIMARY = item.GetIndex("PRIMARY");
+			if (PRIMARY == null)
+				throw new ArgumentException("Item has no primary key.");
+			var value = item.Fields[item.Indexes.IndexOf(PRIMARY)];
+			Column(PRIMARY.Columns[0].Column);
+			if (value == null) Is().Null();
+			else Equals(value, PRIMARY.Columns[0].Type);
+		}
+		/// <summary>
 		/// Auto-generates a condition that exactly matches the given fields and metadata.
 		/// </summary>
 		/// <param name="Metadata">A set of <see cref="ColumnMetadata"/> objects.</param>

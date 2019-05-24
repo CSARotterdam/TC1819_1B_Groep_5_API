@@ -117,7 +117,9 @@ namespace MySQLWrapper.Data
 		{
 			using (var cmd = connection.CreateCommand())
 			{
-				var condition = new MySqlConditionBuilder(Metadata.ToArray(), Fields);
+				var condition = GetIndex("PRIMARY") != null
+					? new MySqlConditionBuilder(this)
+					: new MySqlConditionBuilder(Metadata.ToArray(), Fields);
 				cmd.CommandText = SQLConstants.GetDelete(
 					Schema,
 					condition.ConditionString
@@ -154,7 +156,9 @@ namespace MySQLWrapper.Data
                     return $"`{meta.Column}` = {paramName}";
                 }
                 var columnValuePairs = string.Join(", ", Metadata.Zip(Fields, (x, y) => addValues(x, y)));
-				var condition = new MySqlConditionBuilder(Metadata.ToArray(), fieldTrace);
+				var condition = GetIndex("PRIMARY") != null
+					? new MySqlConditionBuilder(this)
+					: new MySqlConditionBuilder(Metadata.ToArray(), Fields);
 				cmd.CommandText = SQLConstants.GetUpdate(
 					Schema,
 					columnValuePairs,
