@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -19,18 +20,18 @@ namespace API {
 		public static void Main() {
 			// Compress previous log
 			if (File.Exists("Logs/latest.log")) {
-				DateTime created = File.GetCreationTime("Logs/latest.log");
-				var archiveName = string.Format("Logs/{0:dd-MM-yyyy}.zip", created);
-				using (var archive = ZipFile.Open(archiveName, ZipArchiveMode.Update)) {
-					archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
+				var lastArchive = Directory.GetFiles("Logs").OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
+				if (lastArchive != null)
+				{
+					using (var archive = ZipFile.Open(lastArchive, ZipArchiveMode.Update))
+						archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
+					File.Delete("Logs/latest.log");
 				}
-
-				File.Delete("Logs/latest.log");
 			}
 
 			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log") {
 				Compression = true,
-				Archive = "Logs/{0:dd-MM-yyyy}.zip"
+				Archive = "Logs/{1:dd-MM-yyyy}.{2}.zip"
 			});
 
 			log.Info("Server is starting!");

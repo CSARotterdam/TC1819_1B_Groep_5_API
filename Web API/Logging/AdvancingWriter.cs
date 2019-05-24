@@ -13,6 +13,11 @@ namespace Logging
 		public override Encoding Encoding => Encoding.UTF8;
 
 		/// <summary>
+		/// Gets the time when this writer was created.
+		/// </summary>
+		public DateTime Creation { get; } = DateTime.Now;
+
+		/// <summary>
 		/// The duration of a file written by this writer before advancing a new file.
 		/// </summary>
 		public readonly TimeSpan Duration;
@@ -20,32 +25,64 @@ namespace Logging
 
 		private readonly Thread FileAdvancerThread;
 		private TextWriter Stream;
-		private string File
+
+		/// <summary>
+		/// Gets or sets path of the files to create. This can be an unformatted string if <see cref="Compression"/>
+		/// is set to true.
+		/// </summary>
+		/// <remarks>
+		/// This path may include 3 string format items. The first specifies the time of it's creation.
+		/// The third specifies the time this writer was created.
+		/// The third specifies how many files have been written by this writer.
+		/// </remarks>
+		public string File
 		{
 			get
 			{
-				return string.Format(_file, FileTimeStamp, Files.Count);
+				Func<int, string> getFile = x => string.Format(_file, FileTimeStamp, Creation, x);
+				int i = 0;
+				while (System.IO.File.Exists(getFile(i)))
+				{
+					string prevFile = getFile(i);
+					i++;
+					if (prevFile == getFile(i)) return prevFile;
+				}
+				return getFile(i);
 			}
 		}
 		private readonly string _file;
+
 		/// <summary>
-		/// The path of the compressed archives to create. Only used when <see cref="Compression"/> is set to true.
-		/// <para>This path may include 2 string format items. The first specifies the time of it's creation; The
-		/// second specifies how many files have been written by this writer.</para>
+		/// Gets or sets path of the compressed archives to create. Only used when <see cref="Compression"/> is set to true.
 		/// </summary>
+		/// <remarks>
+		/// This path may include 3 string format items. The first specifies the time of it's creation.
+		/// The third specifies the time this writer was created.
+		/// The third specifies how many archives have been written by this writer.
+		/// </remarks>
 		public string Archive
 		{
-			private get
+			get
 			{
-				return string.Format(_Archive, FileTimeStamp, Files.Count);
+				Func<int, string> getArchive = x => string.Format(_archive, FileTimeStamp, Creation, x);
+				int i = 0;
+				while (System.IO.File.Exists(getArchive(i)))
+				{
+					string prevArchive = getArchive(i);
+					i++;
+					if (prevArchive == getArchive(i)) return prevArchive;
+				}
+				return getArchive(i);
 			}
 			set
 			{
-				if (_Archive != null) return;
-				_Archive = value;
+				if (_archive != null) return;
+				_archive = value;
+				if (!System.IO.File.Exists(_archive))
+					System.IO.File.Create(Archive);
 			}
 		}
-		private string _Archive;
+		private string _archive;
 
 		private bool Active = true;
 
@@ -110,8 +147,7 @@ namespace Logging
 					FinalizeStream();
 					FileTimeStamp += Duration;
 					Stream = new StreamWriter(File) { AutoFlush = true };
-					if (!Files.Contains(File))
-						Files.Add(File);
+					Files.Add(File);
 				}
 			}
 		}
@@ -143,8 +179,8 @@ namespace Logging
 
 				System.IO.File.Delete(file);
 				Files.Remove(file);
-				if (!Files.Contains(archiveName))
-					Files.Add(archiveName);
+				if (!Archives.Contains(archiveName))
+					Archives.Add(archiveName);
 			}
 		}
 
