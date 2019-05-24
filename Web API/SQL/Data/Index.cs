@@ -57,7 +57,7 @@ namespace MySQLWrapper.Data
 				throw new ArgumentException("Cannot create index with no columns.", "columns");
 			Type = type;
 			Columns = columns;
-			Name = name;
+			Name = Type == IndexType.PRIMARY ? "PRIMARY" : name;
 			AutoIncrement = false;
 		}
 		/// <summary>
