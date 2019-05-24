@@ -48,7 +48,7 @@ namespace API.Threads {
 				catch (Exception e)
 				{
 					CommandMethods.timer.Reset();
-					log.Error($"{e.GetType().Name}: {e.Message}", e, true);
+					log.Error($"{e.InnerException.GetType().Name}: {e.InnerException.Message}", false);
 				}
 			}
 		}
@@ -93,7 +93,7 @@ namespace API.Commands {
 			log.Info("Successfully reloaded config");
 		}
 
-		public static void UploadImage(string[] args)
+		public static void UploadImage(params string[] args)
 		{
 			if (args.Length < 1)
 			{
@@ -109,8 +109,26 @@ namespace API.Commands {
 			timer.Start();
 			wrapper.Upload(image);
 			timer.Stop();
-			log.Info($"({Misc.FormatDelay(timer)}) Uploaded {image}");
+			log.Info($"({Misc.FormatDelay(timer)}) Uploaded {Path.GetFileName(args[0])}");
 			timer.Reset();
+		}
+
+		public static void UploadImages(params string[] args)
+		{
+			if (args.Length < 1)
+			{
+				log.Error("UploadImages requires one argument");
+				return;
+			}
+			if (!Directory.Exists(args[0]))
+			{
+				log.Error($"{args[0]} is not a valid directory");
+				return;
+			}
+			var files = Directory.GetFiles(args[0]);
+			foreach (var file in files)
+				if (Image.ImageFormats.Contains(Path.GetExtension(file)))
+					UploadImage(file);
 		}
 	}
 }
