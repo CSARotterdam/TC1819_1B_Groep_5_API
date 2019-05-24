@@ -124,8 +124,9 @@ namespace MySQLWrapper.Data
 				);
 				condition.MergeParameters(cmd);
 
+				var cmdOut = cmd.ExecuteNonQuery();
 				ClearTrace();
-				return cmd.ExecuteNonQuery();
+				return cmdOut;
 			}
 		}
 		/// <summary>
@@ -161,8 +162,9 @@ namespace MySQLWrapper.Data
 				);
 				condition.MergeParameters(cmd);
 
+				var cmdOut = cmd.ExecuteNonQuery();
 				UpdateTrace();
-				return cmd.ExecuteNonQuery();
+				return cmdOut;
 			}
 		}
 		/// <summary>
@@ -294,6 +296,6 @@ namespace MySQLWrapper.Data
 		/// <summary>
 		/// Returns a string that represents the current object.
 		/// </summary>
-		public override string ToString() => GetType().Name + "(" + string.Join(", ", Metadata.Zip(Fields, (x, y) => $"{x.Column}: {y}")) + ")";
+		public override string ToString() => GetType().Name + "(" + string.Join(", ", Metadata.Zip(Fields, (x, y) => $"{x.Column}: {y ?? "NULL"}")) + ")";
 	}
 }
