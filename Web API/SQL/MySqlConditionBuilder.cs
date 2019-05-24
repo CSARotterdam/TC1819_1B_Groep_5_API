@@ -102,6 +102,7 @@ namespace MySQLWrapper.Data
 			return this;
 		}
 
+		#region Operands
 		/// <summary>
 		/// Appends a column as operand to the condition. Fails if it is not expected.
 		/// </summary>
@@ -174,6 +175,9 @@ namespace MySQLWrapper.Data
 			else modifyingOperand = false;
 			return this;
 		}
+		#endregion
+
+		#region Comarison operators
 		/// <summary>
 		/// Appends an Equals operator the condition. Fails if it is not expected.
 		/// </summary>
@@ -261,7 +265,8 @@ namespace MySQLWrapper.Data
 		/// </remarks>
 		/// <param name="pattern">A string pattern to compare a value to.</param>
 		public MySqlConditionBuilder Like(string pattern) => Like().Operand(pattern, MySqlDbType.String);
-
+		#endregion
+		#region Arithmetic operators
 		/// <summary>
 		/// Appends the addition operator the condition. Fails if it is not expected.
 		/// </summary>
@@ -307,7 +312,9 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		/// <param name="value">The value to append.</param>
 		public MySqlConditionBuilder Modulo(long value) => Modulo().Operand(value, MySqlDbType.Int64);
+		#endregion
 
+		#region Modifiers
 		/// <summary>
 		/// Appends the NOT modifier to the condition. Fails if it is not expected.
 		/// </summary>
@@ -321,6 +328,22 @@ namespace MySQLWrapper.Data
 			unfinished = true;
 			return this;
 		}
+		#endregion
+
+		#region Functions
+		/// <summary>
+		/// Appends the CURDATE() function that is equal to the current date.
+		/// </summary>
+		public MySqlConditionBuilder CurrentDate() => AppendOperator("CURDATE()");
+		/// <summary>
+		/// Appends the CURTIME() function that is equal to the current time.
+		/// </summary>
+		public MySqlConditionBuilder CurrentTime() => AppendOperator("CURTIME()");
+		/// <summary>
+		/// Appends the NOW() function that is equal to the current date and time.
+		/// </summary>
+		public MySqlConditionBuilder Now() => AppendOperator("NOW()");
+		#endregion
 
 		/// <summary>
 		/// Appends a value as an operator to the condition.
