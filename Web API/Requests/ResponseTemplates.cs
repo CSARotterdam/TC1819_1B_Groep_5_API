@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using Newtonsoft.Json.Linq;
 
 namespace API.Requests {
 	public static class Templates {
@@ -50,6 +51,13 @@ namespace API.Requests {
 			return new JObject() {
 				{"reason", "NoSuchProductItem" },
 				{"message", message },
+			};
+		}
+
+		internal static JObject NoSuchLoan(string loanId = null) {
+			return new JObject() {
+				{"reason", "NoSuchProductCategory" },
+				{"message", loanId },
 			};
 		}
 
