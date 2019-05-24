@@ -48,7 +48,7 @@ namespace API {
 				log.Fatal("Configuration file is not a valid JSON file.");
 				log.Fatal("Validate the file at https://www.jsonschemavalidator.net/");
 				log.Fatal("Press the any key to exit.");
-				Console.ReadLine();
+				Console.ReadKey();
 				return;
 			}
 
@@ -67,7 +67,7 @@ namespace API {
 				log.Fatal("\n");
 				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
 				log.Fatal("Press the any key to exit.");
-				Console.ReadLine();
+				Console.ReadKey();
 				return;
 			}
 

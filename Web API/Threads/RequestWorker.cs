@@ -21,7 +21,7 @@ namespace API.Threads {
 			MethodInfo[] methods = typeof(RequestMethods).GetMethods();
 
 			//Connect to database
-			wrapper = API.Program.CreateWrapper();
+			wrapper = Program.CreateWrapper();
 
 			log.Info("Thread " + Thread.CurrentThread.Name + " now running.");
 			while (true) {
@@ -87,7 +87,7 @@ namespace API.Threads {
 				//If the request handler requires the user token or permission level to be verified first, do that now.
 				bool verifyToken = false;
 				bool verifyPermission = false;
-				User user = RequestMethods.CurrentUser;
+				User user = null;
 				long token = 0;
 				string username;
 
@@ -117,7 +117,7 @@ namespace API.Threads {
 
 				//Check the user's permission level, unless the requesttype doesn't require it.
 				if (!sendResponse && verifyToken) {
-					System.DateTime tokenDT = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+					DateTime tokenDT = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 					tokenDT = tokenDT.AddSeconds(token).ToLocalTime();
 					bool validToken = !((DateTime.Today - tokenDT).TotalSeconds > (double)Program.Settings["authenticationSettings"]["expiration"]);
 
@@ -138,8 +138,10 @@ namespace API.Threads {
 
 				//Attempt to process the request
 				if (!sendResponse) {
-					Object[] methodParams = new object[1] { requestContent };
+					object[] methodParams = new object[1] { requestContent };
+					RequestMethods.CurrentUser = user;
 					responseJson = (JObject)requestMethod.Invoke(null, methodParams);
+					RequestMethods.CurrentUser = null;
 					timer.Stop();
 					log.Trace($"({Misc.FormatDelay(timer)}) Processed request '{requestMethod.Name}' with {request.ContentLength64} bytes.");
 					timer.Restart();
@@ -152,7 +154,6 @@ namespace API.Threads {
 				timer.Stop();
 				log.Trace($"({Misc.FormatDelay(timer)}) Sent response with {size} bytes.");
 				log.Fine("Request processed successfully.");
-				RequestMethods.CurrentUser = null;
 			}
 		}
 

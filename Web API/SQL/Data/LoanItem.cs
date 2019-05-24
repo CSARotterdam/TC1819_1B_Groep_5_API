@@ -45,7 +45,7 @@ namespace MySQLWrapper.Data
 		/// <param name="start">The date when this loan starts. This must be less than <paramref name="end"/>.</param>
 		/// <param name="end">The date when this loan ends.</param>
 		/// <param name="isAcquired">Set whether or not the item associated with this loan has been aquired by the user.</param>
-		public LoanItem(int? id, string user, string productItem, DateTime start, DateTime end, bool isAcquired = false)
+		public LoanItem(int? id, string user, int productItem, DateTime start, DateTime end, bool isAcquired = false)
 		{
 			if (DateTime.Compare(start, end) > 0)
 				throw new ArgumentException("The start date must be less than the end date.");
@@ -73,15 +73,10 @@ namespace MySQLWrapper.Data
 				_fields[1] = value;
 			}
 		}
-		public string ProductItem
+		public int ProductItem
 		{
-			get { return (string)Fields[2]; }
-			set
-			{
-				if (value != null && value.Length > Metadata[2].Length)
-					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
-				_fields[2] = value;
-			}
+			get { return (int)Fields[2]; }
+			set { _fields[2] = value; }
 		}
 		public DateTime Start
 		{

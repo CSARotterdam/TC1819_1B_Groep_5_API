@@ -26,7 +26,7 @@ namespace API {
                 'expiration': 7200
             },
 			'requestSettings':{
-				'maxLoanDuration': '21:00:00'
+				'maxLoanDuration': '21:00:00:00'
 			}
 		}";
 
