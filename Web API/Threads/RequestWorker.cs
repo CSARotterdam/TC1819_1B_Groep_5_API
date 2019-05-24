@@ -87,7 +87,7 @@ namespace API.Threads {
 				//If the request handler requires the user token or permission level to be verified first, do that now.
 				bool verifyToken = false;
 				bool verifyPermission = false;
-				User user = null;
+				User user = RequestMethods.CurrentUser;
 				long token = 0;
 				string username;
 
@@ -141,7 +141,7 @@ namespace API.Threads {
 					Object[] methodParams = new object[1] { requestContent };
 					responseJson = (JObject)requestMethod.Invoke(null, methodParams);
 					timer.Stop();
-					log.Trace($"({FormatDelay(timer)}) Processed request '{requestMethod.Name}' with {request.ContentLength64} bytes.");
+					log.Trace($"({Misc.FormatDelay(timer)}) Processed request '{requestMethod.Name}' with {request.ContentLength64} bytes.");
 					timer.Restart();
 				}
 
@@ -150,8 +150,9 @@ namespace API.Threads {
 				response.ContentType = "application/json";
 				int size = SendMessage(context, responseJson.ToString(), HttpStatusCode.OK);
 				timer.Stop();
-				log.Trace($"({FormatDelay(timer)}) Sent response with {size} bytes.");
+				log.Trace($"({Misc.FormatDelay(timer)}) Sent response with {size} bytes.");
 				log.Fine("Request processed successfully.");
+				RequestMethods.CurrentUser = null;
 			}
 		}
 
@@ -169,19 +170,6 @@ namespace API.Threads {
 			output.Write(buffer, 0, buffer.Length);
 			output.Close();
 			return buffer.Length;
-		}
-
-		private static string FormatDelay(Stopwatch timer) {
-			if (timer.ElapsedMilliseconds != 0) {
-				return timer.ElapsedMilliseconds + " ms";
-			}
-
-			if (timer.ElapsedTicks >= 10) // 1 tick is 100 nanoseconds, so 10 ticks is 1 microsecond
-{
-				return (timer.ElapsedTicks / 10) + " us";
-			}
-
-			return (timer.ElapsedTicks * 100) + " ns";
 		}
 	}
 }

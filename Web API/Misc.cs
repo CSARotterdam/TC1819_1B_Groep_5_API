@@ -1,6 +1,8 @@
 ﻿using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace API {
@@ -31,6 +33,15 @@ namespace API {
 				i++;
 			}
 			return condition.ExitGroup();
+		}
+
+		public static string FormatDelay(Stopwatch timer, int decimals = 0)
+		{
+			if (timer.ElapsedMilliseconds != 0)
+				return Math.Round(timer.Elapsed.TotalMilliseconds, decimals) + " ms";
+			if (timer.ElapsedTicks >= 10)
+				return Math.Round(timer.ElapsedTicks / 10d, decimals) + " us";
+			return Math.Round(timer.ElapsedTicks * 100d, decimals) + " ns";
 		}
 	}
 }
