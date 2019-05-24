@@ -21,7 +21,7 @@ namespace API.Requests {
 
 			var selection = RequestMethods.wrapper.Select<T>(new MySqlConditionBuilder()
 					.Column(column)
-					.Equals(ID, operandtype)
+					.Equals((object)ID, operandtype)
 				).ToList();
 			if (selection.Count == 0) {
 				return null;
