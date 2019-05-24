@@ -142,5 +142,19 @@ namespace API.Requests {
 				{"message", string.Join(", ", argNames) }
 			};
 		}
+
+		public static JObject NoItemsForProduct(string message = null) {
+			return new JObject() {
+				{"reason", "NoItemsForProduct"},
+				{"message", message }
+			};
+		}
+
+		public static JObject ReservationFailed(string message = null) {
+			return new JObject() {
+				{"reason", "ReservationFailed"},
+				{"message", message }
+			};
+		}
 	}
 }
