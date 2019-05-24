@@ -31,7 +31,7 @@ namespace API {
 
 			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log") {
 				Compression = true,
-				Archive = "Logs/{1:dd-MM-yyyy}.{2}.zip"
+				Archive = "Logs/{0:dd-MM-yyyy}.{2}.zip"
 			});
 
 			log.Info("Server is starting!");
