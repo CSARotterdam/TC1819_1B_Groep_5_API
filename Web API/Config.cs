@@ -24,7 +24,10 @@ namespace API {
 			},
             'authenticationSettings':{
                 'expiration': 7200
-            }
+            },
+			'requestSettings':{
+				'maxLoanDuration': '21:00:00'
+			}
 		}";
 
 		public static dynamic loadConfig() {

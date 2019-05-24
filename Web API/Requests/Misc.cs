@@ -9,6 +9,8 @@ namespace API.Requests {
 	static partial class RequestMethods {
 		public static TechlabMySQL wrapper;
 		public static Logger log;
+		public static User CurrentUser;
+		public static TimeSpan MaxLoanDuration => Program.Settings.requestSettings.maxLoanDuration;
 	}
 	static partial class Requests {
 		public static T getObject<T>(dynamic ID, string column = "id") where T : SchemaItem, new() {
