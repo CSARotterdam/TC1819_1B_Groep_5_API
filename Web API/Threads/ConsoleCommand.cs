@@ -110,7 +110,7 @@ namespace API.Commands {
 			timer.Start();
 			wrapper.Upload(image);
 			timer.Stop();
-			log.Info($"({Misc.FormatDelay(timer)}) Uploaded {Path.GetFileName(args[0])}");
+			log.Info($"({Math.Round(image.Data.Length / 1024 / timer.Elapsed.TotalSeconds, 2)} KiB/s) Uploaded {Path.GetFileName(args[0])}");
 			timer.Reset();
 		}
 
@@ -128,8 +128,19 @@ namespace API.Commands {
 			}
 			var files = Directory.GetFiles(args[0]);
 			foreach (var file in files)
+			{
 				if (Image.ImageFormats.Contains(Path.GetExtension(file)))
-					UploadImage(file);
+				{
+					try
+					{ UploadImage(file); }
+					catch (Exception e)
+					{
+						timer.Stop();
+						log.Error($"({Misc.FormatDelay(timer)}) {e.GetType().Name}: {e.Message}", false);
+						timer.Reset();
+					}
+				}
+			}
 		}
 	}
 }
