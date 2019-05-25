@@ -48,7 +48,7 @@ namespace API.Requests
 			ProductItem item;
 			try {
 				item = Core_GetUnreservedItems(productId, newLoanSpan).FirstOrDefault();
-			} catch (Exception e) {
+			} catch (Exception) {
 				return Templates.NoItemsForProduct(productId);
 			}
 			if (item == null)
