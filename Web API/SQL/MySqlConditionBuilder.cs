@@ -383,7 +383,7 @@ namespace MySQLWrapper.Data
 		/// <summary>
 		/// Appends opening and closing brackets to the condition and enters them.
 		/// </summary>
-		/// <seealso cref="ExitGroup"/>.
+		/// <seealso cref="EndGroup"/>.
 		public MySqlConditionBuilder NewGroup()
 		{
 			Append("()");
@@ -396,7 +396,7 @@ namespace MySQLWrapper.Data
 		/// <summary>
 		/// Exists a bracket group. Fails if none have been entered yet.
 		/// </summary>
-		public MySqlConditionBuilder ExitGroup()
+		public MySqlConditionBuilder EndGroup()
 		{
 			if (depth == 0)
 				throw new OperationCanceledException("Can't exit main clause.");
