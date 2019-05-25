@@ -21,8 +21,7 @@ namespace API {
 			// Compress previous log
 			if (File.Exists("Logs/latest.log")) {
 				var lastArchive = Directory.GetFiles("Logs").OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
-				if (lastArchive != null)
-				{
+				if (lastArchive != null) {
 					using (var archive = ZipFile.Open(lastArchive, ZipArchiveMode.Update))
 						archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
 					File.Delete("Logs/latest.log");
