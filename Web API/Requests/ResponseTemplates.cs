@@ -54,9 +54,14 @@ namespace API.Requests {
 			};
 		}
 
+		/// <summary>
+		/// Sent when a nonexistent loan was requested
+		/// </summary>
+		/// <param name="loanId">The ID of the LoanItem</param>
+		/// <returns></returns>
 		internal static JObject NoSuchLoan(string loanId = null) {
 			return new JObject() {
-				{"reason", "NoSuchProductCategory" },
+				{"reason", "NoSuchLoan" },
 				{"message", loanId },
 			};
 		}
@@ -151,6 +156,7 @@ namespace API.Requests {
 			};
 		}
 
+		//TODO: Documentation motherfucker, do you speak it?
 		public static JObject NoItemsForProduct(string message = null) {
 			return new JObject() {
 				{"reason", "NoItemsForProduct"},
