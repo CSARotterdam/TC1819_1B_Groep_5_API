@@ -335,7 +335,7 @@ while True:
 				"username": username,
 				"token": token,
 				"requestData": {
-					"products": "lizard"
+					"products": ["lizard", "dr-prrt-drel"]
 				}
 			})
 		except requests.RequestException:
