@@ -32,7 +32,7 @@ namespace API {
 				}
 				i++;
 			}
-			return condition.ExitGroup();
+			return condition.EndGroup();
 		}
 
 		public static string FormatDelay(Stopwatch timer, int decimals = 0)

@@ -24,9 +24,9 @@ namespace API.Requests
 			List<string> failedVerifications = new List<string>();
 			if (requestProductId == null || requestProductId.Type != JTokenType.String)
 				failedVerifications.Add("productID");
-			if (requestStart == null || requestStart.Type != JTokenType.String)
+			if (requestStart == null || !(requestStart.Type == JTokenType.String || requestStart.Type == JTokenType.Date))
 				failedVerifications.Add("start");
-			if (requestEnd == null || requestEnd.Type != JTokenType.String)
+			if (requestEnd == null || !(requestEnd.Type == JTokenType.String || requestEnd.Type == JTokenType.Date))
 				failedVerifications.Add("end");
 
 			if (failedVerifications.Any())
@@ -41,14 +41,15 @@ namespace API.Requests
 			try { end = DateTime.Parse(requestEnd.ToString()); }
 			catch (Exception) { return Templates.InvalidArgument("Unable to parse 'end'"); }
 			if (end < start) return Templates.InvalidArguments("'end' must come after 'start'");
-			if (start < DateTime.Now.Date) return Templates.InvalidArgument("'start' may not be set earlier than today.");
-			if (end - start > MaxLoanDuration) return Templates.InvalidArgument($"Duration of the loan may not exceed {MaxLoanDuration.Days} days.");
+			var newLoanSpan = new DateTimeSpan(start, end);
+			if (newLoanSpan.Start < DateTime.Now.Date) return Templates.InvalidArgument("'start' may not be set earlier than today.");
+			if (newLoanSpan.Duration > MaxLoanDuration) return Templates.InvalidArgument($"Duration of the loan may not exceed {MaxLoanDuration.Days} days.");
 
 			ProductItem item;
 			try {
-				item = Core_GetUnreservedItem(productId, new DateTimeSpan(start, end));
-			} catch (OperationCanceledException e) {
-				return Templates.NoItemsForProduct(e.Message);
+				item = Core_GetUnreservedItems(productId, newLoanSpan).FirstOrDefault();
+			} catch (Exception e) {
+				return Templates.NoItemsForProduct(productId);
 			}
 			if (item == null)
 				return Templates.ReservationFailed($"Product '{productId}' has no items available during this time.");
@@ -68,11 +69,10 @@ namespace API.Requests
 			return response;
 		}
 
-		private static ProductItem Core_GetUnreservedItem(string productId, DateTimeSpan span)
+		private static List<ProductItem> Core_GetUnreservedItems(string productId, DateTimeSpan span)
 		{
 			List<ProductItem> items = Core_getProductItems(productId)[productId].ToList();
-			if (!items.Any()) throw new OperationCanceledException("No items are associated with this productId.");
-			//TODO: returning null might be better ^^^^^^
+			if (!items.Any()) return null;
 
 			var condition = new MySqlConditionBuilder();
 			condition.NewGroup();
@@ -82,21 +82,26 @@ namespace API.Requests
 					.Column("product_item")
 					.Equals(item.Id, item.GetIndex("PRIMARY").Columns[0].Type);
 			}
-			condition.ExitGroup();
+			condition.EndGroup();
 			condition.And()
 				.Column("end")
 				.GreaterThanOrEqual()
 				.Operand(span.Start, MySqlDbType.DateTime);
+			condition.And()
+				.Column("start")
+				.LessThanOrEqual()
+				.Operand(span.End, MySqlDbType.DateTime);
 
 			List<LoanItem> loans = wrapper.Select<LoanItem>(condition).ToList();
 			foreach (var loan in loans)
 			{
+				log.Info(loan);
 				if (!items.Any(x => x.Id == loan.ProductItem))
 					continue;
 				var loanSpan = new DateTimeSpan(loan.Start, loan.End);
 				if (span.Overlaps(loanSpan)) items.Remove(items.First(x => x.Id == loan.ProductItem));
 			}
-			return items.FirstOrDefault();
+			return items;
 		}
 
 	}
