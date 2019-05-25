@@ -172,13 +172,13 @@ namespace API.Requests {
 		}
 
 		/// <summary>
-		/// Sent when the client requested an extension for a loanItem, but this couldn't be done due to conflicting loanItems.
+		/// Sent when the client requested a resize to the loan's timespan, but this couldn't be done due to other conflicting loans.
 		/// </summary>
 		/// <param name="amount"></param>
 		/// <returns>The amount of loanItems that overlapped</returns>
-		public static JObject ReservationExtensionFailed(int amount = 0) {
+		public static JObject LoanResizeFailed(int amount = 0) {
 			return new JObject() {
-				{"reason", "ReservationExtensionFailed"},
+				{"reason", "LoanResizeFailed"},
 				{"amount", amount }
 			};
 		}
