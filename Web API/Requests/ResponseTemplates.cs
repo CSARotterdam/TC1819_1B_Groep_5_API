@@ -170,5 +170,17 @@ namespace API.Requests {
 				{"message", message }
 			};
 		}
+
+		/// <summary>
+		/// Sent when the client requested an extension for a loanItem, but this couldn't be done due to conflicting loanItems.
+		/// </summary>
+		/// <param name="amount"></param>
+		/// <returns>The amount of loanItems that overlapped</returns>
+		public static JObject ReservationExtensionFailed(int amount = 0) {
+			return new JObject() {
+				{"reason", "ReservationExtensionFailed"},
+				{"amount", amount }
+			};
+		}
 	}
 }
