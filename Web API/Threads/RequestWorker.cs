@@ -140,10 +140,19 @@ namespace API.Threads {
 				if (!sendResponse) {
 					object[] methodParams = new object[1] { requestContent };
 					RequestMethods.CurrentUser = user;
-					responseJson = (JObject)requestMethod.Invoke(null, methodParams);
+					try
+					{
+						responseJson = (JObject)requestMethod.Invoke(null, methodParams);
+						timer.Stop();
+						log.Trace($"({Misc.FormatDelay(timer)}) Processed request '{requestMethod.Name}' with {request.ContentLength64} bytes.");
+					}
+					catch (Exception e)
+					{
+						timer.Stop();
+						log.Error($"({Misc.FormatDelay(timer)}) {e.InnerException.GetType().Name}: {e.InnerException.Message}", e, false);
+						responseJson = Templates.ServerError(e.InnerException.Message);
+					}
 					RequestMethods.CurrentUser = null;
-					timer.Stop();
-					log.Trace($"({Misc.FormatDelay(timer)}) Processed request '{requestMethod.Name}' with {request.ContentLength64} bytes.");
 					timer.Restart();
 				}
 
