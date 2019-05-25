@@ -90,8 +90,8 @@ namespace API.Requests
 		public bool Overlaps(DateTimeSpan span)
 		{
 			return span.Equals(this)
-				|| (span.Contains(Start) && Contains(span.End))
-				|| (span.Contains(End) && Contains(span.Start))
+				|| (span.Contains(Start) && (Contains(span.End) || End == span.End))
+				|| (span.Contains(End) && (Contains(span.Start) || Start == span.Start))
 				|| (span.Contains(Start) && span.Contains(End))
 				|| (Contains(span.Start) && Contains(span.End));
 		}
