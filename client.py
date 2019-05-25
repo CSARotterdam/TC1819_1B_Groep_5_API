@@ -12,8 +12,8 @@ while True:
 1. Login		6. DeleteProduct		11. getProductCategory		16. deleteProductItem
 2. Register		7. AddProduct			12. getProductCategoryList	17. deleteUser
 3. Logout		8. UpdateProduct		13. updateCategory		18. updateUser
-4. GetProduct		9. AddCategory			14. addProductItem			19. addLoan
-5. GetProductList	10. DeleteCategory		15. updateProductItem
+4. GetProduct		9. AddCategory			14. addProductItem		19. addLoan
+5. GetProductList	10. DeleteCategory		15. updateProductItem		20. getProductAvailability
 	''')
 	answer = input()
 	if answer == "1":
@@ -323,6 +323,19 @@ while True:
 					"productID": "lizard",
 					"start": input("Start "),
 					"end": input("End ")
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+
+	elif answer == "20":
+		try:
+			r = requests.post(address, json={
+				"requestType": "getProductAvailability",
+				"username": username,
+				"token": token,
+				"requestData": {
+					"products": "lizard"
 				}
 			})
 		except requests.RequestException:
