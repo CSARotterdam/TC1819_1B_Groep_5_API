@@ -32,9 +32,10 @@ namespace MySQLWrapper
 		/// <param name="database">(Optional) The desired database. Can be changed with <seealso cref="ChangeDatabase(string)"/></param>
 		/// <param name="timeout">(Optional) The connection timeout in seconds. -1 by default.</param>
 		/// <param name="persistLogin">(Optional) Set whether to stay logged in for an extended amount of time. Off by default.</param>
-		public TechlabMySQL(string server, string port, string username = null, string password = null, string database = null, int timeout = -1, bool persistLogin = false)
+		/// <param name="caching">(Optional) Set whether to use caching. Off by default.</param>
+		public TechlabMySQL(string server, string port, string username = null, string password = null, string database = null, int timeout = -1, bool persistLogin = false, bool caching = false)
 		{
-			Reconnect(server, port, username, password, database, timeout, persistLogin);
+			Reconnect(server, port, username, password, database, timeout, persistLogin, caching);
 		}
 
 		/// <summary>
@@ -132,7 +133,7 @@ namespace MySQLWrapper
 			_connection = new MySqlConnection(builder.ToString());
 		}
 
-		public void Reconnect(string server, string port, string username = null, string password = null, string database = null, int timeout = -1, bool persistLogin = false)
+		public void Reconnect(string server, string port, string username = null, string password = null, string database = null, int timeout = -1, bool persistLogin = false, bool caching = false)
 		{
 			if (server == null) throw new ArgumentNullException("server");
 			if (port == null) throw new ArgumentNullException("port");
@@ -149,6 +150,7 @@ namespace MySQLWrapper
 			if (database != null) builder.Database = database;
 			if (timeout >= 0) builder.ConnectionTimeout = (uint)timeout;
 			builder.PersistSecurityInfo = persistLogin;
+			builder.TableCaching = caching;
 
 			_connection = new MySqlConnection(builder.GetConnectionString(true));
 			this.builder = builder;

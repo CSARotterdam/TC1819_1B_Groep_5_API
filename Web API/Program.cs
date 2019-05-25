@@ -135,7 +135,7 @@ namespace API {
 		}
 
 		public static TechlabMySQL CreateWrapper() {
-			string databaseAddress = Program.Settings.databaseSettings.serverAddress;
+			string databaseAddress = Settings.databaseSettings.serverAddress;
 			string databasePort;
 			string[] splitAddress = databaseAddress.Split(":");
 			if (databaseAddress == splitAddress[0]) {
@@ -147,11 +147,12 @@ namespace API {
 			TechlabMySQL wrapper = new TechlabMySQL( //TODO: Catch access denied, other exceptions.
 				databaseAddress,
 				databasePort,
-				(string)Program.Settings.databaseSettings.username,
-				(string)Program.Settings.databaseSettings.password,
-				(string)Program.Settings.databaseSettings.database,
-				(int)Program.Settings.databaseSettings.connectionTimeout,
-				(bool)Program.Settings.databaseSettings.persistLogin
+				(string)Settings.databaseSettings.username,
+				(string)Settings.databaseSettings.password,
+				(string)Settings.databaseSettings.database,
+				(int)Settings.databaseSettings.connectionTimeout,
+				(bool)Settings.databaseSettings.persistLogin,
+				(bool)Settings.databaseSettings.caching
 			) {
 				AutoReconnect = true
 			};

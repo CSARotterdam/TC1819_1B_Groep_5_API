@@ -12,6 +12,7 @@ namespace API {
 				'database': null,
 				'connectionTimeout':-1,
 				'persistLogin': true,
+				'caching': true,
 			},
 			'connectionSettings': {
 				'autodetect': true,
