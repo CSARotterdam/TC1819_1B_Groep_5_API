@@ -125,19 +125,5 @@ namespace API.Requests {
 
 			return response;
 		}
-
-		public static void test()
-		{
-			var d1 = new DateTimeSpan(DateTime.Parse("2019-06-15 00:00:00"), DateTime.Parse("2019-06-17 00:00:00"));
-			Console.WriteLine(d1.Duration);
-			var d2 = new DateTimeSpan(DateTime.Parse("2019-05-30 00:00:00"), DateTime.Parse("2019-06-18 00:00:00"));
-			Console.WriteLine(d2.Duration);
-			Console.WriteLine(d1.Overlaps(d2));
-			d2.End = d2.End.Subtract(new TimeSpan(24, 0, 0));
-			Console.WriteLine(d2.End);
-			Console.WriteLine(d2.Duration);
-			Console.WriteLine(d1.Overlaps(d2));
-			Console.WriteLine(d2.Overlaps(d1));
-		}
 	}
 }
