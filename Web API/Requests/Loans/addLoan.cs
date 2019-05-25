@@ -40,7 +40,7 @@ namespace API.Requests
 			catch (Exception) { return Templates.InvalidArgument("Unable to parse 'start'"); }
 			try { end = DateTime.Parse(requestEnd.ToString()); }
 			catch (Exception) { return Templates.InvalidArgument("Unable to parse 'end'"); }
-			if (end < start) return Templates.InvalidArguments("'end' must be come after 'start'");
+			if (end < start) return Templates.InvalidArguments("'end' must come after 'start'");
 			if (start < DateTime.Now.Date) return Templates.InvalidArgument("'start' may not be set earlier than today.");
 			if (end - start > MaxLoanDuration) return Templates.InvalidArgument($"Duration of the loan may not exceed {MaxLoanDuration.Days} days.");
 
@@ -72,6 +72,7 @@ namespace API.Requests
 		{
 			List<ProductItem> items = Core_getProductItems(productId)[productId].ToList();
 			if (!items.Any()) throw new OperationCanceledException("No items are associated with this productId.");
+			//TODO: returning null might be better ^^^^^^
 
 			var condition = new MySqlConditionBuilder();
 			condition.NewGroup();

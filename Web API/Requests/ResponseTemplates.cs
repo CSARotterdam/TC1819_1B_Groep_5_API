@@ -54,9 +54,14 @@ namespace API.Requests {
 			};
 		}
 
+		/// <summary>
+		/// Sent when a nonexistent loan was requested
+		/// </summary>
+		/// <param name="loanId">The ID of the LoanItem</param>
+		/// <returns></returns>
 		internal static JObject NoSuchLoan(string loanId = null) {
 			return new JObject() {
-				{"reason", "NoSuchProductCategory" },
+				{"reason", "NoSuchLoan" },
 				{"message", loanId },
 			};
 		}
@@ -151,6 +156,7 @@ namespace API.Requests {
 			};
 		}
 
+		//TODO: Documentation motherfucker, do you speak it?
 		public static JObject NoItemsForProduct(string message = null) {
 			return new JObject() {
 				{"reason", "NoItemsForProduct"},
@@ -162,6 +168,18 @@ namespace API.Requests {
 			return new JObject() {
 				{"reason", "ReservationFailed"},
 				{"message", message }
+			};
+		}
+
+		/// <summary>
+		/// Sent when the client requested an extension for a loanItem, but this couldn't be done due to conflicting loanItems.
+		/// </summary>
+		/// <param name="amount"></param>
+		/// <returns>The amount of loanItems that overlapped</returns>
+		public static JObject ReservationExtensionFailed(int amount = 0) {
+			return new JObject() {
+				{"reason", "ReservationExtensionFailed"},
+				{"amount", amount }
 			};
 		}
 	}
