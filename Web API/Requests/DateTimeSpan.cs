@@ -89,9 +89,12 @@ namespace API.Requests
 		/// <param name="span">The DateTimeSpan to test for any overlaps.</param>
 		public bool Overlaps(DateTimeSpan span)
 		{
+			Console.Write(this + ": ");
 			return span.Equals(this)
-				|| (span.Contains(Start) && (Contains(span.End) || End == span.End))
-				|| (span.Contains(End) && (Contains(span.Start) || Start == span.Start))
+				|| (span.Start < End && span.End == End)
+				|| (span.End > Start && span.Start == Start)
+				|| (span.Contains(Start) && Contains(span.End))
+				|| (span.Contains(End) && Contains(span.Start))
 				|| (span.Contains(Start) && span.Contains(End))
 				|| (Contains(span.Start) && Contains(span.End));
 		}
