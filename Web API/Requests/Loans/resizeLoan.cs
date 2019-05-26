@@ -51,17 +51,21 @@ namespace API.Requests {
 			if (newLoanSpan.Start < DateTime.Now.Date) return Templates.InvalidArgument("'start' may not be set earlier than today.");
 			if (newLoanSpan.Duration > MaxLoanDuration) return Templates.InvalidArgument($"Duration of the loan may not exceed {MaxLoanDuration.Days} days.");
 
-			//Get the specified loanItem if it exists. If it doesn't, throw an error.
+			// Build a condition to get the specific loan
 			var condition = new MySqlConditionBuilder();
-
 			// Automatically limit results to current user only if their permission is User
 			if (CurrentUser.Permission <= User.UserPermission.User)
 				condition.And().Column("user").Equals(CurrentUser.Username, MySqlDbType.String);
 			condition.And().Column("id").Equals(loanID, MySqlDbType.Int32);
 
+			//Get the specified loanItem if it exists. If it doesn't, throw an error.
 			LoanItem oldLoan = wrapper.Select<LoanItem>(condition ).FirstOrDefault();
 			if (oldLoan == null)
 				return Templates.NoSuchLoan(loanID);
+
+			// Return a loanExpired template if the loan has already ended
+			if (oldLoan.End < DateTime.Now)
+				return Templates.LoanExpired();
 
 			// Build condition
 			condition = new MySqlConditionBuilder()

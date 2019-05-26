@@ -69,6 +69,12 @@ namespace API.Requests
 			return response;
 		}
 
+		/// <summary>
+		/// Tries to find and return all items of a product type during a timespan that aren't reserved.
+		/// </summary>
+		/// <param name="productId">The product type whose items to return.</param>
+		/// <param name="span">The time period to test for unreserved items.</param>
+		/// <returns>A subset of all items of the given product type, or null if the product type has no items.</returns>
 		private static List<ProductItem> Core_GetUnreservedItems(string productId, DateTimeSpan span)
 		{
 			List<ProductItem> items = Core_getProductItems(productId)[productId].ToList();

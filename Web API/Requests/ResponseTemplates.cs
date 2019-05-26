@@ -148,7 +148,7 @@ namespace API.Requests {
 		/// Examples include out of range integers, strings with an incorrect length, etc.
 		/// </summary>
 		/// <param name="argNames">The names of the arguments with invalid values.</param>
-		/// <returns>The "Invalid Argument" response template.</returns>
+		/// <returns>The "Invalid Arguments" response template.</returns>
 		public static JObject InvalidArguments(params string[] argNames) {
 			return new JObject() {
 				{"reason", "InvalidArgument"},
@@ -156,7 +156,10 @@ namespace API.Requests {
 			};
 		}
 
-		//TODO: Documentation motherfucker, do you speak it?
+		/// <summary>
+		/// Error response when a request handler tried to retrieve items of a certain product type, but none exist.
+		/// </summary>
+		/// <param name="message">An optional message.</param>
 		public static JObject NoItemsForProduct(string message = null) {
 			return new JObject() {
 				{"reason", "NoItemsForProduct"},
@@ -164,6 +167,10 @@ namespace API.Requests {
 			};
 		}
 
+		/// <summary>
+		/// Sent when the server tries to create a loan, but it failed.
+		/// </summary>
+		/// <param name="message">An optional message.</param>
 		public static JObject ReservationFailed(string message = null) {
 			return new JObject() {
 				{"reason", "ReservationFailed"},
@@ -180,6 +187,18 @@ namespace API.Requests {
 			return new JObject() {
 				{"reason", "LoanResizeFailed"},
 				{"amount", amount }
+			};
+		}
+
+		/// <summary>
+		/// Sent when the client requested a resize to the loan's timespan, but the specified loan has already expired.
+		/// </summary>
+		/// <param name="message">An optional message.</param>
+		public static JObject LoanExpired(string message = null)
+		{
+			return new JObject() {
+				{"reason", "LoanResizeFailed"},
+				{"message", message }
 			};
 		}
 	}
