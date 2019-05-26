@@ -35,8 +35,7 @@ namespace API {
 			return condition.EndGroup();
 		}
 
-		public static string FormatDelay(Stopwatch timer, int decimals = 0)
-		{
+		public static string FormatDelay(Stopwatch timer, int decimals = 0) {
 			if (timer.ElapsedMilliseconds != 0)
 				return Math.Round(timer.Elapsed.TotalMilliseconds, decimals) + " ms";
 			if (timer.ElapsedTicks >= 10)

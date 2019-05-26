@@ -44,10 +44,7 @@ namespace API.Threads {
 				}
 
 				//Execute the command
-				try
-				{ command.Invoke(null, new object[] { tokens.TakeLast(tokens.Length - 1).ToArray() }); }
-				catch (Exception e)
-				{
+				try { command.Invoke(null, new object[] { tokens.TakeLast(tokens.Length - 1).ToArray() }); } catch (Exception e) {
 					CommandMethods.timer.Reset();
 					log.Error($"{e.InnerException.GetType().Name}: {e.InnerException.Message}", false);
 				}
@@ -62,21 +59,17 @@ namespace API.Commands {
 		public static Logger log;
 		public static Stopwatch timer = new Stopwatch();
 
-		public static void Ping(string[] args)
-		{
+		public static void Ping(string[] args) {
 			List<double> delays = new List<double>();
 			int pingCount = 4;
-			try { pingCount = int.Parse(args[0]); }
-			catch (Exception) { }
-			for (int i = 0; i < pingCount; i++)
-			{
+			try { pingCount = int.Parse(args[0]); } catch (Exception) { }
+			for (int i = 0; i < pingCount; i++) {
 				if (i != 0) Thread.Sleep(1000 - (int)delays.Last());
 				timer.Start();
 				bool status = wrapper.Ping();
 				timer.Stop();
 				if (status) log.Info($"Reply after {Misc.FormatDelay(timer, 1)}");
-				else
-				{
+				else {
 					log.Info($"Failed after {Misc.FormatDelay(timer, 1)}");
 					timer.Reset();
 					break;
@@ -87,22 +80,18 @@ namespace API.Commands {
 			if (delays.Count > 1) log.Info($"Average: {Math.Round(delays.Average(), 2)} ms");
 		}
 
-		public static void ReloadConfig(string[] args)
-		{
+		public static void ReloadConfig(string[] args) {
 			lock (Program.Settings)
 				Program.Settings = Config.loadConfig();
 			log.Info("Successfully reloaded config");
 		}
 
-		public static void UploadImage(params string[] args)
-		{
-			if (args.Length < 1)
-			{
+		public static void UploadImage(params string[] args) {
+			if (args.Length < 1) {
 				log.Error("UploadImage requires one argument");
 				return;
 			}
-			if (!File.Exists(args[0]))
-			{
+			if (!File.Exists(args[0])) {
 				log.Error($"{args[0]} is not a valid file path");
 				return;
 			}
@@ -114,27 +103,19 @@ namespace API.Commands {
 			timer.Reset();
 		}
 
-		public static void UploadImages(params string[] args)
-		{
-			if (args.Length < 1)
-			{
+		public static void UploadImages(params string[] args) {
+			if (args.Length < 1) {
 				log.Error("UploadImages requires one argument");
 				return;
 			}
-			if (!Directory.Exists(args[0]))
-			{
+			if (!Directory.Exists(args[0])) {
 				log.Error($"{args[0]} is not a valid directory");
 				return;
 			}
 			var files = Directory.GetFiles(args[0]);
-			foreach (var file in files)
-			{
-				if (Image.ImageFormats.Contains(Path.GetExtension(file)))
-				{
-					try
-					{ UploadImage(file); }
-					catch (Exception e)
-					{
+			foreach (var file in files) {
+				if (Image.ImageFormats.Contains(Path.GetExtension(file))) {
+					try { UploadImage(file); } catch (Exception e) {
 						timer.Stop();
 						log.Error($"({Misc.FormatDelay(timer)}) {e.GetType().Name}: {e.Message}", false);
 						timer.Reset();

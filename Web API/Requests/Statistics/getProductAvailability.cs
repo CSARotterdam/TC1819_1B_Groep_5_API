@@ -1,7 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using static API.Requests.RequestMethodAttributes;
@@ -21,10 +20,10 @@ namespace API.Requests {
 
 			//Parse arguments
 			List<string> productIDs = new List<string>();
-			if(statTypeValue.Type == JTokenType.String) {
+			if (statTypeValue.Type == JTokenType.String) {
 				//TODO Allow * to be used as value, selecting all products
 				productIDs.Add(statTypeValue.ToObject<string>());
-			} else if(statTypeValue.Type == JTokenType.Array) {
+			} else if (statTypeValue.Type == JTokenType.Array) {
 				productIDs = statTypeValue.ToObject<List<string>>();
 			}
 
@@ -33,7 +32,7 @@ namespace API.Requests {
 			};
 
 			//Retrieve statistics
-			foreach(string productID in productIDs) {
+			foreach (string productID in productIDs) {
 				//If the product doesn't exist, add an error entry
 				if (Requests.getObject<Product>(productID) == null) {
 					response[productID] = "NoSuchProduct";
@@ -69,7 +68,7 @@ namespace API.Requests {
 				entry["reservations"] = loans.Count;
 
 				//Count total loanedOut
-				foreach(LoanItem loan in loans) {
+				foreach (LoanItem loan in loans) {
 					if (loan.IsAcquired)
 						entry["loanedOut"] = (int)entry["loanedOut"] + 1;
 				}
