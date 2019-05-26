@@ -33,16 +33,16 @@ namespace API.Requests
 			
 			// Build condition
 			var condition = new MySqlConditionBuilder();
-			condition.Column("user")
-				.Equals(CurrentUser.Username, MySqlDbType.String)
-				.And()
-				.Column("id")
-				.Equals(loanId, MySqlDbType.String);
+			if (CurrentUser.Permission <= User.UserPermission.User)
+				condition.Column("user").Equals(CurrentUser.Username, MySqlDbType.String);
+			condition.And().Column("id").Equals(loanId, MySqlDbType.String);
 			
 			// Get and delete loan, or return error if no such loan exists
 			var loan = wrapper.Select<LoanItem>(condition, range: (0, 1)).FirstOrDefault();
 			if (loan == null)
 				return Templates.NoSuchLoan(loanId.ToString());
+			if (loan.Start < DateTime.Now)
+				return Templates.LoanAlreadyStarted();
 			wrapper.Delete(loan);
 			
 			// Create response

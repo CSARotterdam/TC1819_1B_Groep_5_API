@@ -180,11 +180,13 @@ namespace API.Requests {
 		/// <summary>
 		/// Sent when the client requested a resize to the loan's timespan, but this couldn't be done due to other conflicting loans.
 		/// </summary>
+		/// <param name="message">An optional message.</param>
 		/// <param name="amount"></param>
 		/// <returns>The amount of loanItems that overlapped</returns>
-		public static JObject LoanResizeFailed(int amount = 0) {
+		public static JObject LoanResizeFailed(string message = null, int? amount = null) {
 			return new JObject() {
 				{"reason", "LoanResizeFailed"},
+				{"message", message },
 				{"amount", amount }
 			};
 		}
@@ -197,6 +199,18 @@ namespace API.Requests {
 		{
 			return new JObject() {
 				{"reason", "LoanResizeFailed"},
+				{"message", message }
+			};
+		}
+
+		/// <summary>
+		/// Sent when the client requested a delete to a loan, but the loan has already started.
+		/// </summary>
+		/// <param name="message">An optional message.</param>
+		public static JObject LoanAlreadyStarted(string message = null)
+		{
+			return new JObject() {
+				{"reason", "LoanAlreadyStarted"},
 				{"message", message }
 			};
 		}

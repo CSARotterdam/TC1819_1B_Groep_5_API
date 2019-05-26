@@ -66,6 +66,8 @@ namespace API.Requests {
 			// Return a loanExpired template if the loan has already ended
 			if (oldLoan.End < DateTime.Now)
 				return Templates.LoanExpired();
+			if (oldLoan.Start < DateTime.Now && oldLoan.Start != start)
+				return Templates.LoanAlreadyStarted();
 
 			// Build condition
 			condition = new MySqlConditionBuilder()
