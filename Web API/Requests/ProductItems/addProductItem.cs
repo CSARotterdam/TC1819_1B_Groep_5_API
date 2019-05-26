@@ -5,7 +5,7 @@ using static API.Requests.RequestMethodAttributes;
 namespace API.Requests {
 	static partial class RequestMethods {
 
-		[verifyPermission(User.UserPermission.Collaborator)]
+		[verifyPermission(User.UserPermission.Admin)]
 		public static JObject addProductItem(JObject request) {
 			//Get arguments
 			string productID;

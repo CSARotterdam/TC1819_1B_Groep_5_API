@@ -9,7 +9,7 @@ namespace API.Requests {
 	static partial class RequestMethods {
 
 		//TODO Cache this shit
-		[verifyPermission(User.UserPermission.Admin)]
+		[verifyPermission(User.UserPermission.Collaborator)]
 		public static JObject getProductAvailability(JObject request) {
 			//Get arguments
 			JObject requestData = request["requestData"].ToObject<JObject>();
