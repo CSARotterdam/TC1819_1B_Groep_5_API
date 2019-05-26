@@ -51,9 +51,13 @@ namespace Logging
 		/// </summary>
 		public static readonly Level INFO = new Level(0, "INFO", true);
 		/// <summary>
+		/// Used for logs that document program configuration events.
+		/// </summary>
+		public static readonly Level CONFIG = new Level(250, "FINE", true);
+		/// <summary>
 		/// Used for relatively fine logging. Not as fine as TRACE.
 		/// </summary>
-		public static readonly Level FINE = new Level(100, "FINE", true);
+		public static readonly Level FINE = new Level(500, "FINE", true);
 		/// <summary>
 		/// Used for very fine information. E.G object construction, function calls, etc.
 		/// </summary>
@@ -195,6 +199,13 @@ namespace Logging
 
 		#region Default Logging Methods
 		/// <summary>
+		/// Writes a message with the DEBUG log level.
+		/// </summary>
+		/// <param name="message">The value to write.</param>
+		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
+		public void Debug(object message, bool stackTrace = false) => Write(Level.DEBUG, message, stackTrace);
+
+		/// <summary>
 		/// Writes a message with the FATAL log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
@@ -229,24 +240,28 @@ namespace Logging
 		/// <param name="message">The value to write.</param>
 		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
 		public void Warning(object message, bool stackTrace = false) => Write(Level.WARN, message, stackTrace);
+
 		/// <summary>
 		/// Writes a message with the INFO log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
 		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
 		public void Info(object message, bool stackTrace = false) => Write(Level.INFO, message, stackTrace);
+
 		/// <summary>
-		/// Writes a message with the DEBUG log level.
+		/// Writes a message with the CONFIG log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
 		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
-		public void Debug(object message, bool stackTrace = false) => Write(Level.DEBUG, message, stackTrace);
+		public void Config(object message, bool stackTrace = false) => Write(Level.CONFIG, message, stackTrace);
+
 		/// <summary>
 		/// Writes a message with the FINE log level.
 		/// </summary>
 		/// <param name="message">The value to write.</param>
 		/// <param name="stackTrace">Set whether to include a full stacktrace in the log record.</param>
 		public void Fine(object message, bool stackTrace = false) => Write(Level.FINE, message, stackTrace);
+
 		/// <summary>
 		/// Writes a message with the TRACE log level.
 		/// </summary>
