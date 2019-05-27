@@ -5,16 +5,16 @@ using System.Collections.ObjectModel;
 
 namespace MySQLWrapper.Data
 {
+	enum UserPermission
+	{
+		Empty,
+		User,
+		Collaborator,
+		Admin
+	}
+
 	sealed class User : SchemaItem
 	{
-		public enum UserPermission
-		{
-			Empty,
-			User,
-			Collaborator,
-			Admin
-		}
-
 		#region Schema Metadata
 		public const string schema = "users";
 		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
