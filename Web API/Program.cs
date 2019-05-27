@@ -16,12 +16,13 @@ using System.Threading;
 namespace API {
 	class Program {
 		public static bool ManualError = false;
+
 		public static Logger log = new Logger(Level.ALL, Console.Out);
 		public static TechlabMySQL Connection;
 
 		public static List<RequestWorker> RequestWorkers = new List<RequestWorker>();
-		public static Thread listenerThread;
-		public static Thread consoleThread;
+		public static Listener ListenerThread;
+		public static Thread ConsoleThread;
 
 		public static JObject Settings;
 
@@ -66,8 +67,10 @@ namespace API {
 			var requestQueue = new BlockingCollection<HttpListenerContext>();
 
 			//Create console command thread
-			consoleThread = new Thread(() => API.Threads.ConsoleCommand.main(log));
-			consoleThread.Start();
+			ConsoleThread = new Thread(() => API.Threads.ConsoleCommand.main(log)) {
+				IsBackground = true
+			};
+			ConsoleThread.Start();
 
 			//Create worker threads
 			log.Info("Creating worker threads.");
@@ -80,20 +83,16 @@ namespace API {
 
 			// Create listener thingy.
 			HttpListener listener = new HttpListener();
-			foreach (string address in addresses) {
+			foreach (string address in addresses)
 				listener.Prefixes.Add("http://" + address + "/");
-			}
-			listenerThread = new Thread(() => API.Threads.Listener.main(log, listener, requestQueue)) {
-				Name = "ListenerThread"
-			};
-			listenerThread.Start();
+			ListenerThread = new Listener(listener, requestQueue, "ListenerThread", log);
+			ListenerThread.Start();
 			log.Config("Finished setup");
 
 			// Wait until all threads are terminated
-			consoleThread.Join();
-			listenerThread.Join();
-			foreach (var t in RequestWorkers) {
-				t.Join();
+			foreach (var worker in RequestWorkers) {
+				worker.Join();
+				log.Fine($"Stopped '{worker}'");
 			}
 
 			// Exit main thread
