@@ -84,6 +84,11 @@ namespace MySQLWrapper
 		/// Get whether or not the password for the underlying connection is expired.
 		/// </summary>
 		public bool IsPasswordExpired => Connection.IsPasswordExpired;
+
+		/// <summary>
+		/// Gets the current state of the connection. Returns closed if connection is null.
+		/// </summary>
+		public ConnectionState State => _connection?.State ?? ConnectionState.Closed;
 		#endregion
 
 		#region Exposed connection methods
