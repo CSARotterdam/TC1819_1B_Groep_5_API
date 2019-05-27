@@ -59,29 +59,40 @@ namespace Logging
 		/// This path may include 3 string format items. The first specifies the time of it's creation.
 		/// The third specifies the time this writer was created.
 		/// The third specifies how many archives have been written by this writer.
+		/// <para>
+		/// Once set, this returns the same formatted string every time. Resets when setting the format again.
+		/// </para>
 		/// </remarks>
 		public string Archive
 		{
 			get
 			{
-				Func<int, string> getArchive = x => string.Format(_archive, FileTimeStamp, Creation, x);
+				if (_archive != null) return _archive;
+				Func<int, string> getArchive = x => string.Format(archiveFormat, FileTimeStamp, Creation, x);
 				int i = 0;
 				while (System.IO.File.Exists(getArchive(i)))
 				{
 					string prevArchive = getArchive(i);
 					i++;
-					if (prevArchive == getArchive(i)) return prevArchive;
+					if (prevArchive == getArchive(i))
+					{
+						_archive = prevArchive;
+						return _archive;
+					}
 				}
-				return getArchive(i);
+				_archive = getArchive(i);
+				return _archive;
 			}
 			set
 			{
-				if (_archive != null) return;
-				_archive = value;
-				if (!System.IO.File.Exists(_archive))
+				if (archiveFormat != null) return;
+				archiveFormat = value;
+				_archive = null;
+				if (!System.IO.File.Exists(archiveFormat))
 					System.IO.File.Create(Archive);
 			}
 		}
+		private string archiveFormat;
 		private string _archive;
 
 		private bool Active = true;
@@ -90,6 +101,11 @@ namespace Logging
 		/// Gets or sets whether this <see cref="AdvancingWriter"/> compresses it's files after closing their streams.
 		/// </summary>
 		public bool Compression { get; set; } = false;
+		/// <summary>
+		/// Gets or sets whether this <see cref="AdvancingWriter"/> commpresses it's last file when closing or disposing.
+		/// <para><see cref="Compression"/> must be true for this to have any effect.</para>
+		/// </summary>
+		public bool CompressOnClose { get; set; } = true;
 
 		private readonly List<string> Files = new List<string>();
 		private readonly List<string> Archives = new List<string>();
@@ -163,7 +179,7 @@ namespace Logging
 				var archiveName = Archive ?? Path.ChangeExtension(file, "zip");
 
 				var mode = ZipArchiveMode.Update;
-				if (!Files.Contains(archiveName) && System.IO.File.Exists(archiveName))
+				if (!Archives.Contains(archiveName) && System.IO.File.Exists(archiveName))
 				{
 					System.IO.File.Delete(archiveName);
 					mode = ZipArchiveMode.Create;
@@ -171,7 +187,7 @@ namespace Logging
 
 				using (var archive = ZipFile.Open(archiveName, mode))
 				{
-					archive.CreateEntryFromFile(
+					var entry = archive.CreateEntryFromFile(
 						file,
 						$"{Path.GetFileNameWithoutExtension(file)}.{(mode == ZipArchiveMode.Update ? archive.Entries.Count : 0)}{Path.GetExtension(file)}"
 					);
@@ -215,6 +231,8 @@ namespace Logging
 
 		protected override void Dispose(bool disposing)
 		{
+			if (Compression && !CompressOnClose)
+				Compression = false;
 			Active = false;
 			FileAdvancerThread.Interrupt();
 			base.Dispose(disposing);

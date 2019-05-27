@@ -26,18 +26,11 @@ namespace API {
 		public static JObject Settings;
 
 		public static void Main() {
-			// Compress previous log
-			if (File.Exists("Logs/latest.log")) {
-				var lastArchive = Directory.GetFiles("Logs").OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
-				if (lastArchive != null) {
-					using (var archive = ZipFile.Open(lastArchive, ZipArchiveMode.Update))
-						archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
-					File.Delete("Logs/latest.log");
-				}
-			}
+			IOSetup();
 
-			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log") {
+			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log", new TimeSpan(0, 0, 5)) {
 				Compression = true,
+				CompressOnClose = false,
 				Archive = "Logs/{0:dd-MM-yyyy}.{2}.zip"
 			});
 
@@ -48,8 +41,10 @@ namespace API {
 			Settings = Config.loadConfig();
 			if(Settings == null) {
 				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
-				log.Fatal("Press the any key to exit.");
-				Console.Read();
+				log.Fatal("Press the any key to exit...");
+				Console.ReadKey();
+				Console.WriteLine();
+				log.Close();
 				return;
 			}
 			log.Info("Loaded configuration file.");
@@ -103,7 +98,7 @@ namespace API {
 
 			// Exit main thread
 			log.Info("Exiting program...");
-			log.Dispose();
+			log.Close();
 		}
 
 		public static TechlabMySQL CreateConnection() {
@@ -131,6 +126,27 @@ namespace API {
 			Connection = wrapper;
 			wrapper.Open();
 			return wrapper;
+		}
+
+		/// <summary>
+		/// Performs setup for all IO-related features
+		/// </summary>
+		public static void IOSetup()
+		{
+			// Create folders
+			Directory.CreateDirectory("Logs");
+
+			// Compress previous log
+			if (File.Exists("Logs/latest.log"))
+			{
+				var lastArchive = Directory.GetFiles("Logs").OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
+				if (lastArchive != null)
+				{
+					using (var archive = ZipFile.Open(lastArchive, ZipArchiveMode.Update))
+						archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
+					File.Delete("Logs/latest.log");
+				}
+			}
 		}
 	}
 }
