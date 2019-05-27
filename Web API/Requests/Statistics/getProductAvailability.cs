@@ -31,7 +31,6 @@ namespace API.Requests {
 			//Retrieve statistics
 			foreach (string productID in productIDs) {
 				//If the product doesn't exist, add an error entry
-				Log.Debug($"{Connection.GetType().Name}@{Connection.GetHashCode().ToString("X")}");
 				if (GetObject<Product>(productID) == null) {
 					response[productID] = "NoSuchProduct";
 					continue;
