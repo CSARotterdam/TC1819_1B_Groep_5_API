@@ -38,7 +38,7 @@ namespace API.Requests {
 		/// <summary>
 		/// The maximum duration of a loan, as specified in the <see cref="Program.Settings"/>.
 		/// </summary>
-		private TimeSpan MaxLoanDuration => Program.Settings.requestSettings.maxLoanDuration;
+		private TimeSpan MaxLoanDuration => new TimeSpan((long)Program.Settings["requestSettings"]["maxLoanDuration"]);
 
 		/// <summary>
 		/// Creates a new instance of <see cref="RequestHandler"/>.
@@ -128,7 +128,7 @@ namespace API.Requests {
 				return false;
 
 			// Calculate token age
-			long expiration = Program.Settings.authenticationSettings.expiration;
+			long expiration = (long)Program.Settings["authenticationSettings"]["expiration"];
 			long token = (long)request["token"];
 			long tokenAge = (long)(DateTime.UtcNow - Epoch.AddSeconds(token).ToLocalTime()).TotalSeconds;
 
@@ -205,7 +205,7 @@ namespace API.Requests {
 			}
 
 			// If the token can't be parsed, respond with 'InvalidArgument'
-			if (!long.TryParse(token.ToString(), out long f))
+			if (!long.TryParse(token.ToString(), out long _))
 			{
 				response = Templates.InvalidArgument("token");
 				return false;

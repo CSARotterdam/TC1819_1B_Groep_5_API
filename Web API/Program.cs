@@ -2,6 +2,7 @@
 using Logging;
 using MySQLWrapper;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -16,12 +17,13 @@ namespace API {
 	class Program {
 		public static bool ManualError = false;
 		public static Logger log = new Logger(Level.ALL, Console.Out);
-		public static dynamic Settings;
 		public static TechlabMySQL Connection;
 
 		public static List<RequestWorker> RequestWorkers = new List<RequestWorker>();
 		public static Thread listenerThread;
 		public static Thread consoleThread;
+
+		public static JObject Settings;
 
 		public static void Main() {
 			// Compress previous log
@@ -42,48 +44,19 @@ namespace API {
 			log.Info("Server is starting!");
 
 			//Load configuration file
-			log.Config("Loading configuration file.");
-			bool validConfig = true;
-
-			try {
-				Settings = Config.loadConfig();
-			} catch (JsonReaderException) {
-				log.Fatal("Configuration file is not a valid JSON file.");
-				log.Info("Validate the file at https://www.jsonschemavalidator.net/");
-				log.Info("Press the any key to exit.");
-				Console.ReadKey();
+			log.Info("Loading configuration file.");
+			Settings = Config.loadConfig();
+			if(Settings == null) {
+				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
+				log.Fatal("Press the any key to exit.");
+				Console.Read();
 				return;
 			}
-
-			//Check if config contains all necessary info to start. If it doesn't, abort launch.
-			if (Settings.databaseSettings.username == null || Settings.databaseSettings.password == null || Settings.databaseSettings.serverAddress == null || Settings.databaseSettings.database == null) {
-				log.Fatal("Incomplete or missing database configuration.");
-				validConfig = false;
-			}
-			if ((bool)Settings.connectionSettings.autodetect && Settings.connectionSettings.serverAddresses.Count == 0) {
-				log.Fatal("Missing server address.");
-				validConfig = false;
-			}
-
-			//If the config file is invalid, throw an error and abort.
-			if (!validConfig) {
-				log.Info("");
-				log.Info("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
-				log.Info("Press the any key to exit.");
-				Console.ReadKey();
-				return;
-			}
-
-			if ((string)Settings["authenticationSettings"]["expiration"] == null) {
-				log.Info("User token expiration not set. Defaulting to 7200 (2 hours).");
-				Settings["authenticationSettings"]["expiration"] = 7200;
-			}
-
-			log.Config("Successfully loaded configuration file.");
+			log.Info("Loaded configuration file.");
 
 			//Get local IP address, if autodetect is enabled in settings.
-			List<string> addresses = Settings.connectionSettings.serverAddresses.ToObject<List<string>>();
-			if ((bool)Settings.connectionSettings.autodetect) {
+			List<string> addresses = Settings["connectionSettings"]["serverAddresses"].ToObject<List<string>>();
+			if ((bool)Settings["connectionSettings"]["autodetect"]) {
 				string address;
 				using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0)) {
 					socket.Connect("8.8.8.8", 65530);
@@ -102,7 +75,8 @@ namespace API {
 			consoleThread.Start();
 
 			//Create worker threads
-			int threadCount = (int)Settings.performanceSettings.workerThreadCount;
+			log.Info("Creating worker threads.");
+			int threadCount = (int)Settings["performanceSettings"]["workerThreadCount"];
 			for (int i = 0; i < threadCount; i++) {
 				var worker = new RequestWorker(CreateConnection(), requestQueue, "RequestWorker" + (i + 1), log);
 				worker.Start();
@@ -133,7 +107,7 @@ namespace API {
 		}
 
 		public static TechlabMySQL CreateConnection() {
-			string databaseAddress = Settings.databaseSettings.serverAddress;
+			string databaseAddress = (string)Settings["databaseSettings"]["serverAddress"];
 			string databasePort;
 			string[] splitAddress = databaseAddress.Split(":");
 			if (databaseAddress == splitAddress[0]) {
@@ -145,12 +119,12 @@ namespace API {
 			TechlabMySQL wrapper = new TechlabMySQL(
 				databaseAddress,
 				databasePort,
-				(string)Settings.databaseSettings.username,
-				(string)Settings.databaseSettings.password,
-				(string)Settings.databaseSettings.database,
-				(int)Settings.databaseSettings.connectionTimeout,
-				(bool)Settings.databaseSettings.persistLogin,
-				(bool)Settings.databaseSettings.caching
+				(string)Settings["databaseSettings"]["username"],
+				(string)Settings["databaseSettings"]["password"],
+				(string)Settings["databaseSettings"]["database"],
+				(int)Settings["databaseSettings"]["connectionTimeout"],
+				(bool)Settings["databaseSettings"]["persistLogin"],
+				(bool)Settings["databaseSettings"]["caching"]
 			) {
 				AutoReconnect = true
 			};
