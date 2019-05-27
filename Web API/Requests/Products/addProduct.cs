@@ -5,19 +5,18 @@ using System.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 
-		[verifyPermission(User.UserPermission.Admin)]
-		public static JObject addProduct(JObject request) {
+		[RequiresPermissionLevel(UserPermission.Admin)]
+		public JObject addProduct(JObject request) {
 			//Get arguments
 			string productID;
 			string manufacturer;
 			string categoryID;
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("productID", out JToken productIDValue);
-			requestData.TryGetValue("categoryID", out JToken categoryIDValue);
-			requestData.TryGetValue("manufacturer", out JToken manufacturerValue);
-			requestData.TryGetValue("name", out JToken nameValue);
+			request.TryGetValue("productID", out JToken productIDValue);
+			request.TryGetValue("categoryID", out JToken categoryIDValue);
+			request.TryGetValue("manufacturer", out JToken manufacturerValue);
+			request.TryGetValue("name", out JToken nameValue);
 			if (productIDValue == null || productIDValue.Type != JTokenType.String ||
 				manufacturerValue == null || manufacturerValue.Type != JTokenType.String ||
 				nameValue == null || nameValue.Type != JTokenType.Object ||
@@ -31,7 +30,7 @@ namespace API.Requests {
 			}
 
 			//Get image
-			requestData.TryGetValue("image", out JToken imageValue);
+			request.TryGetValue("image", out JToken imageValue);
 			string extension = null;
 			byte[] imageData = null;
 			if (imageValue != null && imageValue.Type == JTokenType.Object) {
@@ -73,28 +72,28 @@ namespace API.Requests {
 
 
 			//Check if product already exists
-			Product product = Requests.getObject<Product>(productID);
+			Product product = GetObject<Product>(productID);
 			if (product != null) {
 				return Templates.AlreadyExists(productID);
 			}
 
 			//Check if category exists
-			ProductCategory category = Requests.getObject<ProductCategory>(categoryID);
+			ProductCategory category = GetObject<ProductCategory>(categoryID);
 			if (category != null) {
 				return Templates.NoSuchProductCategory(categoryID);
 			}
 
 			//Create product, languageItem, image
 			LanguageItem item = new LanguageItem(productID + "_name", en, nl, ar);
-			item.Upload(wrapper);
+			item.Upload(Connection);
 			if (imageData != null) {
 				Image image = new Image(productID + "_image", imageData, extension);
-				image.Upload(wrapper);
+				image.Upload(Connection);
 				product = new Product(productID, manufacturer, categoryID, productID + "_name", image.Id);
 			} else {
 				product = new Product(productID, manufacturer, categoryID, productID + "_name");
 			}
-			product.Upload(wrapper);
+			product.Upload(Connection);
 
 			//Create response
 			return new JObject() {

@@ -1,19 +1,19 @@
 ﻿using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
-using static API.Requests.Requests;
+using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
-		//Note: Uses its own permission check, because while only admins can edit every user, users can edit their own password.
-		public static JObject updateUser(JObject request) {
+	abstract partial class RequestHandler {
+		//Note: Uses its own permission check, because while only admins can edit every user, the rest can edit their own password.
+		[RequiresPermissionLevel(UserPermission.User)]
+		public JObject updateUser(JObject request) {
 			//Get arguments
 			string username;
 			string password;
 			int permission = -2;
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("username", out JToken usernameValue);
-			requestData.TryGetValue("password", out JToken passwordValue);
-			requestData.TryGetValue("permission", out JToken permissionValue);
+			request.TryGetValue("username", out JToken usernameValue);
+			request.TryGetValue("password", out JToken passwordValue);
+			request.TryGetValue("permission", out JToken permissionValue);
 			if (usernameValue == null || usernameValue.Type != JTokenType.String) {
 				return Templates.MissingArguments("username");
 			} else {
@@ -32,9 +32,9 @@ namespace API.Requests {
 			}
 
 			//Check permission
-			User currentUser = getObject<User>(request["username"].ToObject<string>(), "Username");
+			User currentUser = GetObject<User>(request["username"].ToObject<string>(), "Username");
 			if (currentUser.Username != username) {
-				if (currentUser.Permission != User.UserPermission.Admin) {
+				if (currentUser.Permission != UserPermission.Admin) {
 					return Templates.AccessDenied;
 				}
 			} else if (permission != -2) {
@@ -42,7 +42,7 @@ namespace API.Requests {
 			}
 
 			//Get user
-			User user = getObject<User>(username, "Username");
+			User user = GetObject<User>(username, "Username");
 			if (user == null) {
 				return Templates.NoSuchUser(username);
 			}
@@ -52,9 +52,9 @@ namespace API.Requests {
 				user.Password = password;
 			}
 			if (permission != -2) {
-				user.Permission = (User.UserPermission)permission;
+				user.Permission = (UserPermission)permission;
 			}
-			user.Update(wrapper);
+			user.Update(Connection);
 
 			//Create response
 			return new JObject() {

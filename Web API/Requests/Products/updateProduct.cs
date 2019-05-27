@@ -5,10 +5,10 @@ using System.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 
-		[verifyPermission(User.UserPermission.Admin)]
-		public static JObject updateProduct(JObject request) {
+		[RequiresPermissionLevel(UserPermission.Admin)]
+		public JObject updateProduct(JObject request) {
 
 			//Validate arguments
 			string productID;
@@ -20,13 +20,12 @@ namespace API.Requests {
 			JObject names = null;
 			JObject newImage = null;
 
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("productID", out JToken idValue);
-			requestData.TryGetValue("newProductID", out JToken newIDValue);
-			requestData.TryGetValue("categoryID", out JToken categoryIDValue);
-			requestData.TryGetValue("manufacturer", out JToken manufacturerValue);
-			requestData.TryGetValue("name", out JToken nameValue);
-			requestData.TryGetValue("image", out JToken imageValue);
+			request.TryGetValue("productID", out JToken idValue);
+			request.TryGetValue("newProductID", out JToken newIDValue);
+			request.TryGetValue("categoryID", out JToken categoryIDValue);
+			request.TryGetValue("manufacturer", out JToken manufacturerValue);
+			request.TryGetValue("name", out JToken nameValue);
+			request.TryGetValue("image", out JToken imageValue);
 			if (idValue == null || idValue.Type != JTokenType.String) {
 				return Templates.MissingArguments("productID");
 			} else {
@@ -63,14 +62,14 @@ namespace API.Requests {
 			}
 
 			//Get product, if it exists
-			Product product = Requests.getObject<Product>(productID);
+			Product product = GetObject<Product>(productID);
 			if (product == null) {
 				return Templates.NoSuchProduct(productID);
 			}
 
 			///////////////Image
 			//Edit image if needed;
-			Image image = product.GetImage(wrapper);
+			Image image = product.GetImage(Connection);
 			if (newImage != null) {
 
 				string oldID = image.Id;
@@ -85,18 +84,18 @@ namespace API.Requests {
 				}
 
 				if (oldID != image.Id) {
-					image.Upload(wrapper);
+					image.Upload(Connection);
 					product.UpdateTrace();
 					product.Image = image.Id;
-					product.Update(wrapper);
+					product.Update(Connection);
 				} else {
-					image.Update(wrapper);
+					image.Update(Connection);
 				}
 			}
 
 			///////////////LanguageItem
 			//Edit the LanguageItem if needed;
-			LanguageItem item = product.GetName(wrapper);
+			LanguageItem item = product.GetName(Connection);
 			if (names != null) {
 				if (names.TryGetValue("en", out JToken enValue)) {
 					if (enValue.Type == JTokenType.String) {
@@ -113,20 +112,20 @@ namespace API.Requests {
 						item.ar = arValue.ToObject<string>();
 					}
 				}
-				item.Update(wrapper);
+				item.Update(Connection);
 			}
 
 			//If a new product ID was specified, check if it already exists. If it doesn't, change the product ID.
 			if (newProductID != null) {
-				Product newProduct = Requests.getObject<Product>(newProductID);
+				Product newProduct = GetObject<Product>(newProductID);
 				if (newProduct != null) {
 					return Templates.AlreadyExists(productID);
 				} else {
 					image.Id = newProductID + "_image";
-					image.Update(wrapper);
+					image.Update(Connection);
 					product.Image = image.Id;
 					item.Id = newProductID + "_name";
-					item.Update(wrapper);
+					item.Update(Connection);
 					product.Name = item.Id;
 					product.UpdateTrace();
 					product.Id = newProductID;
@@ -136,7 +135,7 @@ namespace API.Requests {
 			///////////////Product
 			//If a new category was specified, check if it exists. If it does, change the product category
 			if (categoryID != null) {
-				ProductCategory category = Requests.getObject<ProductCategory>(categoryID);
+				ProductCategory category = GetObject<ProductCategory>(categoryID);
 				if (category == null) {
 					return Templates.NoSuchProductCategory(categoryID);
 				} else {
@@ -149,7 +148,7 @@ namespace API.Requests {
 				product.Manufacturer = manufacturer;
 			}
 
-			product.Update(wrapper);
+			product.Update(Connection);
 
 			//Create response
 			return new JObject() {

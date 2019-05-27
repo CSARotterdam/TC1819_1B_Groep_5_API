@@ -7,7 +7,7 @@ using System.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 		/// <summary>
 		/// Handles requests with requestType "GetProducts".
 		/// </summary>
@@ -21,15 +21,14 @@ namespace API.Requests {
 		/// </remarks>
 		/// <param name="request">The request from the client.</param>
 		/// <returns>The contents of the requestData field, which is to be returned to the client.</returns>
-		[verifyPermission(User.UserPermission.User)]
-		public static JObject getProducts(JObject request) {
+		[RequiresPermissionLevel(UserPermission.User)]
+		public JObject getProducts(JObject request) {
 			// Get request arguments
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("columns", out JToken requestColumns);
-			requestData.TryGetValue("criteria", out JToken requestCriteria);
-			requestData.TryGetValue("language", out JToken requestLanguages);
-			requestData.TryGetValue("start", out JToken requestRangeStart);
-			requestData.TryGetValue("amount", out JToken requestRangeAmount);
+			request.TryGetValue("columns", out JToken requestColumns);
+			request.TryGetValue("criteria", out JToken requestCriteria);
+			request.TryGetValue("language", out JToken requestLanguages);
+			request.TryGetValue("start", out JToken requestRangeStart);
+			request.TryGetValue("amount", out JToken requestRangeAmount);
 
 			MySqlConditionBuilder condition = new MySqlConditionBuilder();
 
@@ -68,7 +67,7 @@ namespace API.Requests {
 				((JArray)requestColumns).Add("name");
 
 			// Request category data from database
-			List<object[]> categoryData = wrapper.Select<Product>(requestColumns.ToObject<string[]>(), condition, range).ToList();
+			List<object[]> categoryData = Connection.Select<Product>(requestColumns.ToObject<string[]>(), condition, range).ToList();
 
 			// Add all categories as dictionaries to responseData
 			foreach (var data in categoryData) {
@@ -97,7 +96,7 @@ namespace API.Requests {
 				else
 					languageColumns.Insert(0, "id");
 
-				List<object[]> names = wrapper.Select<LanguageItem>(languageColumns.ToArray(), nameCondition).ToList();
+				List<object[]> names = Connection.Select<LanguageItem>(languageColumns.ToArray(), nameCondition).ToList();
 				for (int i = 0; i < responseData.Count; i++) {
 					var nameData = names.First(x => x[0].Equals(nameIds[i]));
 					var translations = new JObject();

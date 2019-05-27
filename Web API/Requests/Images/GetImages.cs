@@ -6,7 +6,7 @@ using System.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 		/// <summary>
 		/// Gets and returns a list of images from the database.
 		/// </summary>
@@ -17,12 +17,11 @@ namespace API.Requests {
 		/// </remarks>
 		/// <param name="request"></param>
 		/// <returns></returns>
-		[verifyPermission(User.UserPermission.User)]
-		public static JObject GetImages(JObject request) {
+		[RequiresPermissionLevel(UserPermission.User)]
+		public JObject GetImages(JObject request) {
 			//Get arguments
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("columns", out JToken requestColumns);
-			requestData.TryGetValue("images", out JToken requestImageIds);
+			request.TryGetValue("columns", out JToken requestColumns);
+			request.TryGetValue("images", out JToken requestImageIds);
 
 			if (requestImageIds == null) {
 				return Templates.MissingArguments("imageIds");
@@ -67,7 +66,7 @@ namespace API.Requests {
 			((JArray)requestColumns).Insert(0, Image.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0].Column);
 
 			// Get images
-			List<object[]> imageData = wrapper.Select<Image>(requestColumns.ToObject<string[]>(), condition).ToList();
+			List<object[]> imageData = Connection.Select<Image>(requestColumns.ToObject<string[]>(), condition).ToList();
 
 			//Create base response
 			var responseData = new JObject();

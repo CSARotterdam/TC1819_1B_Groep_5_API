@@ -3,13 +3,12 @@ using Newtonsoft.Json.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 
-		[verifyPermission(User.UserPermission.Admin)]
-		public static JObject deleteProductItem(JObject request) {
+		[RequiresPermissionLevel(UserPermission.Admin)]
+		public JObject deleteProductItem(JObject request) {
 			//Get arguments
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("productItemID", out JToken idValue);
+			request.TryGetValue("productItemID", out JToken idValue);
 			if (idValue == null || idValue.Type != JTokenType.String) {
 				return Templates.MissingArguments("productItemID");
 			}
@@ -20,11 +19,11 @@ namespace API.Requests {
 			}
 
 			//Check if productItem exists
-			ProductItem item = Requests.getObject<ProductItem>(productID);
+			ProductItem item = GetObject<ProductItem>(productID);
 			if (item == null) {
 				return Templates.NoSuchProduct(productID);
 			}
-			item.Delete(wrapper);
+			item.Delete(Connection);
 
 			//Create base response
 			return new JObject() {

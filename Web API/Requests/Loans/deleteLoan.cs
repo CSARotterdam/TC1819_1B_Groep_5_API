@@ -7,7 +7,7 @@ using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests
 {
-	static partial class RequestMethods
+	abstract partial class RequestHandler
 	{
 		/// <summary>
 		/// Handles requests with requestType "deleteLoan".
@@ -20,12 +20,11 @@ namespace API.Requests
 		/// </remarks>
 		/// <param name="request">The request from the client.</param>
 		/// <returns>The contents of the requestData field, which is to be returned to the client.</returns>
-		[verifyPermission(User.UserPermission.User)]
-		public static JObject deleteLoan(JObject request)
+		[RequiresPermissionLevel(UserPermission.User)]
+		public JObject deleteLoan(JObject request)
 		{
 			// Get arguments
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("loanId", out JToken loanId);
+			request.TryGetValue("loanId", out JToken loanId);
 
 			// Verify arguments
 			if (loanId == null || loanId.Type != JTokenType.Integer)
@@ -33,17 +32,17 @@ namespace API.Requests
 			
 			// Build condition
 			var condition = new MySqlConditionBuilder();
-			if (CurrentUser.Permission <= User.UserPermission.User)
+			if (CurrentUser.Permission <= UserPermission.User)
 				condition.Column("user").Equals(CurrentUser.Username, MySqlDbType.String);
 			condition.And().Column("id").Equals(loanId, MySqlDbType.String);
 			
 			// Get and delete loan, or return error if no such loan exists
-			var loan = wrapper.Select<LoanItem>(condition, range: (0, 1)).FirstOrDefault();
+			var loan = Connection.Select<LoanItem>(condition, range: (0, 1)).FirstOrDefault();
 			if (loan == null)
 				return Templates.NoSuchLoan(loanId.ToString());
 			if (loan.Start < DateTime.Now)
 				return Templates.LoanAlreadyStarted();
-			wrapper.Delete(loan);
+			Connection.Delete(loan);
 			
 			// Create response
 			JObject response = new JObject() {

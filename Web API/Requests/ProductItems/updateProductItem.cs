@@ -3,19 +3,17 @@ using Newtonsoft.Json.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 
-		[verifyPermission(User.UserPermission.Admin)]
-		public static JObject updateProductItem(JObject request) {
+		[RequiresPermissionLevel(UserPermission.Admin)]
+		public JObject updateProductItem(JObject request) {
 
 			//Validate arguments
 			string productItemID;
 			string productID = null;
 
-
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("productItemID", out JToken itemIdValue);
-			requestData.TryGetValue("productID", out JToken idValue);
+			request.TryGetValue("productItemID", out JToken itemIdValue);
+			request.TryGetValue("productID", out JToken idValue);
 			if (itemIdValue == null || itemIdValue.Type != JTokenType.String) {
 				return Templates.MissingArguments("productItemID");
 			} else {
@@ -29,13 +27,13 @@ namespace API.Requests {
 			}
 
 			//Get product, if it exists
-			Product product = Requests.getObject<Product>(productID);
+			Product product = GetObject<Product>(productID);
 			if (product == null) {
 				return Templates.NoSuchProduct(productID);
 			}
 
 			//get productItem, if it exists
-			ProductItem item = Requests.getObject<ProductItem>(productItemID);
+			ProductItem item = GetObject<ProductItem>(productItemID);
 			if (item == null) {
 				return Templates.NoSuchProductItem(productItemID);
 			}
@@ -45,7 +43,7 @@ namespace API.Requests {
 				item.ProductId = productID;
 			}
 
-			item.Update(wrapper);
+			item.Update(Connection);
 
 			//Create response
 			return new JObject() {

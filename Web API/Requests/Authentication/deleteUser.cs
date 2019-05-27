@@ -1,17 +1,15 @@
 ﻿using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
 using static API.Requests.RequestMethodAttributes;
-using static API.Requests.Requests;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 
-		[verifyPermission(User.UserPermission.Admin)]
-		public static JObject deleteUser(JObject request) {
+		[RequiresPermissionLevel(UserPermission.Admin)]
+		public JObject deleteUser(JObject request) {
 			//Get arguments
 			string username;
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("username", out JToken usernameValue);
+			request.TryGetValue("username", out JToken usernameValue);
 			if (usernameValue == null || usernameValue.Type != JTokenType.String) {
 				return Templates.MissingArguments("username");
 			} else {
@@ -19,7 +17,7 @@ namespace API.Requests {
 			}
 
 			//Check if user exists
-			User user = getObject<User>(username, "Username");
+			User user = GetObject<User>(username, "Username");
 			if (user == null) {
 				return Templates.NoSuchUser(username);
 			}

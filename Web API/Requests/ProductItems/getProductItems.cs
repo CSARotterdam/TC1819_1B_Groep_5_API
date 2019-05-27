@@ -8,7 +8,7 @@ using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests
 {
-	static partial class RequestMethods
+	abstract partial class RequestHandler
 	{
 		/// <summary>
 		/// Handles requests with requestType "getProductItems".
@@ -19,12 +19,11 @@ namespace API.Requests
 		/// </remarks>
 		/// <param name="request">The request from the client.</param>
 		/// <returns>The contents of the requestData field, which is to be returned to the client.</returns>
-		[verifyPermission(User.UserPermission.User)]
-		public static JObject getProductItems(JObject request)
+		[RequiresPermissionLevel(UserPermission.User)]
+		public JObject getProductItems(JObject request)
 		{
 			// Get request arguments
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("products", out JToken requestProductIds);
+			request.TryGetValue("products", out JToken requestProductIds);
 
 			// Verify the argument
 			if (requestProductIds != null && (requestProductIds.Type != JTokenType.Array || requestProductIds.Any(x => x.Type != JTokenType.String)))
@@ -61,7 +60,7 @@ namespace API.Requests
 		/// </summary>
 		/// <param name="productIds"></param>
 		/// <returns></returns>
-		private static ILookup<string, ProductItem> Core_getProductItems(params string[] productIds)
+		private ILookup<string, ProductItem> Core_getProductItems(params string[] productIds)
 		{
 			MySqlConditionBuilder condition = new MySqlConditionBuilder();
 
@@ -78,7 +77,7 @@ namespace API.Requests
 				.Column(itemPrimary.Column)
 				.NotEquals(0, itemPrimary.Type);
 
-			return wrapper.Select<ProductItem>(condition).ToLookup(x => x.ProductId);
+			return Connection.Select<ProductItem>(condition).ToLookup(x => x.ProductId);
 		}
 	}
 }

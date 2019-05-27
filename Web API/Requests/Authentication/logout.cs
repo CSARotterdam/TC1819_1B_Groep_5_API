@@ -1,31 +1,13 @@
-﻿using MySQLWrapper.Data;
-using Newtonsoft.Json.Linq;
-using static API.Requests.Requests;
-
+﻿using Newtonsoft.Json.Linq;
 
 namespace API.Requests {
-	static partial class RequestMethods {
-
-
+	abstract partial class RequestHandler {
 		/// <summary>
 		/// Handles requests with requestType "logout".
 		/// </summary>
 		/// <param name="request">The JObject containing the request received from the client.</param>
 		/// <returns>A <see cref="JObject"/> containing the request response, which can then be sent to the client.</returns>
-
-		public static JObject logout(JObject request) {
-			//Verify user details
-			request.TryGetValue("username", out JToken usernameValue);
-			if (usernameValue == null || usernameValue.Type == JTokenType.Null) {
-				return Templates.MissingArguments("username, token");
-			}
-			string username = usernameValue.ToString();
-
-			User user = getObject<User>(username, "Username");
-			if (user == null) {
-				return Templates.NoSuchUser(username);
-			}
-
+		public JObject logout(JObject request) {
 			//Create response object
 			JObject response = new JObject() {
 				{"success", true },
@@ -33,8 +15,8 @@ namespace API.Requests {
 			};
 
 			//Log the user out
-			user.Token = 0;
-			user.Update(wrapper);
+			CurrentUser.Token = 0;
+			CurrentUser.Update(Connection);
 			return response;
 		}
 	}

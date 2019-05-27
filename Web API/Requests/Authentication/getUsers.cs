@@ -1,4 +1,4 @@
 ﻿namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 	}
 }

@@ -2,21 +2,19 @@
 using Newtonsoft.Json.Linq;
 using System;
 using static API.Requests.RequestMethodAttributes;
-using static API.Requests.Requests;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 		/// <summary>
 		/// Handles requests with requestType "registerUser".
 		/// </summary>
 		/// <param name="request">The JObject containing the request received from the client.</param>
 		/// <returns>A JObject containing the request response, which can then be sent to the client.</returns>
-		[skipTokenVerification]
-		public static JObject registerUser(JObject request) {
+		[IgnoreUserToken]
+		public JObject registerUser(JObject request) {
 			//Verify user details
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("username", out JToken usernameValue);
-			requestData.TryGetValue("password", out JToken passwordValue);
+			request.TryGetValue("username", out JToken usernameValue);
+			request.TryGetValue("password", out JToken passwordValue);
 			if (usernameValue == null || passwordValue == null || usernameValue.Type == JTokenType.Null || passwordValue.Type == JTokenType.Null) {
 				return Templates.MissingArguments("username, password");
 			}
@@ -24,7 +22,7 @@ namespace API.Requests {
 			string password = passwordValue.ToString();
 
 			//Check if username already exists
-			if (getObject<User>(username, "Username") != null) {
+			if (GetObject<User>(username, "Username") != null) {
 				return Templates.AlreadyExists(username);
 			}
 
@@ -36,14 +34,14 @@ namespace API.Requests {
 				return Templates.InvalidPassword;
 			}
 
-			long token = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
-			User user = new User(username, password, token, User.UserPermission.User);
-			user.Upload(wrapper);
+			long token = (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+			User user = new User(username, password, token, UserPermission.User);
+			user.Upload(Connection);
 
 			//Create response object
 			JObject response = new JObject() {
-				{"userToken", (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds },
-				{ "permissionLevel",  0},
+				{"userToken", (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds },
+				{"permissionLevel", 0},
 				{"reason", null},
 			};
 

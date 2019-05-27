@@ -7,7 +7,7 @@ using System.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods
+	abstract partial class RequestHandler
 	{
 		/// <summary>
 		/// Handles requests with requestType "getLoans".
@@ -22,16 +22,15 @@ namespace API.Requests {
 		/// </remarks>
 		/// <param name="request">The request from the client.</param>
 		/// <returns>The contents of the requestData field, which is to be returned to the client.</returns>
-		[verifyPermission(User.UserPermission.User)]
-		public static JObject getLoans(JObject request)
+		[RequiresPermissionLevel(UserPermission.User)]
+		public JObject getLoans(JObject request)
 		{
 			// Get arguments
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("columns", out JToken requestColumns);
-			requestData.TryGetValue("productItemIds", out JToken requestProductItems);
-			requestData.TryGetValue("userId", out JToken requestUserId);
-			requestData.TryGetValue("start", out JToken requestStart);
-			requestData.TryGetValue("end", out JToken requestEnd);
+			request.TryGetValue("columns", out JToken requestColumns);
+			request.TryGetValue("productItemIds", out JToken requestProductItems);
+			request.TryGetValue("userId", out JToken requestUserId);
+			request.TryGetValue("start", out JToken requestStart);
+			request.TryGetValue("end", out JToken requestEnd);
 
 			// Verify arguments
 			List<string> failedVerifications = new List<string>();
@@ -72,7 +71,7 @@ namespace API.Requests {
 			if (requestUserId != null)
 				condition.And().Column("user").Equals(requestUserId, MySqlDbType.String);
 			// Automatically limit results to current user only if their permission is User
-			if (CurrentUser.Permission <= User.UserPermission.User)
+			if (CurrentUser.Permission <= UserPermission.User)
 				condition.And().Column("user").Equals(CurrentUser.Username, MySqlDbType.String);
 			// Select only relevant loans
 			if (requestStart != null)
@@ -81,7 +80,7 @@ namespace API.Requests {
 				condition.And().Column("start").LessThanOrEqual().Operand(end, MySqlDbType.DateTime);
 
 			// Get loans
-			var loans = wrapper.Select<LoanItem>(requestColumns.ToObject<string[]>(), condition);
+			var loans = Connection.Select<LoanItem>(requestColumns.ToObject<string[]>(), condition);
 
 			// Build base response
 			var responseData = new JArray();

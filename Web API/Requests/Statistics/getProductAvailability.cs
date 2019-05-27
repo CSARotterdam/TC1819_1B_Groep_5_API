@@ -6,14 +6,12 @@ using System.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 
-		//TODO Cache this shit
-		[verifyPermission(User.UserPermission.Collaborator)]
-		public static JObject getProductAvailability(JObject request) {
+		[RequiresPermissionLevel(UserPermission.Collaborator)]
+		public JObject getProductAvailability(JObject request) {
 			//Get arguments
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("products", out JToken statTypeValue);
+			request.TryGetValue("products", out JToken statTypeValue);
 			if (statTypeValue == null || (statTypeValue.Type != JTokenType.String && statTypeValue.Type != JTokenType.Array)) {
 				return Templates.MissingArguments("statType");
 			}
@@ -28,13 +26,13 @@ namespace API.Requests {
 			}
 
 			//Create base response
-			JObject response = new JObject() {
-			};
+			JObject response = new JObject();
 
 			//Retrieve statistics
 			foreach (string productID in productIDs) {
 				//If the product doesn't exist, add an error entry
-				if (Requests.getObject<Product>(productID) == null) {
+				Log.Debug($"{Connection.GetType().Name}@{Connection.GetHashCode().ToString("X")}");
+				if (GetObject<Product>(productID) == null) {
 					response[productID] = "NoSuchProduct";
 					continue;
 				}
@@ -48,13 +46,13 @@ namespace API.Requests {
 				};
 
 				//Get all loans belonging to this product
-				List<ProductItem> productItems = wrapper.Select<ProductItem>(new MySqlConditionBuilder()
+				List<ProductItem> productItems = Connection.Select<ProductItem>(new MySqlConditionBuilder()
 					.Column("product")
 					.Equals(productID, MySqlDbType.String)
 				).ToList();
 				List<LoanItem> loans = new List<LoanItem>();
 				foreach (ProductItem pitem in productItems) {
-					List<LoanItem> loanitems = wrapper.Select<LoanItem>(new MySqlConditionBuilder()
+					List<LoanItem> loanitems = Connection.Select<LoanItem>(new MySqlConditionBuilder()
 						.Column("product_item")
 						.Equals(pitem.Id, MySqlDbType.Int32)
 					).ToList();

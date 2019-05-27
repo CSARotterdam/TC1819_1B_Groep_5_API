@@ -3,15 +3,14 @@ using Newtonsoft.Json.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 
-		[verifyPermission(User.UserPermission.Collaborator)]
-		public static JObject addProductCategory(JObject request) {
+		[RequiresPermissionLevel(UserPermission.Collaborator)]
+		public JObject addProductCategory(JObject request) {
 			//Get arguments
 			string categoryID;
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("categoryID", out JToken categoryIDValue);
-			requestData.TryGetValue("name", out JToken nameValue);
+			request.TryGetValue("categoryID", out JToken categoryIDValue);
+			request.TryGetValue("name", out JToken nameValue);
 			if (categoryIDValue == null || categoryIDValue.Type != JTokenType.String ||
 				nameValue == null || nameValue.Type != JTokenType.Object
 			) {
@@ -45,16 +44,16 @@ namespace API.Requests {
 
 
 			//Check if category already exists
-			ProductCategory category = Requests.getObject<ProductCategory>(categoryID);
+			ProductCategory category = GetObject<ProductCategory>(categoryID);
 			if (category != null) {
 				return Templates.AlreadyExists(categoryID);
 			}
 
 			//Create category, languageitem
 			LanguageItem item = new LanguageItem(categoryID + "_name", en, nl, ar);
-			item.Upload(wrapper);
+			item.Upload(Connection);
 			category = new ProductCategory(categoryID, item.Id);
-			category.Upload(wrapper);
+			category.Upload(Connection);
 
 			//Create response
 			return new JObject() {

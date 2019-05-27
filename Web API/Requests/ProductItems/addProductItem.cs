@@ -3,14 +3,13 @@ using Newtonsoft.Json.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 
-		[verifyPermission(User.UserPermission.Admin)]
-		public static JObject addProductItem(JObject request) {
+		[RequiresPermissionLevel(UserPermission.Admin)]
+		public JObject addProductItem(JObject request) {
 			//Get arguments
 			string productID;
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("productID", out JToken productIDValue);
+			request.TryGetValue("productID", out JToken productIDValue);
 			if (productIDValue == null || productIDValue.Type != JTokenType.String) {
 				return Templates.MissingArguments("productID, categoryID, manufacturer, name");
 			} else {
@@ -18,14 +17,14 @@ namespace API.Requests {
 			}
 
 			//Check if product exists
-			Product product = Requests.getObject<Product>(productID);
+			Product product = GetObject<Product>(productID);
 			if (product == null) {
 				return Templates.NoSuchProduct(productID);
 			}
 
 			//Create productItem
 			ProductItem item = new ProductItem(null, productID);
-			item.Upload(wrapper);
+			item.Upload(Connection);
 
 			//Create response
 			return new JObject() {

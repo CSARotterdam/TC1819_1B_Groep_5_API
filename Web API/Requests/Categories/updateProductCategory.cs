@@ -3,20 +3,19 @@ using Newtonsoft.Json.Linq;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 
-		[verifyPermission(User.UserPermission.Collaborator)]
-		public static JObject updateProductCategory(JObject request) {
+		[RequiresPermissionLevel(UserPermission.Collaborator)]
+		public JObject updateProductCategory(JObject request) {
 
 			//Validate arguments
 			string categoryID;
 			string newCategoryID = null;
 			JObject names = null;
 
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("categoryID", out JToken categoryIDValue);
-			requestData.TryGetValue("newCategoryID", out JToken newCategoryIDValue);
-			requestData.TryGetValue("name", out JToken nameValue);
+			request.TryGetValue("categoryID", out JToken categoryIDValue);
+			request.TryGetValue("newCategoryID", out JToken newCategoryIDValue);
+			request.TryGetValue("name", out JToken nameValue);
 			if (categoryIDValue == null || categoryIDValue.Type != JTokenType.String) {
 				return Templates.MissingArguments("categoryID");
 			} else {
@@ -33,14 +32,14 @@ namespace API.Requests {
 			}
 
 			//Get product, if it exists
-			ProductCategory category = Requests.getObject<ProductCategory>(categoryID);
+			ProductCategory category = GetObject<ProductCategory>(categoryID);
 			if (category == null) {
 				return Templates.NoSuchProductCategory(categoryID);
 			}
 
 			///////////////LanguageItem
 			//Edit the LanguageItem if needed;
-			LanguageItem item = category.GetName(wrapper);
+			LanguageItem item = category.GetName(Connection);
 			if (names != null) {
 				if (names.TryGetValue("en", out JToken enValue)) {
 					if (enValue.Type == JTokenType.String) {
@@ -57,24 +56,24 @@ namespace API.Requests {
 						item.ar = arValue.ToObject<string>();
 					}
 				}
-				item.Update(wrapper);
+				item.Update(Connection);
 			}
 
 			//If a new product ID was specified, check if it already exists. If it doesn't, change the product ID.
 			if (newCategoryID != null) {
-				ProductCategory newProduct = Requests.getObject<ProductCategory>(newCategoryID);
+				ProductCategory newProduct = GetObject<ProductCategory>(newCategoryID);
 				if (newProduct != null) {
 					return Templates.AlreadyExists(categoryID);
 				} else {
 					item.Id = newCategoryID + "_name";
-					item.Update(wrapper);
+					item.Update(Connection);
 					category.Name = item.Id;
 					category.UpdateTrace();
 					category.Id = newCategoryID;
 				}
 			}
 
-			category.Update(wrapper);
+			category.Update(Connection);
 
 			//Create response
 			return new JObject() {

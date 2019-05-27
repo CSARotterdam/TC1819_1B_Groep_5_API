@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 
 namespace API.Requests {
-	static partial class RequestMethods {
+	abstract partial class RequestHandler {
 		/// <summary>
 		/// Handles requests with requestType "checkToken".
 		/// </summary>

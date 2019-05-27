@@ -8,17 +8,15 @@ using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests
 {
-	static partial class RequestMethods
+	abstract partial class RequestHandler
 	{
-		[verifyPermission(User.UserPermission.User)]
-		public static JObject addLoan(JObject request)
+		[RequiresPermissionLevel(UserPermission.User)]
+		public JObject addLoan(JObject request)
 		{
-
 			//Get arguments
-			JObject requestData = request["requestData"].ToObject<JObject>();
-			requestData.TryGetValue("productId", out JToken requestProductId);
-			requestData.TryGetValue("start", out JToken requestStart);
-			requestData.TryGetValue("end", out JToken requestEnd);
+			request.TryGetValue("productId", out JToken requestProductId);
+			request.TryGetValue("start", out JToken requestStart);
+			request.TryGetValue("end", out JToken requestEnd);
 
 			// Verify the arguments
 			List<string> failedVerifications = new List<string>();
@@ -55,7 +53,7 @@ namespace API.Requests
 				return Templates.ReservationFailed($"Product '{productId}' has no items available during this time.");
 
 			var loan = new LoanItem(null, CurrentUser.Username, item.Id.Value, start, end);
-			wrapper.Upload(loan);
+			Connection.Upload(loan);
 
 			//Create response
 			JObject response = new JObject() {
@@ -75,7 +73,7 @@ namespace API.Requests
 		/// <param name="productId">The product type whose items to return.</param>
 		/// <param name="span">The time period to test for unreserved items.</param>
 		/// <returns>A subset of all items of the given product type, or null if the product type has no items.</returns>
-		private static List<ProductItem> Core_GetUnreservedItems(string productId, DateTimeSpan span)
+		private List<ProductItem> Core_GetUnreservedItems(string productId, DateTimeSpan span)
 		{
 			List<ProductItem> items = Core_getProductItems(productId)[productId].ToList();
 			if (!items.Any()) return null;
@@ -98,10 +96,10 @@ namespace API.Requests
 				.LessThanOrEqual()
 				.Operand(span.End, MySqlDbType.DateTime);
 
-			List<LoanItem> loans = wrapper.Select<LoanItem>(condition).ToList();
+			List<LoanItem> loans = Connection.Select<LoanItem>(condition).ToList();
 			foreach (var loan in loans)
 			{
-				log.Info(loan);
+				Log.Info(loan);
 				if (!items.Any(x => x.Id == loan.ProductItem))
 					continue;
 				var loanSpan = new DateTimeSpan(loan.Start, loan.End);
