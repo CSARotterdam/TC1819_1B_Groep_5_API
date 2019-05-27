@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MySQLWrapper.Data
 {
@@ -50,6 +51,21 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		public MySqlConditionBuilder() { }
 		/// <summary>
+		/// Auto-generates a condition that matches the primary key with the it's value in the
+		/// given <see cref="SchemaItem"/>.
+		/// </summary>
+		/// <param name="item">The schemaItem whose primary key to use for the new condition.</param>
+		public MySqlConditionBuilder(SchemaItem item)
+		{
+			Index PRIMARY = item.GetIndex("PRIMARY");
+			if (PRIMARY == null)
+				throw new ArgumentException("Item has no primary key.");
+			var value = item.Fields[item.Indexes.IndexOf(PRIMARY)];
+			Column(PRIMARY.Columns[0].Column);
+			if (value == null) Is().Null();
+			else Equals(value, PRIMARY.Columns[0].Type);
+		}
+		/// <summary>
 		/// Auto-generates a condition that exactly matches the given fields and metadata.
 		/// </summary>
 		/// <param name="Metadata">A set of <see cref="ColumnMetadata"/> objects.</param>
@@ -63,7 +79,7 @@ namespace MySQLWrapper.Data
 				// Append an AND
 				if (i != 0) And();
 				// Append conditions for each column
-				if (Fields[i] == null) Column(Metadata[i].Column).Equals().Null();
+				if (Fields[i] == null) Column(Metadata[i].Column).Is().Null();
 				else Column(Metadata[i].Column).Equals(Fields[i], Metadata[i].Type);
 			}
 		}
@@ -101,6 +117,7 @@ namespace MySQLWrapper.Data
 			return this;
 		}
 
+		#region Operands
 		/// <summary>
 		/// Appends a column as operand to the condition. Fails if it is not expected.
 		/// </summary>
@@ -173,6 +190,9 @@ namespace MySQLWrapper.Data
 			else modifyingOperand = false;
 			return this;
 		}
+		#endregion
+
+		#region Comarison operators
 		/// <summary>
 		/// Appends an Equals operator the condition. Fails if it is not expected.
 		/// </summary>
@@ -183,6 +203,22 @@ namespace MySQLWrapper.Data
 		/// <param name="value">The value to append.</param>
 		/// <param name="type">The type of the value.</param>
 		public MySqlConditionBuilder Equals(object value, MySqlDbType type) => Equals().Operand(value, type);
+		/// <summary>
+		/// Appends an Is operator and an operand the condition. Fails if it is not expected.
+		/// </summary>
+		/// <remarks>
+		/// 'IS' is the the only operator capable of checking if a value is NULL.
+		/// </remarks>
+		public MySqlConditionBuilder Is() => AppendOperator("IS");
+		/// <summary>
+		/// Appends an IS operator and an operand the condition. Fails if it is not expected.
+		/// </summary>
+		/// <remarks>
+		/// 'IS' is the the only operator capable of checking if a value is NULL.
+		/// </remarks>
+		/// <param name="value">The value to append.</param>
+		/// <param name="type">The type of the value.</param>
+		public MySqlConditionBuilder Is(object value, MySqlDbType type) => Is().Operand(value, type);
 		/// <summary>
 		/// Appends a Not Equals operator the condition. Fails if it is not expected.
 		/// </summary>
@@ -244,7 +280,8 @@ namespace MySQLWrapper.Data
 		/// </remarks>
 		/// <param name="pattern">A string pattern to compare a value to.</param>
 		public MySqlConditionBuilder Like(string pattern) => Like().Operand(pattern, MySqlDbType.String);
-
+		#endregion
+		#region Arithmetic operators
 		/// <summary>
 		/// Appends the addition operator the condition. Fails if it is not expected.
 		/// </summary>
@@ -290,7 +327,9 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		/// <param name="value">The value to append.</param>
 		public MySqlConditionBuilder Modulo(long value) => Modulo().Operand(value, MySqlDbType.Int64);
+		#endregion
 
+		#region Modifiers
 		/// <summary>
 		/// Appends the NOT modifier to the condition. Fails if it is not expected.
 		/// </summary>
@@ -304,6 +343,22 @@ namespace MySQLWrapper.Data
 			unfinished = true;
 			return this;
 		}
+		#endregion
+
+		#region Functions
+		/// <summary>
+		/// Appends the CURDATE() function that is equal to the current date.
+		/// </summary>
+		public MySqlConditionBuilder CurrentDate() => AppendOperator("CURDATE()");
+		/// <summary>
+		/// Appends the CURTIME() function that is equal to the current time.
+		/// </summary>
+		public MySqlConditionBuilder CurrentTime() => AppendOperator("CURTIME()");
+		/// <summary>
+		/// Appends the NOW() function that is equal to the current date and time.
+		/// </summary>
+		public MySqlConditionBuilder Now() => AppendOperator("NOW()");
+		#endregion
 
 		/// <summary>
 		/// Appends a value as an operator to the condition.
@@ -316,7 +371,8 @@ namespace MySQLWrapper.Data
 			// Append the operator text to the condition with spaces.
 			Append($" {_operator.ToString()} ");
 
-			// Set regulatory flags to true
+			// Set regulatory flags
+			modifyingOperand = false;
 			expectingOperand = true;
 			unfinished = true;
 
@@ -327,7 +383,7 @@ namespace MySQLWrapper.Data
 		/// <summary>
 		/// Appends opening and closing brackets to the condition and enters them.
 		/// </summary>
-		/// <seealso cref="ExitGroup"/>.
+		/// <seealso cref="EndGroup"/>.
 		public MySqlConditionBuilder NewGroup()
 		{
 			Append("()");
@@ -340,7 +396,7 @@ namespace MySQLWrapper.Data
 		/// <summary>
 		/// Exists a bracket group. Fails if none have been entered yet.
 		/// </summary>
-		public MySqlConditionBuilder ExitGroup()
+		public MySqlConditionBuilder EndGroup()
 		{
 			if (depth == 0)
 				throw new OperationCanceledException("Can't exit main clause.");
@@ -350,6 +406,11 @@ namespace MySQLWrapper.Data
 			depth--;
 			return this;
 		}
+
+		/// <summary>
+		/// Returns whether or not the condition is empty.
+		/// </summary>
+		public bool IsEmpty() => !conditionString.Any();
 
 		/// <summary>
 		/// Adds text at the cursor position and advances the cursor by the length of the text.

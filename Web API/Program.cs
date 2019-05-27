@@ -1,59 +1,58 @@
-﻿using System;
+﻿using API.Threads;
+using Logging;
+using MySQLWrapper;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using MySQLWrapper;
-using Logging;
 
 namespace API {
 	class Program {
-		public static TechlabMySQL wrapper;
 		public static bool ManualError = false;
+
 		public static Logger log = new Logger(Level.ALL, Console.Out);
-		private static int _errorCode;
-		public static int ErrorCode{
-			get { return _errorCode; }
-			set {
-				_errorCode = value;
-				log.Error("Error code changed to " + _errorCode.ToString());
-				if(_errorCode == 0){
-					log.Error("Error state disabled. Now accepting requests.");
-				} else {
-					log.Error("Error state enabled. All requests will be refused.");
-				}
-			}
-		}
+		public static TechlabMySQL Connection;
+
+		public static List<RequestWorker> RequestWorkers = new List<RequestWorker>();
+		public static Listener ListenerThread;
+		public static Thread ConsoleThread;
+
+		public static JObject Settings;
 
 		public static void Main() {
-			log.Info("Hello world!");
+			IOSetup();
+
+			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log", new TimeSpan(0, 0, 5)) {
+				Compression = true,
+				CompressOnClose = false,
+				Archive = "Logs/{0:dd-MM-yyyy}.{2}.zip"
+			});
+
+			log.Info("Server is starting!");
 
 			//Load configuration file
-			dynamic Settings = Config.loadConfig();
-
-			//Check if config contains all necessary info to start. If it doesn't, abort launch.
-			bool validConfig = true;
-			if(Settings.databaseSettings.username == null || Settings.databaseSettings.password == null || Settings.databaseSettings.serverAddress == null || Settings.databaseSettings.database == null) {
-				log.Error("Error: Incomplete database configuration.");
-				validConfig = false;
-			}
-			if((bool)Settings.connectionSettings.autodetect && Settings.connectionSettings.serverAddresses.Count == 0) {
-				log.Error("Error: Missing server address.");
-				validConfig = false;
-			}
-			if (!validConfig) {
-				log.Error("The server failed to start because there is at least one invalid setting. Please check the server configuration!");
-				log.Error("Press the any key to exit.");
-				Console.ReadLine();
+			log.Info("Loading configuration file.");
+			Settings = Config.loadConfig();
+			if(Settings == null) {
+				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
+				log.Fatal("Press the any key to exit...");
+				Console.ReadKey();
+				Console.WriteLine();
+				log.Close();
 				return;
 			}
-			log.Info("Successfully loaded configuration file.");
+			log.Info("Loaded configuration file.");
 
 			//Get local IP address, if autodetect is enabled in settings.
-			List<string> addresses = Settings.connectionSettings.serverAddresses.ToObject<List<string>>();
-			if ((bool)Settings.connectionSettings.autodetect) {
+			List<string> addresses = Settings["connectionSettings"]["serverAddresses"].ToObject<List<string>>();
+			if ((bool)Settings["connectionSettings"]["autodetect"]) {
 				string address;
 				using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0)) {
 					socket.Connect("8.8.8.8", 65530);
@@ -65,61 +64,88 @@ namespace API {
 			}
 
 			//Create request queue
-			BlockingCollection<HttpListenerContext> requestQueue = new BlockingCollection<HttpListenerContext>();
+			var requestQueue = new BlockingCollection<HttpListenerContext>();
 
 			//Create console command thread
-			Thread consoleThread = new Thread(() => API.Threads.ConsoleCommand.main(log));
-			consoleThread.Start();
+			ConsoleThread = new Thread(() => API.Threads.ConsoleCommand.main(log)) {
+				IsBackground = true
+			};
+			ConsoleThread.Start();
 
-			//Connect to database
-			string databaseAddress = Settings.databaseSettings.serverAddress;
-			string databasePort = "";
+			//Create worker threads
+			log.Info("Creating worker threads.");
+			int threadCount = (int)Settings["performanceSettings"]["workerThreadCount"];
+			for (int i = 0; i < threadCount; i++) {
+				var worker = new RequestWorker(CreateConnection(), requestQueue, "RequestWorker" + (i + 1), log);
+				worker.Start();
+				RequestWorkers.Add(worker);
+			}
+
+			// Create listener thingy.
+			HttpListener listener = new HttpListener();
+			foreach (string address in addresses)
+				listener.Prefixes.Add("http://" + address + "/");
+			ListenerThread = new Listener(listener, requestQueue, "ListenerThread", log);
+			ListenerThread.Start();
+			log.Config("Finished setup");
+
+			// Wait until all threads are terminated
+			foreach (var worker in RequestWorkers) {
+				worker.Join();
+				log.Fine($"Stopped '{worker}'");
+			}
+
+			// Exit main thread
+			log.Info("Exiting program...");
+			log.Close();
+		}
+
+		public static TechlabMySQL CreateConnection() {
+			string databaseAddress = (string)Settings["databaseSettings"]["serverAddress"];
+			string databasePort;
 			string[] splitAddress = databaseAddress.Split(":");
-			if(databaseAddress == splitAddress[0]){
+			if (databaseAddress == splitAddress[0]) {
 				databasePort = "3306";
 			} else {
 				databaseAddress = splitAddress[0];
 				databasePort = splitAddress[1];
 			}
-			wrapper = new TechlabMySQL( //TODO: Catch access denied, other exceptions.
+			TechlabMySQL wrapper = new TechlabMySQL(
 				databaseAddress,
 				databasePort,
-				(string)Settings.databaseSettings.username,
-				(string)Settings.databaseSettings.password,
-				(string)Settings.databaseSettings.database,
-				(int)Settings.databaseSettings.connectionTimeout,
-				(bool)Settings.databaseSettings.persistLogin
-			);
-			Requests.RequestMethods.wrapper = wrapper;
-			wrapper.Open();
-
-			//Create database maintainer thread
-			Thread databaseMaintainerThread = new Thread(() => API.Threads.DatabaseMaintainer.main());
-			databaseMaintainerThread.Start();
-
-			//Create worker threads
-			log.Info("Creating worker threads.");
-			int threadCount = (int)Settings.performanceSettings.workerThreadCount;
-			Thread[] threadList = new Thread[threadCount];
-			for (int i = 0; i != threadCount; i++) {
-				Thread workerThread = new Thread(() => API.Threads.RequestWorker.main(log, requestQueue)) {
-					Name = "WorkerThread" + i.ToString()
-				};
-				workerThread.Start();
-				threadList[i] = workerThread;
-			}
-			log.Info("Finished creating worker threads.");
-
-			// Create listener thingy.
-			HttpListener listener = new HttpListener();
-			foreach (string address in addresses) {
-				listener.Prefixes.Add("http://" + address + "/");
-			}
-			Thread ListenerThread = new Thread(() => API.Listener.main(log, listener, requestQueue)) {
-				Name = "ListenerThread"
+				(string)Settings["databaseSettings"]["username"],
+				(string)Settings["databaseSettings"]["password"],
+				(string)Settings["databaseSettings"]["database"],
+				(int)Settings["databaseSettings"]["connectionTimeout"],
+				(bool)Settings["databaseSettings"]["persistLogin"],
+				(bool)Settings["databaseSettings"]["caching"]
+			) {
+				AutoReconnect = true
 			};
-			ListenerThread.Start();
-			log.Info("Setup complete.");
+			Connection = wrapper;
+			wrapper.Open();
+			return wrapper;
+		}
+
+		/// <summary>
+		/// Performs setup for all IO-related features
+		/// </summary>
+		public static void IOSetup()
+		{
+			// Create folders
+			Directory.CreateDirectory("Logs");
+
+			// Compress previous log
+			if (File.Exists("Logs/latest.log"))
+			{
+				var lastArchive = Directory.GetFiles("Logs").OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
+				if (lastArchive != null)
+				{
+					using (var archive = ZipFile.Open(lastArchive, ZipArchiveMode.Update))
+						archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
+					File.Delete("Logs/latest.log");
+				}
+			}
 		}
 	}
 }
