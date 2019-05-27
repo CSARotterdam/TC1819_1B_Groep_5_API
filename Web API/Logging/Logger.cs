@@ -53,7 +53,7 @@ namespace Logging
 		/// <summary>
 		/// Used for logs that document program configuration events.
 		/// </summary>
-		public static readonly Level CONFIG = new Level(250, "FINE", true);
+		public static readonly Level CONFIG = new Level(250, "CONFIG", true);
 		/// <summary>
 		/// Used for relatively fine logging. Not as fine as TRACE.
 		/// </summary>
@@ -142,7 +142,7 @@ namespace Logging
 		/// <summary>
 		/// The format used for log records.
 		/// </summary>
-		public string Format { get; private set; } = "{asctime:HH:mm:ss} {classname,-15} {levelname,5}: {message}";
+		public string Format { get; private set; } = "{asctime:HH:mm:ss} {classname,-15} {levelname,6}: {message}";
 		/// <summary>
 		/// Sets whether or not the log record stacktraces will use file info.
 		/// </summary>
