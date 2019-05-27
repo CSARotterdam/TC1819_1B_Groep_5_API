@@ -1,6 +1,7 @@
-﻿using MySQLWrapper.Data;
+﻿using MySql.Data.MySqlClient;
+using MySQLWrapper.Data;
 using System;
-using static API.Requests.Requests;
+using System.Linq;
 
 namespace API.Commands {
 	static partial class CommandMethods {
@@ -12,7 +13,10 @@ namespace API.Commands {
 			}
 
 			//Get the user object. Show an error if doesn't exist.
-			User user = getObject<User>(tokens[1], "Username");
+			var condition = new MySqlConditionBuilder()
+				.Column("username")
+				.Equals(tokens[1], MySqlDbType.String);
+			User user = Program.Connection?.Select<User>(condition, (0, 1)).FirstOrDefault();
 			if (user == null) {
 				Console.WriteLine("No such user.");
 				return;

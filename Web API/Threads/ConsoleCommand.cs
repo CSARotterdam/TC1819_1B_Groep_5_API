@@ -15,10 +15,10 @@ namespace API.Threads {
 	class ConsoleCommand {
 		public static void main(Logger log) {
 			MethodInfo[] methods = typeof(CommandMethods).GetMethods();
-			CommandMethods.wrapper = API.Program.CreateWrapper();
+			CommandMethods.wrapper = API.Program.CreateConnection();
 			CommandMethods.log = log;
 
-			log.Info("Thread ConsoleCommands now running.");
+			log.Config("Starting thread 'ConsoleCommands'");
 			while (true) {
 				//Wait for input, then split it.
 				string text = Console.ReadLine();

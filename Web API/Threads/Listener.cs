@@ -7,7 +7,7 @@ namespace API.Threads {
 
 		//For someone called the 'Listener,' you do an awful lot of shouting...
 		public static void main(Logger log, HttpListener listener, BlockingCollection<HttpListenerContext> requestQueue) {
-			log.Info("Thread Listener now running.");
+			log.Config("Starting thread 'ListenerThread'");
 			listener.Start();
 
 			// Main loop

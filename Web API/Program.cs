@@ -1,4 +1,5 @@
-﻿using Logging;
+﻿using API.Threads;
+using Logging;
 using MySQLWrapper;
 using Newtonsoft.Json;
 using System;
@@ -16,6 +17,11 @@ namespace API {
 		public static bool ManualError = false;
 		public static Logger log = new Logger(Level.ALL, Console.Out);
 		public static dynamic Settings;
+		public static TechlabMySQL Connection;
+
+		public static List<RequestWorker> RequestWorkers = new List<RequestWorker>();
+		public static Thread listenerThread;
+		public static Thread consoleThread;
 
 		public static void Main() {
 			// Compress previous log
@@ -35,19 +41,16 @@ namespace API {
 
 			log.Info("Server is starting!");
 
-			//Start logger
-			Requests.RequestMethods.log = log;
-
 			//Load configuration file
-			log.Info("Loading configuration file.");
+			log.Config("Loading configuration file.");
 			bool validConfig = true;
 
 			try {
 				Settings = Config.loadConfig();
 			} catch (JsonReaderException) {
 				log.Fatal("Configuration file is not a valid JSON file.");
-				log.Fatal("Validate the file at https://www.jsonschemavalidator.net/");
-				log.Fatal("Press the any key to exit.");
+				log.Info("Validate the file at https://www.jsonschemavalidator.net/");
+				log.Info("Press the any key to exit.");
 				Console.ReadKey();
 				return;
 			}
@@ -64,9 +67,9 @@ namespace API {
 
 			//If the config file is invalid, throw an error and abort.
 			if (!validConfig) {
-				log.Fatal("\n");
-				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
-				log.Fatal("Press the any key to exit.");
+				log.Info("");
+				log.Info("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
+				log.Info("Press the any key to exit.");
 				Console.ReadKey();
 				return;
 			}
@@ -76,7 +79,7 @@ namespace API {
 				Settings["authenticationSettings"]["expiration"] = 7200;
 			}
 
-			log.Info("Successfully loaded configuration file.");
+			log.Config("Successfully loaded configuration file.");
 
 			//Get local IP address, if autodetect is enabled in settings.
 			List<string> addresses = Settings.connectionSettings.serverAddresses.ToObject<List<string>>();
@@ -92,48 +95,44 @@ namespace API {
 			}
 
 			//Create request queue
-			BlockingCollection<HttpListenerContext> requestQueue = new BlockingCollection<HttpListenerContext>();
+			var requestQueue = new BlockingCollection<HttpListenerContext>();
 
 			//Create console command thread
-			Thread consoleThread = new Thread(() => API.Threads.ConsoleCommand.main(log));
+			consoleThread = new Thread(() => API.Threads.ConsoleCommand.main(log));
 			consoleThread.Start();
 
 			//Create worker threads
-			log.Info("Creating worker threads.");
 			int threadCount = (int)Settings.performanceSettings.workerThreadCount;
-			Thread[] threadList = new Thread[threadCount];
-			for (int i = 0; i != threadCount; i++) {
-				Thread workerThread = new Thread(() => API.Threads.RequestWorker.Main(log, requestQueue)) {
-					Name = "WorkerThread" + i.ToString()
-				};
-				workerThread.Start();
-				threadList[i] = workerThread;
+			for (int i = 0; i < threadCount; i++) {
+				var worker = new RequestWorker(CreateConnection(), requestQueue, "RequestWorker" + (i + 1), log);
+				worker.Start();
+				RequestWorkers.Add(worker);
 			}
-			log.Info("Finished creating worker threads.");
 
 			// Create listener thingy.
 			HttpListener listener = new HttpListener();
 			foreach (string address in addresses) {
 				listener.Prefixes.Add("http://" + address + "/");
 			}
-			Thread ListenerThread = new Thread(() => API.Threads.Listener.main(log, listener, requestQueue)) {
+			listenerThread = new Thread(() => API.Threads.Listener.main(log, listener, requestQueue)) {
 				Name = "ListenerThread"
 			};
-			ListenerThread.Start();
-			log.Info("Setup complete.");
+			listenerThread.Start();
+			log.Config("Finished setup");
 
 			// Wait until all threads are terminated
 			consoleThread.Join();
-			ListenerThread.Join();
-			foreach (var t in threadList) {
+			listenerThread.Join();
+			foreach (var t in RequestWorkers) {
 				t.Join();
 			}
 
 			// Exit main thread
+			log.Info("Exiting program...");
 			log.Dispose();
 		}
 
-		public static TechlabMySQL CreateWrapper() {
+		public static TechlabMySQL CreateConnection() {
 			string databaseAddress = Settings.databaseSettings.serverAddress;
 			string databasePort;
 			string[] splitAddress = databaseAddress.Split(":");
@@ -143,7 +142,7 @@ namespace API {
 				databaseAddress = splitAddress[0];
 				databasePort = splitAddress[1];
 			}
-			TechlabMySQL wrapper = new TechlabMySQL( //TODO: Catch access denied, other exceptions.
+			TechlabMySQL wrapper = new TechlabMySQL(
 				databaseAddress,
 				databasePort,
 				(string)Settings.databaseSettings.username,
@@ -155,7 +154,7 @@ namespace API {
 			) {
 				AutoReconnect = true
 			};
-			Requests.RequestMethods.wrapper = wrapper;
+			Connection = wrapper;
 			wrapper.Open();
 			return wrapper;
 		}
