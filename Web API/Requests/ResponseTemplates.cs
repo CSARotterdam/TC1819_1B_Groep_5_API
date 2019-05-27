@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using Newtonsoft.Json.Linq;
 
 namespace API.Requests {
 	public static class Templates {
@@ -109,10 +110,22 @@ namespace API.Requests {
 		/// Also thrown when the arguments are the wrong type, as these are ignored and therefore assumed to be missing.
 		/// </summary>
 		/// <param name="message">The arguments that were required for the requested function.</param>
-		/// <returns></returns>
 		public static JObject MissingArguments(string message) {
 			return new JObject() {
 				{"reason", "MissingArguments"},
+				{"message", message}
+			};
+		}
+
+		public static JObject MissingArguments(params string[] args) => MissingArguments(string.Join(", ", args));
+
+		/// <summary>
+		/// Sent when a request from a client is missing essential data, preventing it from being parsed.
+		/// </summary>
+		/// <param name="message">The arguments that were required for the requested function.</param>
+		public static JObject MalformedRequest(string message) {
+			return new JObject() {
+				{"reason", "MalformedRequest"},
 				{"message", message}
 			};
 		}
@@ -122,7 +135,7 @@ namespace API.Requests {
 		/// </summary>
 		/// <param name="message">The error that caused this failure.</param>
 		/// <returns></returns>
-		public static JObject ServerError(string message) {
+		public static JObject ServerError(string message = null) {
 			return new JObject() {
 				{"reason", "ServerError"},
 				{"message", message}
