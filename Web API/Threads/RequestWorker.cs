@@ -1,182 +1,204 @@
 ﻿using API.Requests;
 using Logging;
 using MySQLWrapper;
-using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net;
-using System.Reflection;
+using System.Text;
 using System.Threading;
-using static API.Requests.RequestMethodAttributes;
-using static API.Requests.Requests;
 
-namespace API.Threads {
-	class RequestWorker {
-		private static TechlabMySQL wrapper;
+namespace API.Threads
+{
+	sealed class RequestWorker : RequestHandler {
+		/// <summary>
+		/// Gets whether or not this requestWorker's thread is alive.
+		/// </summary>
+		public bool IsAlive => workerThread.IsAlive;
 
-		//RequestWorker threads takes and processes incoming requests from the requestQueue (which are added to the queue by the Listener thread.
-		public static void Main(Logger log, BlockingCollection<HttpListenerContext> requestQueue) {
-			MethodInfo[] methods = typeof(RequestMethods).GetMethods();
+		private readonly BlockingCollection<HttpListenerContext> RequestQueue;
+		private readonly Stopwatch timer = new Stopwatch();
+		private readonly Thread workerThread;
 
-			//Connect to database
-			wrapper = Program.CreateWrapper();
+		/// <summary>
+		/// Creates a new instance of <see cref="RequestWorker"/>.
+		/// </summary>
+		/// <param name="connection">The connection to use for all handlers.</param>
+		/// <param name="requestQueue">The queue to take incoming requests from.</param>
+		/// <param name="log">An optional logger for all handlers.</param>
+		public RequestWorker(TechlabMySQL connection, BlockingCollection<HttpListenerContext> requestQueue, string name = null, Logger log = null)
+			: base(connection, log)
+		{
+			RequestQueue = requestQueue;
+			workerThread = new Thread(ThreadStart) { Name = name ?? GetType().Name };
+		}
 
-			log.Info("Thread " + Thread.CurrentThread.Name + " now running.");
-			while (true) {
-				// Wait for request.
-				HttpListenerContext context = requestQueue.Take();
-				HttpListenerRequest request = context.Request;
-				log.Fine("Processing request.");
+		/// <summary>
+		/// Waits for a request from <see cref="RequestQueue"/>, processes it and returns an appropriate response.
+		/// </summary>
+		public void Run()
+		{
+			// Take request from queue
+			HttpListenerContext context = RequestQueue.Take();
+			HttpListenerRequest request = context.Request;
 
-				// timer for diagnostics
-				var timer = new Stopwatch();
-				timer.Start();
+			timer.Restart();
 
-				//Convert request data to JObject
-				System.IO.Stream body = request.InputStream;
-				System.Text.Encoding encoding = request.ContentEncoding;
-				System.IO.StreamReader reader = new System.IO.StreamReader(body, encoding);
-
-				//Create base response JObject
-				bool sendResponse = false;
-				JObject responseJson = new JObject();
-
-				// Check if content type is application/json. Send a HTTP 415 UnsupportedMediaType if it isn't.
-				if (request.ContentType != "application/json") {
-					log.Error("Request has invalid content type. Sending error response and ignoring!");
-					SendHTMLError(context, "If at first you don't succeed, fail 5 more times.", HttpStatusCode.UnsupportedMediaType);
-					continue;
-				}
-
-				JObject requestContent = JObject.Parse(reader.ReadToEnd());
-
-				// Check if request has body data. Send a 400 BadRequest if it doesn't.
-				if (!request.HasEntityBody) {
-					log.Error("Request has no body data. Sending error response and ignoring!");
-					SendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
-					continue;
-				}
-
-				//Check if the database is available. If it isn't, send an error.
-				if (!wrapper.Ping()) {
-					log.Error("Database connection failed for worker " + Thread.CurrentThread.Name);
-					responseJson = Templates.ServerError("DatabaseConnectionError");
-					sendResponse = true;
-				}
-
-				// Select request handler
-				MethodInfo requestMethod = null;
-				if (!sendResponse) {
-					foreach (MethodInfo method in methods) {
-						if (method.Name == requestContent["requestType"].ToString()) {
-							requestMethod = method;
-							break;
-						}
-					}
-
-					//If no request handler was found, send an error response
-					if (requestMethod == null) {
-						log.Error("Request has invalid requestType value: " + requestContent["requestType"].ToString());
-						responseJson = Templates.InvalidRequestType(requestContent["requestType"].ToString());
-						sendResponse = true;
-					}
-				}
-
-				//If the request handler requires the user token or permission level to be verified first, do that now.
-				bool verifyToken = false;
-				bool verifyPermission = false;
-				User user = null;
-				long token = 0;
-				string username;
-
-				//If either token or permission verification is required, get the username, token and user object.
-				if (!sendResponse) {
-					verifyToken = requestMethod.GetCustomAttribute<skipTokenVerification>() == null;
-					verifyPermission = requestMethod.GetCustomAttribute<verifyPermission>() != null;
-
-					if (verifyToken || verifyPermission) {
-						requestContent.TryGetValue("username", out JToken usernameValue);
-						requestContent.TryGetValue("token", out JToken tokenValue);
-
-						if (usernameValue == null || tokenValue == null || usernameValue.Type != JTokenType.String || tokenValue.Type != JTokenType.Integer) {
-							responseJson = Templates.MissingArguments("username, token");
-							sendResponse = true;
-						} else {
-							token = tokenValue.ToObject<long>();
-							username = usernameValue.ToObject<string>();
-							user = getObject<User>(username, "Username");
-							if (user == null) {
-								responseJson = Templates.InvalidLogin;
-								sendResponse = true;
-							}
-						}
-					}
-				}
-
-				//Check the user's permission level, unless the requesttype doesn't require it.
-				if (!sendResponse && verifyToken) {
-					DateTime tokenDT = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-					tokenDT = tokenDT.AddSeconds(token).ToLocalTime();
-					bool validToken = !((DateTime.Today - tokenDT).TotalSeconds > (double)Program.Settings["authenticationSettings"]["expiration"]);
-
-					if (!(validToken && token == user.Token)) {
-						responseJson = Templates.ExpiredToken;
-						sendResponse = true;
-					}
-				}
-
-				//Check the user's permission level if the requesttype requires it.
-				if (!sendResponse && verifyPermission) {
-					if (user.Permission < requestMethod.GetCustomAttribute<verifyPermission>().permission) {
-						responseJson = Templates.AccessDenied;
-						sendResponse = true;
-						log.Warning("User " + user.Username + " attempted to use requestType " + requestMethod.Name + " without the required permissions.");
-					}
-				}
-
-				//Attempt to process the request
-				if (!sendResponse) {
-					object[] methodParams = new object[1] { requestContent };
-					RequestMethods.CurrentUser = user;
-					try {
-						responseJson = (JObject)requestMethod.Invoke(null, methodParams);
-						timer.Stop();
-						log.Trace($"({Misc.FormatDelay(timer)}) Processed request '{requestMethod.Name}' with {request.ContentLength64} bytes.");
-					} catch (Exception e) {
-						timer.Stop();
-						log.Error($"({Misc.FormatDelay(timer)}) {e.InnerException.GetType().Name}: {e.InnerException.Message}", e, false);
-						responseJson = Templates.ServerError(e.InnerException.Message);
-					}
-					RequestMethods.CurrentUser = null;
-					timer.Restart();
-				}
-
-				// Create & send response
-				HttpListenerResponse response = context.Response;
-				response.ContentType = "application/json";
-				int size = SendMessage(context, responseJson.ToString(), HttpStatusCode.OK);
+			// Send a HTTP 415 UnsupportedMediaType if the content type isn't a json
+			if (request.ContentType != "application/json")
+			{
+				int size = SendHTMLError(context, "If at first you don't succeed, fail 5 more times.", HttpStatusCode.UnsupportedMediaType);
 				timer.Stop();
-				log.Trace($"({Misc.FormatDelay(timer)}) Sent response with {size} bytes.");
-				log.Fine("Request processed successfully.");
+				Log.Fine(GetTimedMessage(timer, $"Recieved non-JSON request. Sent 'UnsupportedMediaType' error with {size} bytes."));
+				return;
+			}
+
+			// Send a 400 BadRequest if the request has no body
+			if (!request.HasEntityBody)
+			{
+				int size = SendMessage(context, "Empty body data", HttpStatusCode.BadRequest);
+				timer.Stop();
+				Log.Fine(GetTimedMessage(timer, $"Recieved request with no body. Sent 'BadRequest' error with {size} bytes."));
+				return;
+			}
+
+			// Send an error if the database isn't available
+			if (!Connection.AutoReconnect && !Connection.Ping())
+			{
+				Connection.Reconnect();
+				if (!Connection.Ping())
+				{
+					int size = SendMessage(context, Templates.ServerError().ToString(), HttpStatusCode.InternalServerError);
+					timer.Stop();
+					Log.Warning(GetTimedMessage(timer, $"Database connection failed for '{workerThread.Name}'. " +
+						$"Sent 'ServerError' with status 'InternalServerError' with {size} bytes."));
+					return;
+				}
+			}
+
+			var requestContent = JObject.Parse(new StreamReader(
+				request.InputStream,
+				request.ContentEncoding).ReadToEnd()
+			);
+
+			JObject response;
+			HttpStatusCode statusCode = HttpStatusCode.OK;
+			try
+			{
+				// Parse request
+				response = ParseRequest(requestContent);
+				timer.Stop();
+				Log.Trace(GetTimedMessage(timer, $"Processed request" +
+					$"{(requestContent.ContainsKey("requestType") ? $" '{requestContent["requestType"]}'" : "")} " +
+					$"with {request.ContentLength64} bytes."));
+				timer.Restart();
+			}
+			catch (Exception e)
+			{
+				// Get inner cause if there is one
+				if (e.InnerException != null) e = e.InnerException;
+
+				// Catch unhandeled exceptions during parsing
+				timer.Stop();
+				Log.Error(GetTimedMessage(timer, $"Error during request" +
+					$"{(requestContent.ContainsKey("requestType") ? $" '{requestContent["requestType"]}'" : "")}: " +
+					$"{e.GetType().Name}: {e.Message}"), e, true);
+
+				// Send 'ServerError' response with InternalServerError status
+				response = Templates.ServerError();
+				statusCode = HttpStatusCode.InternalServerError;
+				timer.Restart();
+			}
+
+			// Send response
+			context.Response.ContentType = "application/json";
+			int responseSize = SendMessage(context, response.ToString(), statusCode);
+			timer.Stop();
+			Log.Trace(GetTimedMessage(timer, $"Sent response" +
+				$"{(response.ContainsKey("reason") && response["reason"].ToString().Any() ? $" '{response["reason"]}'" : "")} " +
+				$"with {responseSize} bytes."));
+
+			timer.Reset();
+		}
+
+		#region Thread control
+		/// <summary>
+		/// Starts this RequestWorker's thread.
+		/// </summary>
+		public void Start()
+		{
+			Log.Config($"Starting thread '{workerThread.Name}'");
+			workerThread.Start();
+		}
+
+		/// <summary>
+		/// Stops this worker by interrupting it's thread.
+		/// </summary>
+		public void Stop() => workerThread.Interrupt();
+
+		/// <summary>
+		/// Blocks until this worker's thread has stopped.
+		/// </summary>
+		public void Join() => workerThread.Join();
+
+		/// <summary>
+		/// Wraps <see cref="Run"/> in a fatal exception handler.
+		/// </summary>
+		private void ThreadStart()
+		{
+			try
+			{ Run(); }
+			catch (Exception e)
+			{
+				if (!(e is ThreadInterruptedException))
+					Log.Fatal($"Exception in thread '{Thread.CurrentThread.Name}': {e.GetType().Name}: {e.Message}", e);
 			}
 		}
+		#endregion
 
-		static void SendHTMLError(HttpListenerContext context, string message, HttpStatusCode statusCode) {
-			//Send error page
+		/// <summary>
+		/// Sends an HTML page with an error code and message to the given <see cref="HttpListenerContext"/>.
+		/// </summary>
+		/// <param name="context">The HttpListenerContext to respond to.</param>
+		/// <param name="message">The message to send back.</param>
+		/// <param name="statusCode">The response status code.</param>
+		private static int SendHTMLError(HttpListenerContext context, string message, HttpStatusCode statusCode) {
+			// Send error page
 			string responseString = "<HTML><BODY><H1>" + (int)statusCode + " " + statusCode + "</H1>" + message + "</BODY></HTML>";
-			SendMessage(context, responseString, statusCode);
+			return SendMessage(context, responseString, statusCode);
 		}
 
-		static int SendMessage(HttpListenerContext context, string message, HttpStatusCode statusCode = HttpStatusCode.OK) {
+		/// <summary>
+		/// Sends a response to the given <see cref="HttpListenerContext"/>.
+		/// </summary>
+		/// <param name="context">The HttpListenerContext to respond to.</param>
+		/// <param name="message">The message to send back.</param>
+		/// <param name="statusCode">The respones status code. Defaults to <see cref="HttpStatusCode.OK"/>.</param>
+		/// <returns></returns>
+		private static int SendMessage(HttpListenerContext context, string message, HttpStatusCode statusCode = HttpStatusCode.OK) {
+			// Get response
 			HttpListenerResponse response = context.Response;
 			response.StatusCode = (int)statusCode;
-			byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
-			System.IO.Stream output = response.OutputStream;
+			// Write message
+			byte[] buffer = Encoding.UTF8.GetBytes(message);
+			Stream output = response.OutputStream;
 			output.Write(buffer, 0, buffer.Length);
 			output.Close();
+			// Return amount of bytes in response
 			return buffer.Length;
 		}
+
+		/// <summary>
+		/// Returns the message with a formatted prefix indicating the elapsed time of the stopwatch.
+		/// </summary>
+		/// <param name="stopwatch">The stopwatch to take the time from.</param>
+		/// <param name="decimals">The amount of decimals to include in the prefix.</param>
+		/// <param name="message">The message to apply the prefix to.</param>
+		/// <param name="format">(Optional) The format of the prefix.</param>
+		private static string GetTimedMessage(Stopwatch stopwatch, string message, int decimals = 2, string format = "({0}) ")
+			=> string.Format(format, Misc.FormatDelay(stopwatch, decimals)) + message;
 	}
 }
