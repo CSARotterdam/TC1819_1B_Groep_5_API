@@ -150,7 +150,9 @@ namespace API.Threads
 		private void ThreadStart()
 		{
 			try
-			{ Run(); }
+			{
+				while (true) Run();
+			}
 			catch (Exception e)
 			{
 				if (!(e is ThreadInterruptedException))
