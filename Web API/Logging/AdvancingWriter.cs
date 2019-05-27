@@ -39,7 +39,7 @@ namespace Logging
 		{
 			get
 			{
-				Func<int, string> getFile = x => string.Format(_file, FileTimeStamp, Creation, x);
+				string getFile(int x) => string.Format(_file, FileTimeStamp, Creation, x);
 				int i = 0;
 				while (System.IO.File.Exists(getFile(i)))
 				{
@@ -68,7 +68,7 @@ namespace Logging
 			get
 			{
 				if (_archive != null) return _archive;
-				Func<int, string> getArchive = x => string.Format(archiveFormat, FileTimeStamp, Creation, x);
+				string getArchive(int x) => string.Format(archiveFormat, FileTimeStamp, Creation, x);
 				int i = 0;
 				while (System.IO.File.Exists(getArchive(i)))
 				{
