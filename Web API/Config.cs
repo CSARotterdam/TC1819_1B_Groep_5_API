@@ -6,72 +6,66 @@ using System.Collections.Generic;
 
 namespace API {
 	class Config {
-		private static readonly string defaultJson = @"{
-			//Settings for the server database.
-			'databaseSettings': {
-				//The database server to connect to.
-				'serverAddress': null,
-				'database': null,
+//Default JSON string
+		private static readonly string defaultJson = 
+@"{
+	//Settings for the server database.
+	'databaseSettings': {
+		//The database server to connect to.
+		'serverAddress': null,
+		'database': null,
+		//Login details for the above server.
+		'username': null,
+		'password': null,		
+		//The timeout for database queries, in seconds. -1 to disable.
+		'connectionTimeout':-1,
+		//Whether to keep authenticating the server with the database server.
+		'persistLogin': true,
+		//Cache the results of database queries, which can lower response time.
+		'caching': true,
+	},
 
-				//Login details for the above server.
-				'username': null,
-				'password': null,
-				
-				//The timeout for database queries, in seconds. -1 to disable.
-				'connectionTimeout':-1,
+	//Connection connections
+	'connectionSettings': {
+		//If true, the server will attempt to automatically detect its IP address by pinging 8.8.8.8
+		'autodetect': true,
+		//A list containing the IP addresses the server will bind to. If autodetect is enabled,
+		//the detected address will be added to this list.
+		'serverAddresses': [
+			'localhost'
+		]
+	},
 
-				//Whether to keep authenticating the server with the database server.
-				'persistLogin': true,
+	//Advanced performance settings
+	'performanceSettings':{
+		//The amount of worker threads that the server will use. More threads increases performance, but also increases hardware usage.
+		'workerThreadCount': 5,
+	},
 
-				//Cache the results of database queries, which can lower response time.
-				'caching': true,
-			},
+	//User authentication settings
+    'authenticationSettings':{
+		//The amount of time (in seconds) until user tokens expire, forcing clients to authenticate themselves again.
+        'expiration': 7200
+    },
 
-			//Connection connections
-			'connectionSettings': {
-
-				//If true, the server will attempt to automatically detect its IP address by pinging 8.8.8.8
-				'autodetect': true,
-
-				//A list containing the IP addresses the server will bind to. If autodetect is enabled,
-				//the detected address will be added to this list.
-				'serverAddresses': [
-					'localhost'
-				]
-			},
-
-			//Advanced performance settings
-			'performanceSettings':{
-
-				//The amount of worker threads that the server will use. More threads increases performance, but also increases hardware usage.
-				'workerThreadCount': 5,
-			},
-
-			//User authentication settings
-            'authenticationSettings':{
-
-				//The amount of time (in seconds) until user tokens expire, forcing clients to authenticate themselves again.
-                'expiration': 7200
-            },
-
-			//Request settings
-			'requestSettings':{
-
-				//The max duration that clients can reserve items for.
-				'maxLoanDuration': '21:00:00:00'
-			}
-		}";
+	//Request settings
+	'requestSettings':{
+		//The max duration that clients can reserve items for.
+		'maxLoanDuration': '21:00:00:00'
+	}
+}";
+//End of default JSON string
 
 		public static JObject loadConfig() {
 			string filename = "config.json";
 			Logger log = Program.log;
 			JObject settings;
+			
 
 			if (!File.Exists(filename)) {
 				settings = JObject.Parse(defaultJson);
-				using (JsonTextWriter writer = new JsonTextWriter(File.CreateText(filename))) {
-					writer.Formatting = Formatting.Indented;
-					settings.WriteTo(writer);
+				using (StreamWriter writer = File.CreateText(filename)) {
+					writer.Write(defaultJson);
 				}
 			} else {
 				try {
@@ -90,6 +84,11 @@ namespace API {
 			DBSettings.TryGetValue("username", out JToken username);
 			if (username == null || username.Type != JTokenType.String) {
 				log.Error("Database username setting not set.");
+				databaseSuccess = false;
+			}
+			DBSettings.TryGetValue("password", out JToken password);
+			if (password == null || password.Type != JTokenType.String) {
+				log.Error("Database password setting not set.");
 				databaseSuccess = false;
 			}
 			DBSettings.TryGetValue("serverAddress", out JToken serverAddress);
