@@ -124,9 +124,7 @@ namespace API.Commands {
 			}
 		}
 
-#pragma warning disable IDE0060 // Remove unused parameter
-		public static void Exit(params string[] args)
-#pragma warning restore IDE0060 // Remove unused parameter
+		public static void Exit(string[] _)
 		{
 			foreach (var worker in Program.RequestWorkers)
 				worker.Stop();
