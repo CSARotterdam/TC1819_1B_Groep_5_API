@@ -18,6 +18,7 @@ namespace API.Threads
 		/// Gets whether or not this requestWorker's thread is alive.
 		/// </summary>
 		public bool IsAlive => workerThread.IsAlive;
+		public string Name { get { return workerThread?.Name; } set { workerThread.Name = value; } }
 
 		private readonly BlockingCollection<HttpListenerContext> RequestQueue;
 		private readonly Stopwatch timer = new Stopwatch();
@@ -28,9 +29,9 @@ namespace API.Threads
 		/// </summary>
 		/// <param name="connection">The connection to use for all handlers.</param>
 		/// <param name="requestQueue">The queue to take incoming requests from.</param>
-		/// <param name="log">An optional logger for all handlers.</param>
-		public RequestWorker(TechlabMySQL connection, BlockingCollection<HttpListenerContext> requestQueue, string name = null, Logger log = null)
-			: base(connection, log)
+		/// <param name="logger">An optional logger for all handlers.</param>
+		public RequestWorker(TechlabMySQL connection, BlockingCollection<HttpListenerContext> requestQueue, string name = null, Logger logger = null)
+			: base(connection, logger)
 		{
 			RequestQueue = requestQueue;
 			workerThread = new Thread(ThreadStart) { Name = name ?? GetType().Name };
@@ -130,7 +131,7 @@ namespace API.Threads
 		/// </summary>
 		public void Start()
 		{
-			Log.Config($"Starting thread '{workerThread.Name}'");
+			Log.Config($"Starting thread '{this}'");
 			workerThread.Start();
 		}
 
@@ -202,5 +203,10 @@ namespace API.Threads
 		/// <param name="format">(Optional) The format of the prefix.</param>
 		private static string GetTimedMessage(Stopwatch stopwatch, string message, int decimals = 2, string format = "({0}) ")
 			=> string.Format(format, Misc.FormatDelay(stopwatch, decimals)) + message;
+
+		/// <summary>
+		/// Returns a string representing this <see cref="RequestWorker"/>.
+		/// </summary>
+		public override string ToString() => workerThread?.Name ?? base.ToString();
 	}
 }
