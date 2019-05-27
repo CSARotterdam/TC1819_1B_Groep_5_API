@@ -1,13 +1,16 @@
 ﻿using MySQLWrapper.Data;
+using Newtonsoft.Json;
 using System;
 
 namespace API.Requests {
 	static partial class RequestMethodAttributes {
-		internal sealed class skipTokenVerification : Attribute { };
-		internal sealed class verifyPermission : Attribute {
-			public User.UserPermission permission;
-			public verifyPermission(User.UserPermission permission) {
-				this.permission = permission;
+		internal class RequestAttribute : Attribute { };
+		internal sealed class IgnoreUserToken : RequestAttribute { };
+		internal sealed class RequiresPermissionLevel : RequestAttribute
+		{
+			public UserPermission Permission;
+			public RequiresPermissionLevel(UserPermission permission) {
+				Permission = permission;
 			}
 		};
 	}
