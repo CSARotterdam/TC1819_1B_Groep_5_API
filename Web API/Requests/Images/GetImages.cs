@@ -81,7 +81,7 @@ namespace API.Requests {
 					item.Add((string)requestColumns[i], new JValue(data[i]));
 				}
 
-				responseData.Add((string)data[0], new JArray(data.TakeLast(data.Length - 1)));
+				responseData.Add((string)data[0], item);
 			}
 
 			return response;
