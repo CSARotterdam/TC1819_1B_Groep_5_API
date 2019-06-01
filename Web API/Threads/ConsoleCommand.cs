@@ -124,8 +124,7 @@ namespace API.Commands {
 			}
 		}
 
-		public static void Exit(string[] _)
-		{
+		public static void Exit(string[] _) {
 			foreach (var worker in Program.RequestWorkers)
 				worker.Stop();
 			Program.ListenerThread.Stop();

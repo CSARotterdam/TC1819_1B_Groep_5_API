@@ -1,7 +1,6 @@
 ﻿using API.Threads;
 using Logging;
 using MySQLWrapper;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
@@ -40,7 +39,7 @@ namespace API {
 			//Load configuration file
 			log.Info("Loading configuration file.");
 			Settings = Config.loadConfig();
-			if(Settings == null) {
+			if (Settings == null) {
 				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
 				log.Fatal("Press the any key to exit...");
 				Console.ReadKey();
@@ -130,17 +129,14 @@ namespace API {
 		/// <summary>
 		/// Performs setup for all IO-related features
 		/// </summary>
-		public static void IOSetup()
-		{
+		public static void IOSetup() {
 			// Create folders
 			Directory.CreateDirectory("Logs");
 
 			// Compress previous log
-			if (File.Exists("Logs/latest.log"))
-			{
+			if (File.Exists("Logs/latest.log")) {
 				var lastArchive = Directory.GetFiles("Logs").OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
-				if (lastArchive != null)
-				{
+				if (lastArchive != null) {
 					using (var archive = ZipFile.Open(lastArchive, ZipArchiveMode.Update))
 						archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
 					File.Delete("Logs/latest.log");

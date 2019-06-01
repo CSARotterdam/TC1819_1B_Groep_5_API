@@ -2,12 +2,11 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO;
-using System.Collections.Generic;
 
 namespace API {
 	class Config {
-//Default JSON string
-		private static readonly string defaultJson = 
+		//Default JSON string
+		private static readonly string defaultJson =
 @"{
 	//Settings for the server database.
 	'databaseSettings': {
@@ -54,13 +53,13 @@ namespace API {
 		'maxLoanDuration': '21:00:00:00'
 	}
 }";
-//End of default JSON string
+		//End of default JSON string
 
 		public static JObject loadConfig() {
 			string filename = "config.json";
 			Logger log = Program.log;
 			JObject settings;
-			
+
 
 			if (!File.Exists(filename)) {
 				settings = JObject.Parse(defaultJson);
@@ -161,10 +160,10 @@ namespace API {
 				authenticationSuccess = false;
 			} else {
 				int exp = (int)expiration;
-				if(exp < 1) {
+				if (exp < 1) {
 					log.Error("Token expiration must be at least 1");
 					authenticationSuccess = false;
-				} else if(exp < 7200) {
+				} else if (exp < 7200) {
 					log.Warning($"Token expiration is set to {exp}. This may increase server load.");
 				}
 			}
@@ -179,7 +178,7 @@ namespace API {
 				return null;
 			} else {
 				return settings;
-			}		
+			}
 		}
 	}
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace API.Requests {
 	public static class Templates {
@@ -163,7 +162,7 @@ namespace API.Requests {
 		/// <returns>The "Invalid Arguments" response template.</returns>
 		public static JObject InvalidArguments(params string[] argNames) {
 			return new JObject() {
-				{"reason", "InvalidArgument"},
+				{"reason", "InvalidArguments"},
 				{"message", string.Join(", ", argNames) }
 			};
 		}
@@ -208,8 +207,7 @@ namespace API.Requests {
 		/// Sent when the client requested a resize to the loan's timespan, but the specified loan has already expired.
 		/// </summary>
 		/// <param name="message">An optional message.</param>
-		public static JObject LoanExpired(string message = null)
-		{
+		public static JObject LoanExpired(string message = null) {
 			return new JObject() {
 				{"reason", "LoanResizeFailed"},
 				{"message", message }
@@ -220,8 +218,7 @@ namespace API.Requests {
 		/// Sent when the client requested a delete to a loan, but the loan has already started.
 		/// </summary>
 		/// <param name="message">An optional message.</param>
-		public static JObject LoanAlreadyStarted(string message = null)
-		{
+		public static JObject LoanAlreadyStarted(string message = null) {
 			return new JObject() {
 				{"reason", "LoanAlreadyStarted"},
 				{"message", message }
