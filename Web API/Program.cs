@@ -29,7 +29,7 @@ namespace API {
 		public static void Main() {
 			IOSetup();
 
-			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log", new TimeSpan(0, 0, 5)) {
+			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log") {
 				Compression = true,
 				CompressOnClose = false,
 				Archive = "Logs/{0:dd-MM-yyyy}.{2}.zip"
