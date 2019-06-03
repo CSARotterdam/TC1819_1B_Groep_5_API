@@ -16,6 +16,7 @@ namespace API.Requests {
 			request.TryGetValue("productID", out JToken productIDValue);
 			request.TryGetValue("categoryID", out JToken categoryIDValue);
 			request.TryGetValue("manufacturer", out JToken manufacturerValue);
+			request.TryGetValue("description", out JToken descriptionValue);
 			request.TryGetValue("name", out JToken nameValue);
 			if (productIDValue == null || productIDValue.Type != JTokenType.String ||
 				manufacturerValue == null || manufacturerValue.Type != JTokenType.String ||
@@ -54,44 +55,66 @@ namespace API.Requests {
 			string nl = null;
 			string ar = null;
 			JObject names = nameValue.ToObject<JObject>();
-			names.TryGetValue("en", out JToken enValue);
-			names.TryGetValue("nl", out JToken nlValue);
-			names.TryGetValue("ar", out JToken arValue);
-			if (enValue != null && enValue.Type == JTokenType.String) {
+			names.TryGetValue("en", out JToken nameEnValue);
+			names.TryGetValue("nl", out JToken nameNlValue);
+			names.TryGetValue("ar", out JToken nameArValue);
+			if (nameEnValue != null && nameEnValue.Type == JTokenType.String) {
 				en = names["en"].ToObject<string>();
 			} else {
 				return Templates.MissingArguments("en");
 			}
-			if (nlValue != null && nlValue.Type == JTokenType.String) {
+			if (nameNlValue != null && nameNlValue.Type == JTokenType.String) {
 				nl = names["nl"].ToObject<string>();
 			}
-			if (arValue != null && arValue.Type == JTokenType.String) {
+			if (nameArValue != null && nameArValue.Type == JTokenType.String) {
 				ar = names["ar"].ToObject<string>();
 			}
+			LanguageItem name = new LanguageItem(productID + "_name", en, nl, ar);
 
-
+			LanguageItem description;
+			if (descriptionValue != null && descriptionValue.Type == JTokenType.Object) {
+				//Get description
+				JObject desc = descriptionValue.ToObject<JObject>();
+				desc.TryGetValue("en", out JToken descEnValue);
+				desc.TryGetValue("nl", out JToken descNlValue);
+				desc.TryGetValue("ar", out JToken descArValue);
+				if (descEnValue != null && descEnValue.Type == JTokenType.String) {
+					en = desc["en"].ToObject<string>();
+				} else {
+					return Templates.MissingArguments("en");
+				}
+				if (descNlValue != null && descNlValue.Type == JTokenType.String) {
+					nl = desc["nl"].ToObject<string>();
+				}
+				if (descArValue != null && descArValue.Type == JTokenType.String) {
+					ar = desc["ar"].ToObject<string>();
+				}
+				description = new LanguageItem(productID + "_description", en, nl, ar);
+			} else {
+				description = new LanguageItem(productID + "_description", "", "", "");
+			}
 
 			//Check if product already exists
 			Product product = GetObject<Product>(productID);
-			if (product != null) {
+			if (product == null) {
 				return Templates.AlreadyExists(productID);
 			}
 
 			//Check if category exists
 			ProductCategory category = GetObject<ProductCategory>(categoryID);
-			if (category != null) {
+			if (category == null) {
 				return Templates.NoSuchProductCategory(categoryID);
 			}
 
 			//Create product, languageItem, image
-			LanguageItem item = new LanguageItem(productID + "_name", en, nl, ar);
-			item.Upload(Connection);
+			name.Upload(Connection);
+			description.Upload(Connection);
 			if (imageData != null) {
 				Image image = new Image(productID + "_image", imageData, extension);
 				image.Upload(Connection);
-				product = new Product(productID, manufacturer, categoryID, productID + "_name", image.Id);
+				product = new Product(productID, manufacturer, categoryID, productID + "_name", productID + "_description", image.Id);
 			} else {
-				product = new Product(productID, manufacturer, categoryID, productID + "_name");
+				product = new Product(productID, manufacturer, categoryID, productID + "_name", productID + "_description");
 			}
 			product.Upload(Connection);
 
