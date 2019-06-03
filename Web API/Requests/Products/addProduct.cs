@@ -96,7 +96,7 @@ namespace API.Requests {
 
 			//Check if product already exists
 			Product product = GetObject<Product>(productID);
-			if (product == null) {
+			if (product != null) {
 				return Templates.AlreadyExists(productID);
 			}
 
