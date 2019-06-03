@@ -29,6 +29,7 @@ namespace API.Requests {
 			request.TryGetValue("columns", out JToken requestColumns);
 			request.TryGetValue("productItemIds", out JToken requestProductItems);
 			request.TryGetValue("userId", out JToken requestUserId);
+			request.TryGetValue("loanId", out JToken requestLoanId);
 			request.TryGetValue("start", out JToken requestStart);
 			request.TryGetValue("end", out JToken requestEnd);
 
@@ -67,6 +68,9 @@ namespace API.Requests {
 						.Equals(productItem, MySqlDbType.String);
 				condition.EndGroup();
 			}
+			// Filter by specific loan id
+			if (requestLoanId != null)
+				condition.And().Column("id").Equals(requestLoanId, MySqlDbType.Int32);
 			// Filter by user
 			if (requestUserId != null)
 				condition.And().Column("user").Equals(requestUserId, MySqlDbType.String);
