@@ -106,6 +106,37 @@ namespace API.Requests {
 				}
 			}
 
+			if (requestLanguages != null)
+			{
+				List<string> descIds = responseData.Select(x => x["description"].ToString()).ToList();
+
+				// Build a condition to get all language items in one query
+				var descCondition = new MySqlConditionBuilder();
+				foreach (var desc in descIds)
+				{
+					descCondition.Or();
+					descCondition.Column("id");
+					descCondition.Equals(desc, MySqlDbType.String);
+				}
+
+				// Get the specified translations
+				var languageColumns = requestLanguages.ToObject<List<string>>();
+				if (languageColumns.Count == 0)
+					languageColumns.AddRange(LanguageItem.metadata.Select(x => x.Column));
+				else
+					languageColumns.Insert(0, "id");
+
+				List<object[]> names = Connection.Select<LanguageItem>(languageColumns.ToArray(), descCondition).ToList();
+				for (int i = 0; i < responseData.Count; i++)
+				{
+					var nameData = names.First(x => x[0].Equals(descIds[i]));
+					var translations = new JObject();
+					for (int j = 1; j < languageColumns.Count; j++)
+						translations[languageColumns[j]] = new JValue(nameData[j]);
+					responseData[i]["description"] = translations;
+				}
+			}
+
 			return response;
 		}
 	}

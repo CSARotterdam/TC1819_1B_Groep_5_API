@@ -16,14 +16,16 @@ namespace MySQLWrapper.Data
 			new ColumnMetadata("manufacturer", 80, MySqlDbType.VarChar),
 			new ColumnMetadata("category", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("name", 50, MySqlDbType.VarChar),
+			new ColumnMetadata("description", 50, MySqlDbType.VarChar),
 			new ColumnMetadata("image", 50, MySqlDbType.VarChar),
 		});
 		public static readonly ReadOnlyCollection<Index> indexes = Array.AsReadOnly(new Index[]
 		{
 			new Index("PRIMARY", Index.IndexType.PRIMARY, metadata[0]),
-			new Index("category", Index.IndexType.INDEX, metadata[1]),
-			new Index("name", Index.IndexType.INDEX, metadata[2]),
-			new Index("image", Index.IndexType.INDEX, metadata[4])
+			new Index("category", Index.IndexType.INDEX, metadata[2]),
+			new Index("name", Index.IndexType.INDEX, metadata[3]),
+			new Index("description", Index.IndexType.INDEX, metadata[4]),
+			new Index("image", Index.IndexType.INDEX, metadata[5])
 		});
 		private readonly object[] _fields = new object[metadata.Count];
 		#endregion
@@ -42,14 +44,16 @@ namespace MySQLWrapper.Data
 		/// <param name="id">A unique id to give this product.</param>
 		/// <param name="manufacturer">The name of the manufacturer.</param>
 		/// <param name="category">The id of a <see cref="ProductCategory"/>.</param>
-		/// <param name="name">The id of a <see cref="LanguageItem"/>.</param>
+		/// <param name="name">The id of a <see cref="LanguageItem"/> representing the name of this product.</param>
+		/// <param name="name">The id of a <see cref="LanguageItem"/> representing the description of this product.</param>
 		/// <param name="image">The id of a <see cref="Data.Image"/>.</param>
-		public Product(string id, string manufacturer, string category, string name, string image = "default")
+		public Product(string id, string manufacturer, string category, string name, string description, string image = "default")
 		{
 			Id = id;
 			Manufacturer = manufacturer;
 			Category = category;
 			Name = name;
+			Description = description;
 			Image = image;
 		}
 
@@ -94,7 +98,7 @@ namespace MySQLWrapper.Data
 				_fields[3] = value;
 			}
 		}
-		public string Image
+		public string Description
 		{
 			get { return (string)Fields[4]; }
 			set
@@ -102,6 +106,16 @@ namespace MySQLWrapper.Data
 				if (value != null && value.Length > Metadata[4].Length)
 					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
 				_fields[4] = value;
+			}
+		}
+		public string Image
+		{
+			get { return (string)Fields[5]; }
+			set
+			{
+				if (value != null && value.Length > Metadata[5].Length)
+					throw new ArgumentException("Value exceeds the maximum length specified in the metadata.");
+				_fields[5] = value;
 			}
 		}
 		#endregion
