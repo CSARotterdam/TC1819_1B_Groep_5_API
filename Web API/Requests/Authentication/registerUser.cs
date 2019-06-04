@@ -33,7 +33,6 @@ namespace API.Requests {
 				if(length != null) {
 					lengthPass = false;
 					int val = (int)length;
-					Console.WriteLine(username.Length == val);
 					if(username.Length == val) {
 						lengthPass = true;
 					}
@@ -43,7 +42,6 @@ namespace API.Requests {
 				if(regex != null) {
 					regexPass = false;
 					string val = (string)regex;
-					Console.WriteLine(System.Text.RegularExpressions.Regex.IsMatch(username, val));
 					if (System.Text.RegularExpressions.Regex.IsMatch(username, val)) {
 						regexPass = true;
 					}					
