@@ -178,9 +178,13 @@ namespace MySQLWrapper.Data
 		{
 			if (!expectingOperand)
 				throw new OperationCanceledException("Can't append operand; Not expecting operand.");
-			var paramName = "@" + GetHashedName() + "_param" + Parameters.Count;
-			Parameters.Add(new MySqlParameter(paramName, type) { Value = value });
-			Append(paramName);
+			if (value != null)
+			{
+				var paramName = "@" + GetHashedName() + "_param" + Parameters.Count;
+				Parameters.Add(new MySqlParameter(paramName, type) { Value = value });
+				Append(paramName);
+			}
+			else Null();
 			expectingOperand = false;
 			if (!modifyingOperand)
 				unfinished = !unfinished;
@@ -213,7 +217,7 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		/// <param name="value">The value to append.</param>
 		/// <param name="type">The type of the value.</param>
-		public MySqlConditionBuilder Equals(object value, MySqlDbType type) => Equals().Operand(value, type);
+		public MySqlConditionBuilder Equals(object value, MySqlDbType type) => value != null ? Equals().Operand(value, type) : Is().Null();
 		/// <summary>
 		/// Appends an Is operator and an operand the condition. Fails if it is not expected.
 		/// </summary>
@@ -239,7 +243,7 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		/// <param name="value">The value to append.</param>
 		/// <param name="type">The type of the value.</param>
-		public MySqlConditionBuilder NotEquals(object value, MySqlDbType type) => NotEquals().Operand(value, type);
+		public MySqlConditionBuilder NotEquals(object value, MySqlDbType type) => value != null ? NotEquals().Operand(value, type) : Not().Is().Null();
 		/// <summary>
 		/// Appends a Less Than operator the condition. Fails if it is not expected.
 		/// </summary>
@@ -411,9 +415,12 @@ namespace MySQLWrapper.Data
 		{
 			if (depth == 0)
 				throw new OperationCanceledException("Can't exit main clause.");
-			if (conditionString.Substring(0, cursor+1).EndsWith("()"))
-				throw new OperationCanceledException("Can't exit empty group.");
-			cursor++;
+			if (conditionString.Substring(0, cursor + 1).EndsWith("()"))
+			{
+				conditionString = conditionString.Substring(0, cursor - 1);
+				cursor--;
+			}
+			else cursor++;
 			depth--;
 			return this;
 		}
