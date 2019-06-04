@@ -13,6 +13,7 @@ namespace API.Requests {
 				return Templates.MissingArguments("productID");
 			}
 
+			// Prepare values
 			string categoryID = idValue.ToString();
 
 			//Check if product exists
@@ -20,7 +21,8 @@ namespace API.Requests {
 			if (category == null) {
 				return Templates.NoSuchProductCategory(categoryID);
 			}
-
+			
+			// Delete category and relate
 			category.Delete(Connection);
 			category.GetName(Connection).Delete(Connection);
 
