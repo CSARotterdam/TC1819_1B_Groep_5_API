@@ -13,7 +13,9 @@ namespace API.Requests {
 				return Templates.MissingArguments("productID");
 			}
 
+			// Prepare values
 			string productID = idValue.ToString();
+
 
 			//Check if product exists
 			Product product = GetObject<Product>(productID);
@@ -21,14 +23,16 @@ namespace API.Requests {
 				return Templates.NoSuchProduct(productID);
 			}
 
+			// Check if items or acquired loans exist
+			var condition = new MySqlConditionBuilder();
+
+			// deltete stuffz
 			product.Delete(Connection);
-			Image image = product.GetImage(Connection);
-			if (image.Id != "default") {
-				image.Delete(Connection);
+			if (product.Name != "default") {
+				product.GetImage(Connection)?.Delete(Connection);
 			}
-			LanguageItem name = product.GetName(Connection);
-			if (name.Id != "0") {
-				name.Delete(Connection);
+			if (product.Name != "0") {
+				product.GetName(Connection)?.Delete(Connection);
 			}
 
 			//Create base response
