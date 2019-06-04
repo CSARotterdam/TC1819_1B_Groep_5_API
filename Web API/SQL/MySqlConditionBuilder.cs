@@ -184,7 +184,11 @@ namespace MySQLWrapper.Data
 				Parameters.Add(new MySqlParameter(paramName, type) { Value = value });
 				Append(paramName);
 			}
-			else Null();
+			else
+			{
+				Null();
+				return this;
+			}
 			expectingOperand = false;
 			if (!modifyingOperand)
 				unfinished = !unfinished;
