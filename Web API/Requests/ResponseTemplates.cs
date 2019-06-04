@@ -103,6 +103,14 @@ namespace API.Requests {
 			{"reason", "InvalidPassword" }
 		};
 
+		/// <summary>
+		/// Sent when a client attempts to use a username with an invalid format.
+		/// Usernames must match at least one of the filters configured in config.json, if any.
+		/// </summary>
+		public static JObject InvalidUsername = new JObject() {
+			{"reason", "InvalidUsername" }
+		};
+
 
 		/// <summary>
 		/// Sent when a client sends a request without including the data necessary to fullfil it.

@@ -30,7 +30,10 @@ while True:
 				}
 			})
 			print(r.text)
-			token = r.json()["responseData"]["token"]
+			try:
+				token = r.json()["responseData"]["token"]
+			except KeyError:
+				pass
 		except requests.RequestException:
 			print("Failed")
 

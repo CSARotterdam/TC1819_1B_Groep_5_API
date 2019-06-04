@@ -1,6 +1,7 @@
 ﻿using Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using System.IO;
 
 namespace API {
@@ -44,7 +45,21 @@ namespace API {
 	//User authentication settings
     'authenticationSettings':{
 		//The amount of time (in seconds) until user tokens expire, forcing clients to authenticate themselves again.
-        'expiration': 7200
+        'expiration': 7200,
+		
+		//Filters that specify the username requirements. Usernames must match one of the specified filters.
+		//If empty, all usernames will be allowed.
+		'usernameRequirements': [
+			{
+				'regex': '([A - z])',
+				'length': 6
+			},
+			{
+				'regex': '([0 - 9])',
+				'length': 6
+			}
+	
+		]
     },
 
 	//Request settings
@@ -167,6 +182,31 @@ namespace API {
 					log.Warning($"Token expiration is set to {exp}. This may increase server load.");
 				}
 			}
+
+			authSettings.TryGetValue("usernameRequirements", out JToken usernameRequirementsValue);
+			if (usernameRequirementsValue == null || usernameRequirementsValue.Type != JTokenType.Array) {
+				log.Error("Username requirements not set.");
+				authenticationSuccess = false;
+			} else {
+				foreach(JToken filter in usernameRequirementsValue) {
+					if(filter.Type != JTokenType.Object) {
+						authenticationSuccess = false;
+						break;
+					} else {
+						JObject val = (JObject)filter;
+						val.TryGetValue("length", out JToken length);
+						val.TryGetValue("regex", out JToken regex);
+						if((length != null && length.Type != JTokenType.Integer) || (regex != null && regex.Type != JTokenType.String)) {
+							authenticationSuccess = false;
+							break;
+						}
+					}
+				}
+				if (!authenticationSuccess) {
+					log.Error("One or more username requirement filters is invalid.");
+				}
+			}
+			
 
 			//If all tests passed, return the settings JObject. Otherwise, return
 			if (

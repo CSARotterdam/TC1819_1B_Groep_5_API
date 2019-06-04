@@ -1,6 +1,7 @@
 ﻿using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
@@ -21,10 +22,42 @@ namespace API.Requests {
 			string username = usernameValue.ToString();
 			string password = passwordValue.ToString();
 
-			//Check if username already exists
-			if (GetObject<User>(username, "Username") != null) {
-				return Templates.AlreadyExists(username);
+			//Check if the username matches one of the configured filters.
+			List<JObject> filters = Program.Settings["authenticationSettings"]["usernameRequirements"].ToObject<List<JObject>>();
+			bool validUsername = false;
+			foreach(JObject filter in filters) {
+				filter.TryGetValue("regex", out JToken regex);
+				filter.TryGetValue("length", out JToken length);
+
+				bool lengthPass = true;
+				if(length != null) {
+					lengthPass = false;
+					int val = (int)length;
+					Console.WriteLine(username.Length == val);
+					if(username.Length == val) {
+						lengthPass = true;
+					}
+				}
+
+				bool regexPass = true;
+				if(regex != null) {
+					regexPass = false;
+					string val = (string)regex;
+					Console.WriteLine(System.Text.RegularExpressions.Regex.IsMatch(username, val));
+					if (System.Text.RegularExpressions.Regex.IsMatch(username, val)) {
+						regexPass = true;
+					}					
+				}
+
+				if (lengthPass && regexPass) {
+					validUsername = true;
+					break;
+				}
 			}
+			if (!validUsername) {
+				return Templates.InvalidUsername;
+			}
+
 
 			//Check if password is a SHA-512 hash.
 			//This checks whether the password string is the correct length for a SHA-512 hash, and if it is a proper hexadecimal number.
@@ -34,6 +67,12 @@ namespace API.Requests {
 				return Templates.InvalidPassword;
 			}
 
+			//Check if username already exists
+			if (GetObject<User>(username, "Username") != null) {
+				return Templates.AlreadyExists(username);
+			}
+
+			//Create user
 			long token = (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
 			User user = new User(username, password, token, UserPermission.User);
 			user.Upload(Connection);
