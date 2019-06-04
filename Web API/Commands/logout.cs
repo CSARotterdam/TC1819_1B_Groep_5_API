@@ -1,11 +1,14 @@
 ﻿using MySql.Data.MySqlClient;
 using MySQLWrapper.Data;
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace API.Commands {
-	static partial class CommandMethods {
-		public static void logout(string[] tokens) {
+	static partial class CommandMethods
+	{
+		[MonitoringDescription("Forces the given user to log out.")]
+		public static void Logout(string[] tokens) {
 			//Check if enough tokens were given
 			if (tokens.Length < 2) {
 				Console.WriteLine("Usage: logout <username>");
