@@ -111,6 +111,15 @@ namespace API.Requests {
 			{"reason", "InvalidUsername" }
 		};
 
+		/// <summary>
+		/// Used when a delete request cannot finish because of false prequisites.
+		/// </summary>
+		/// <param name="message">An optional message to attach.</param>
+		public static JObject CannotDelete(string message) => new JObject() {
+				{"reason", "CannotDelete"},
+				{"message", message}
+			};
+
 
 		/// <summary>
 		/// Sent when a client sends a request without including the data necessary to fullfil it.
