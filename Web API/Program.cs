@@ -111,7 +111,7 @@ namespace API {
 				listener.Prefixes.Add("http://" + address + "/");
 			ListenerThread = new Listener(listener, requestQueue, "ListenerThread", log);
 			ListenerThread.Start();
-			log.Config("Finished setup");
+			log.Info("Finished setup");
 
 			// Wait until all threads are terminated
 			foreach (var worker in RequestWorkers) {
