@@ -51,7 +51,7 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		public MySqlConditionBuilder() { }
 		/// <summary>
-		/// Matches a specific column with a set of fields.
+		/// Matches a specific column to a set of fields.
 		/// </summary>
 		/// <param name="column">The name of the column to match.</param>
 		/// <param name="type">The type of the column to match.</param>
