@@ -59,6 +59,26 @@ namespace API.Commands {
 		public static Logger log;
 		public static Stopwatch timer = new Stopwatch();
 
+		[MonitoringDescription("Alias for 'LIST'.")]
+		public static void Help(string[] args) => List(args);
+
+		[MonitoringDescription("Alias for 'EXIT'.")]
+		public static void Quit(string[] args) => Exit(args);
+
+		[MonitoringDescription("Lists all available commands.")]
+		public static void List(string[] args)
+		{
+			var methods = typeof(CommandMethods).GetMethods().Where(x => x.IsStatic).OrderBy(x => x.Name);
+			int maxNameLen = methods.Max(x => x.Name.Length);
+
+			foreach (var method in methods)
+			{
+				var description = (MonitoringDescriptionAttribute) method.GetCustomAttribute(typeof(MonitoringDescriptionAttribute));
+				Console.WriteLine(method.Name.ToUpper() + (description == null ? "" : new string(' ', maxNameLen - method.Name.Length) + " \t" + description.Description));
+			}
+		}
+
+		[MonitoringDescription("Pings the database and prints it's results.")]
 		public static void Ping(string[] args) {
 			List<double> delays = new List<double>();
 			int pingCount = 4;
@@ -80,12 +100,14 @@ namespace API.Commands {
 			if (delays.Count > 1) log.Info($"Average: {Math.Round(delays.Average(), 2)} ms");
 		}
 
+		[MonitoringDescription("Reloads the config.json file.")]
 		public static void ReloadConfig(string[] _) {
 			lock (Program.Settings)
 				Program.Settings = Config.loadConfig();
 			log.Info("Successfully reloaded config");
 		}
 
+		[MonitoringDescription("Uploads a single image. Requires a valid file argument.")]
 		public static void UploadImage(params string[] args) {
 			if (args.Length < 1) {
 				log.Error("UploadImage requires one argument");
@@ -103,6 +125,7 @@ namespace API.Commands {
 			timer.Reset();
 		}
 
+		[MonitoringDescription("Uploads all images from a folder. Requires a valid directory argument.")]
 		public static void UploadImages(params string[] args) {
 			if (args.Length < 1) {
 				log.Error("UploadImages requires one argument");
@@ -113,17 +136,26 @@ namespace API.Commands {
 				return;
 			}
 			var files = Directory.GetFiles(args[0]);
+			int uploaded = 0;
 			foreach (var file in files) {
 				if (Image.ImageFormats.Contains(Path.GetExtension(file))) {
-					try { UploadImage(file); } catch (Exception e) {
+					try
+					{
+						UploadImage(file);
+						uploaded++;
+					}
+					catch (Exception e)
+					{
 						timer.Stop();
 						log.Error($"({Misc.FormatDelay(timer)}) {e.GetType().Name}: {e.Message}", false);
 						timer.Reset();
 					}
 				}
 			}
+			log.Info($"Uploaded {uploaded}/{files.Length} file{(files.Length == 1 ? "" : "s")}.");
 		}
 
+		[MonitoringDescription("Shuts down all worker threads and terminates the program.")]
 		public static void Exit(string[] _) {
 			foreach (var worker in Program.RequestWorkers)
 				worker.Stop();
