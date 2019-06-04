@@ -140,9 +140,9 @@ namespace Logging
 		public Level LogLevel { get; set; }
 		
 		/// <summary>
-		/// The format used for log records.
+		/// Gets or sets the format used for log records.
 		/// </summary>
-		public string Format { get; private set; } = "{asctime:HH:mm:ss} {classname,-15} {levelname,6}: {message}";
+		public string Format { get; set; } = "{asctime:HH:mm:ss} {classname,-15} {levelname,6}: {message}";
 		/// <summary>
 		/// Sets whether or not the log record stacktraces will use file info.
 		/// </summary>
@@ -192,7 +192,7 @@ namespace Logging
 			LogLevel = level;
 			foreach (var stream in outStreams)
 				OutputStreams.Add(stream);
-			Name = name ?? $"{GetType().Name}@{GetHashCode().ToString("X")}";
+			Name = name ?? $"{GetType().Name}@{GetHashCode().ToString("x")}";
 			Format = format ?? Format;
 			Fine("Started log");
 		}

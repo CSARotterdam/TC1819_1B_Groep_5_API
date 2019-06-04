@@ -51,15 +51,22 @@ namespace API {
 				return;
 			}
 
+			if (Settings.ContainsKey("logSettings"))
+			{
+				JObject logSettings = (JObject)Settings["logSettings"];
+				if (logSettings.ContainsKey("logLevel"))
+				{
+					var logLevel = (Level)typeof(Level).GetFields().First(x => x.Name.ToLower() == ((string)logSettings["logLevel"]).ToLower()).GetValue(null);
+					if (logLevel != null)
+						log.LogLevel = logLevel;
+				}
+				if (logSettings.ContainsKey("format"))
+					log.Format = (string)logSettings["format"];
+			}
+
 			log.Config("Setting up files and directories...");
 			IOSetup();
 
-			if (Settings.ContainsKey("logSettings") && ((JObject)Settings["logSettings"]).ContainsKey("logLevel"))
-			{
-				Level logLevel = (Level)typeof(Level).GetFields().First(x => x.Name.ToLower() == ((string)Settings["logSettings"]["logLevel"]).ToLower()).GetValue(null);
-				if (logLevel != null)
-					log.LogLevel = logLevel;
-			}
 			log.OutputStreams.Add(new AdvancingWriter(Logs("latest.log"))
 			{
 				Compression = true,
