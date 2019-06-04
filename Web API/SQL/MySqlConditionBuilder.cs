@@ -51,6 +51,17 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		public MySqlConditionBuilder() { }
 		/// <summary>
+		/// Matches a specific column with a set of fields.
+		/// </summary>
+		/// <param name="column">The name of the column to match.</param>
+		/// <param name="type">The type of the column to match.</param>
+		/// <param name="fields">An array of values to compare to the column.</param>
+		public MySqlConditionBuilder(string column, MySqlDbType type, params object[] fields)
+		{
+			foreach (var field in fields)
+				Column(column).Equals(field, type);
+		}
+		/// <summary>
 		/// Auto-generates a condition that matches the primary key with the it's value in the
 		/// given <see cref="SchemaItem"/>.
 		/// </summary>
@@ -68,19 +79,19 @@ namespace MySQLWrapper.Data
 		/// <summary>
 		/// Auto-generates a condition that exactly matches the given fields and metadata.
 		/// </summary>
-		/// <param name="Metadata">A set of <see cref="ColumnMetadata"/> objects.</param>
-		/// <param name="Fields">A set of objects to compare to the columns.</param>
-		public MySqlConditionBuilder(ColumnMetadata[] Metadata, object[] Fields)
+		/// <param name="metadata">A set of <see cref="ColumnMetadata"/> objects.</param>
+		/// <param name="fields">A set of objects to compare to the columns.</param>
+		public MySqlConditionBuilder(ColumnMetadata[] metadata, object[] fields)
 		{
-			if (Metadata.Length != Fields.Length)
+			if (metadata.Length != fields.Length)
 				throw new ArgumentException("Metadata and Fields must be equal in length.");
-			for (int i = 0; i < Fields.Length; i++)
+			for (int i = 0; i < fields.Length; i++)
 			{
 				// Append an AND
 				if (i != 0) And();
 				// Append conditions for each column
-				if (Fields[i] == null) Column(Metadata[i].Column).Is().Null();
-				else Column(Metadata[i].Column).Equals(Fields[i], Metadata[i].Type);
+				if (fields[i] == null) Column(metadata[i].Column).Is().Null();
+				else Column(metadata[i].Column).Equals(fields[i], metadata[i].Type);
 			}
 		}
 
