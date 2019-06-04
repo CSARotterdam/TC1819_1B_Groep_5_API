@@ -211,7 +211,7 @@ namespace MySQLWrapper.Data
 		}
 		#endregion
 
-		#region Comarison operators
+		#region Comparison operators
 		/// <summary>
 		/// Appends an Equals operator the condition. Fails if it is not expected.
 		/// </summary>
