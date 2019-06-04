@@ -25,19 +25,22 @@ namespace API {
 
 		public static JObject Settings;
 
+		private static string LogDir
+		{
+			get
+			{
+				if (Settings == null || !Settings.ContainsKey("logSettings") || !((JObject)Settings["logSettings"]).ContainsKey("outputDir"))
+					return "Logs";
+				return (string)Settings["logSettings"]["outputDir"];
+			}
+		}
+		private static string Logs(string file) => Path.Combine(LogDir, file);
+
 		public static void Main() {
-			IOSetup();
-
-			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log") {
-				Compression = true,
-				CompressOnClose = false,
-				Archive = "Logs/{0:dd-MM-yyyy}.{2}.zip"
-			});
-
 			log.Info("Server is starting!");
 
 			//Load configuration file
-			log.Info("Loading configuration file.");
+			log.Config("Loading configuration file");
 			Settings = Config.loadConfig();
 			if (Settings == null) {
 				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
@@ -47,7 +50,22 @@ namespace API {
 				log.Close();
 				return;
 			}
-			log.Info("Loaded configuration file.");
+
+			log.Config("Setting up files and directories...");
+			IOSetup();
+
+			if (Settings.ContainsKey("logSettings") && ((JObject)Settings["logSettings"]).ContainsKey("logLevel"))
+			{
+				Level logLevel = (Level)typeof(Level).GetFields().First(x => x.Name.ToLower() == ((string)Settings["logSettings"]["logLevel"]).ToLower()).GetValue(null);
+				if (logLevel != null)
+					log.LogLevel = logLevel;
+			}
+			log.OutputStreams.Add(new AdvancingWriter(Logs("latest.log"))
+			{
+				Compression = true,
+				CompressOnClose = false,
+				Archive = Logs("{0:dd-MM-yyyy}.{2}.zip")
+			});
 
 			//Get local IP address, if autodetect is enabled in settings.
 			List<string> addresses = Settings["connectionSettings"]["serverAddresses"].ToObject<List<string>>();
@@ -72,7 +90,7 @@ namespace API {
 			ConsoleThread.Start();
 
 			//Create worker threads
-			log.Info("Creating worker threads.");
+			log.Config("Creating worker threads...");
 			int threadCount = (int)Settings["performanceSettings"]["workerThreadCount"];
 			for (int i = 0; i < threadCount; i++) {
 				var worker = new RequestWorker(CreateConnection(), requestQueue, "RequestWorker" + (i + 1), log);
@@ -131,15 +149,16 @@ namespace API {
 		/// </summary>
 		public static void IOSetup() {
 			// Create folders
-			Directory.CreateDirectory("Logs");
+			Directory.CreateDirectory(LogDir);
 
 			// Compress previous log
-			if (File.Exists("Logs/latest.log")) {
-				var lastArchive = Directory.GetFiles("Logs").OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
+			var logfile = Logs("latest.log");
+			if (File.Exists(logfile)) {
+				var lastArchive = Directory.GetFiles(LogDir).OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
 				if (lastArchive != null) {
 					using (var archive = ZipFile.Open(lastArchive, ZipArchiveMode.Update))
-						archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
-					File.Delete("Logs/latest.log");
+						archive.CreateEntryFromFile(logfile, Path.GetFileName(logfile));
+					File.Delete(logfile);
 				}
 			}
 		}
