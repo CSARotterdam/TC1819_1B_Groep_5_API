@@ -102,15 +102,15 @@ namespace API.Requests {
 		public static JObject InvalidPassword = new JObject() {
 			{"reason", "InvalidPassword" }
 		};
-		
+
 		/// <summary>
-		/// Used when a delete request cannot finish because of false prequisites.
+		/// Sent when a client attempts to use a username with an invalid format.
+		/// Usernames must match at least one of the filters configured in config.json, if any.
 		/// </summary>
-		/// <param name="message">An optional message to attach.</param>
-		public static JObject CannotDelete(string message) => new JObject() {
-				{"reason", "CannotDelete"},
-				{"message", message}
-			};
+		public static JObject InvalidUsername = new JObject() {
+			{"reason", "InvalidUsername" }
+		};
+
 
 		/// <summary>
 		/// Sent when a client sends a request without including the data necessary to fullfil it.
