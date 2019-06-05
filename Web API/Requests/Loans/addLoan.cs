@@ -22,7 +22,6 @@ namespace API.Requests
 		[RequiresPermissionLevel(UserPermission.User)]
 		public JObject addLoan(JObject request)
 		{
-			Log.Info(request);
 			//Get arguments
 			request.TryGetValue("productId", out JToken requestProductId);
 			request.TryGetValue("start", out JToken requestStart);
@@ -110,7 +109,6 @@ namespace API.Requests
 			List<LoanItem> loans = Connection.Select<LoanItem>(condition).ToList();
 			foreach (var loan in loans)
 			{
-				Log.Info(loan);
 				if (!items.Any(x => x.Id == loan.ProductItem))
 					continue;
 				var loanSpan = new DateTimeSpan(loan.Start, loan.End);
