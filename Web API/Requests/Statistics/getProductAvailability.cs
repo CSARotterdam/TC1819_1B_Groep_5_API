@@ -29,14 +29,14 @@ namespace API.Requests {
 			MySqlConditionBuilder query = new MySqlConditionBuilder();
 			foreach (string ID in productIDs) {
 				query.Or();
-				query.Column("id");
+				query.Column("product");
 				query.Equals(ID, MySqlDbType.String);
 			}
 			List<ProductItem> productItems = Connection.Select<ProductItem>(query).ToList();
 			query = new MySqlConditionBuilder();
 			foreach (ProductItem pitem in productItems) {
 				query.Or();
-				query.Column("id");
+				query.Column("product_item");
 				query.Equals(pitem.Id, MySqlDbType.String);
 			}
 			List<LoanItem> loanItems = Connection.Select<LoanItem>(query).ToList();
