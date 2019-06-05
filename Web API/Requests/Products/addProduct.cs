@@ -1,6 +1,7 @@
 ﻿using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using static API.Requests.RequestMethodAttributes;
 
@@ -8,7 +9,8 @@ namespace API.Requests {
 	abstract partial class RequestHandler {
 
 		[RequiresPermissionLevel(UserPermission.Admin)]
-		public JObject addProduct(JObject request) {
+		public JObject addProduct(JObject request)
+		{
 			//Get arguments
 			string productID;
 			string manufacturer;
@@ -18,19 +20,34 @@ namespace API.Requests {
 			request.TryGetValue("manufacturer", out JToken manufacturerValue);
 			request.TryGetValue("description", out JToken descriptionValue);
 			request.TryGetValue("name", out JToken nameValue);
-			if (productIDValue == null || productIDValue.Type != JTokenType.String ||
-				manufacturerValue == null || manufacturerValue.Type != JTokenType.String ||
-				nameValue == null || nameValue.Type != JTokenType.Object ||
-				categoryIDValue == null || categoryIDValue.Type != JTokenType.String
-			) {
-				return Templates.MissingArguments("productID, categoryID, manufacturer, name");
-			} else {
-				productID = productIDValue.ToObject<string>();
-				manufacturer = manufacturerValue.ToObject<string>();
-				categoryID = categoryIDValue.ToObject<string>();
-			}
 
-			//Get image
+			// Verify presence of arguments
+			List<string> failedVerifications = new List<string>();
+			if (productIDValue == null) failedVerifications.Add("productID");
+			if (categoryIDValue == null) failedVerifications.Add("categoryID");
+			if (manufacturerValue == null) failedVerifications.Add("manufacturer");
+			if (descriptionValue == null) failedVerifications.Add("description");
+			if (nameValue == null) failedVerifications.Add("name");
+
+			if (failedVerifications.Any())
+				return Templates.MissingArguments(failedVerifications.ToArray());
+
+			// Verify arguments
+			if (productIDValue.Type != JTokenType.String) failedVerifications.Add("productID");
+			if (categoryIDValue.Type != JTokenType.String) failedVerifications.Add("categoryID");
+			if (manufacturerValue.Type != JTokenType.String) failedVerifications.Add("manufacturer");
+			if (descriptionValue.Type != JTokenType.Object) failedVerifications.Add("description");
+			if (nameValue.Type != JTokenType.Object) failedVerifications.Add("name");
+
+			if (failedVerifications.Any())
+				return Templates.InvalidArguments(failedVerifications.ToArray());
+
+			// Prepare values
+			productID = productIDValue.ToObject<string>();
+			manufacturer = manufacturerValue.ToObject<string>();
+			categoryID = categoryIDValue.ToObject<string>();
+
+			// Get image
 			request.TryGetValue("image", out JToken imageValue);
 			string extension = null;
 			byte[] imageData = null;
@@ -50,7 +67,7 @@ namespace API.Requests {
 				}
 			}
 
-			//Get languages
+			// Get languages
 			string en;
 			string nl = null;
 			string ar = null;
@@ -61,7 +78,7 @@ namespace API.Requests {
 			if (nameEnValue != null && nameEnValue.Type == JTokenType.String) {
 				en = names["en"].ToObject<string>();
 			} else {
-				return Templates.MissingArguments("en");
+				return Templates.MissingArguments("name: en");
 			}
 			if (nameNlValue != null && nameNlValue.Type == JTokenType.String) {
 				nl = names["nl"].ToObject<string>();
@@ -81,7 +98,7 @@ namespace API.Requests {
 				if (descEnValue != null && descEnValue.Type == JTokenType.String) {
 					en = desc["en"].ToObject<string>();
 				} else {
-					return Templates.MissingArguments("en");
+					return Templates.MissingArguments("description: en");
 				}
 				if (descNlValue != null && descNlValue.Type == JTokenType.String) {
 					nl = desc["nl"].ToObject<string>();
@@ -91,7 +108,7 @@ namespace API.Requests {
 				}
 				description = new LanguageItem(productID + "_description", en, nl, ar);
 			} else {
-				description = new LanguageItem(productID + "_description", "", "", "");
+				description = new LanguageItem(productID + "_description", null);
 			}
 
 			//Check if product already exists
