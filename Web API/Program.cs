@@ -1,5 +1,6 @@
 ﻿using API.Threads;
 using Logging;
+using MySql.Data.MySqlClient;
 using MySQLWrapper;
 using Newtonsoft.Json.Linq;
 using System;
@@ -100,9 +101,14 @@ namespace API {
 			log.Config("Creating worker threads...");
 			int threadCount = (int)Settings["performanceSettings"]["workerThreadCount"];
 			for (int i = 0; i < threadCount; i++) {
-				var worker = new RequestWorker(CreateConnection(), requestQueue, "RequestWorker" + (i + 1), log);
-				worker.Start();
-				RequestWorkers.Add(worker);
+				try {
+					var worker = new RequestWorker(CreateConnection(), requestQueue, "RequestWorker" + (i + 1), log);
+					worker.Start();
+					RequestWorkers.Add(worker);
+				} catch(MySqlException e) {
+					log.Error("Failed to start RequestWorker" + (i + 1));
+					log.Error(e.Message);
+				}
 			}
 
 			// Create listener thingy.
