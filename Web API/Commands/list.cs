@@ -11,7 +11,7 @@ namespace API.Commands
 		public static void Help(string[] args) => List(args);
 
 		[MonitoringDescription("Lists all available commands.")]
-		public static void List(string[] args)
+		public static void List(string[] _)
 		{
 			var methods = typeof(CommandMethods).GetMethods().Where(x => x.IsStatic).OrderBy(x => x.Name);
 			int maxNameLen = methods.Max(x => x.Name.Length);
