@@ -20,7 +20,7 @@ namespace API {
 		public static Logger log = new Logger(Level.ALL, Console.Out);
 		public static TechlabMySQL Connection;
 
-		public static List<RequestWorker> RequestWorkers = new List<RequestWorker>();
+		public static RequestWorker[] RequestWorkers;
 		public static Listener ListenerThread;
 		public static Thread ConsoleThread;
 
@@ -100,13 +100,14 @@ namespace API {
 			//Create worker threads
 			log.Config("Creating worker threads...");
 			int threadCount = (int)Settings["performanceSettings"]["workerThreadCount"];
+			RequestWorkers = new RequestWorker[threadCount];
 			for (int i = 0; i < threadCount; i++) {
 				try {
 					var worker = new RequestWorker(CreateConnection(), requestQueue, "RequestWorker" + (i + 1), log);
 					worker.Start();
-					RequestWorkers.Add(worker);
+					RequestWorkers[i] = worker;
 				} catch(MySqlException e) {
-					log.Error("Failed to start RequestWorker" + (i + 1));
+					log.Error("Failed to create connection for RequestWorker" + (i + 1));
 					log.Error(e.Message);
 				}
 			}
@@ -120,7 +121,7 @@ namespace API {
 			log.Info("Finished setup");
 
 			// Wait until all threads are terminated
-			foreach (var worker in RequestWorkers) {
+			foreach (var worker in RequestWorkers.Where(x => x != null)) {
 				worker.Join();
 				log.Fine($"Stopped '{worker}'");
 			}
