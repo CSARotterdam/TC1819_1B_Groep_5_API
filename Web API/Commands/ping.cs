@@ -18,7 +18,7 @@ namespace API.Commands
 			{
 				if (i != 0) Thread.Sleep(1000 - (int)delays.Last());
 				timer.Start();
-				bool status = wrapper.Ping();
+				bool status = Connection.Ping();
 				timer.Stop();
 				if (status) log.Info($"Reply after {Misc.FormatDelay(timer, 1)}");
 				else

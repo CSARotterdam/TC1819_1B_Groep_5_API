@@ -27,7 +27,7 @@ namespace API.Commands {
 
 			//Set user token to 0 to log them out.
 			user.Token = 0;
-			user.Update(wrapper);
+			user.Update(Connection);
 			Console.WriteLine("User now logged out.");
 		}
 	}

@@ -23,7 +23,7 @@ namespace API.Commands
 			}
 			var image = new Image(args[0]);
 			timer.Start();
-			wrapper.Upload(image);
+			Connection.Upload(image);
 			timer.Stop();
 			log.Info($"({Math.Round(image.Data.Length / 1024 / timer.Elapsed.TotalSeconds, 2)} KiB/s) Uploaded {Path.GetFileName(args[0])}");
 			timer.Reset();
