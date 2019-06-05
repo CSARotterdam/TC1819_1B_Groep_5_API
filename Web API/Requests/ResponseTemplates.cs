@@ -112,14 +112,13 @@ namespace API.Requests {
 		};
 
 		/// <summary>
-		/// Used when a delete request cannot finish because of false prequisites.
+		/// Used when a delete request cannot finish because of false prerequisites.
 		/// </summary>
 		/// <param name="message">An optional message to attach.</param>
 		public static JObject CannotDelete(string message) => new JObject() {
 				{"reason", "CannotDelete"},
 				{"message", message}
 			};
-
 
 		/// <summary>
 		/// Sent when a client sends a request without including the data necessary to fullfil it.
@@ -133,6 +132,10 @@ namespace API.Requests {
 			};
 		}
 
+		/// <summary>
+		/// Sent when a client sends a request without including several required parameters.
+		/// </summary>
+		/// <param name="args">A set of parameter names</param>
 		public static JObject MissingArguments(params string[] args) => MissingArguments(string.Join(", ", args));
 
 		/// <summary>
@@ -164,12 +167,7 @@ namespace API.Requests {
 		/// </summary>
 		/// <param name="argName">The name of the argument with an invalid value.</param>
 		/// <returns>The "Invalid Argument" response template.</returns>
-		public static JObject InvalidArgument(string argName) {
-			return new JObject() {
-				{"reason", "InvalidArgument"},
-				{"message", argName}
-			};
-		}
+		public static JObject InvalidArgument(string argName) => InvalidArguments(argName);
 
 		/// <summary>
 		/// Sent when a client sends a request with arguments set to unacceptable values.
