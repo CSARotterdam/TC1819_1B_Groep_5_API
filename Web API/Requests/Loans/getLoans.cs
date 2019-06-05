@@ -14,11 +14,11 @@ namespace API.Requests {
 		/// </summary>
 		/// <remarks>
 		/// Optional arguments are:
-		///		- Columns > a string[] specifying what fields to return. If omitted or empty, all fields will be returned.
-		///		- ProductItemIds > a string[] the that all returned loans must be about any of these items.
+		///		- columns > a string[] specifying what fields to return. If omitted or empty, all fields will be returned.
+		///		- productItemIds > a string[] the that all returned loans must be about any of these items.
 		///		- userId > The user whose loans to return. Only works for Collaborators or higher.
-		///		- Start > Specifies a limit where all returned loans must have ended after this limit.
-		///		- End > Specifies a limit where all returned loans must have started before this limit.
+		///		- start > Specifies a limit where all returned loans must have ended after this limit.
+		///		- end > Specifies a limit where all returned loans must have started before this limit.
 		/// </remarks>
 		/// <param name="request">The request from the client.</param>
 		/// <returns>The contents of the requestData field, which is to be returned to the client.</returns>

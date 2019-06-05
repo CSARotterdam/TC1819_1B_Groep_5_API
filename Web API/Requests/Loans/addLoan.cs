@@ -10,9 +10,19 @@ namespace API.Requests
 {
 	abstract partial class RequestHandler
 	{
+		/// <summary>
+		/// Creates and uploads a loan associated with a specific user, product item and date range.
+		/// </summary>
+		/// <remarks>
+		/// Required arguments are:
+		///		- productId > The id of the product from which to take and reserve an item.
+		///		- start > The date when the loan will start. May not be before today.
+		///		- end > The date when the loan will end. The timespan between start and end may not be longer than <see cref="MaxLoanDuration"/>.
+		/// </remarks>
 		[RequiresPermissionLevel(UserPermission.User)]
 		public JObject addLoan(JObject request)
 		{
+			Log.Info(request);
 			//Get arguments
 			request.TryGetValue("productId", out JToken requestProductId);
 			request.TryGetValue("start", out JToken requestStart);
@@ -43,6 +53,7 @@ namespace API.Requests
 			if (newLoanSpan.Start < DateTime.Now.Date) return Templates.InvalidArgument("'start' may not be set earlier than today.");
 			if (newLoanSpan.Duration > MaxLoanDuration) return Templates.InvalidArgument($"Duration of the loan may not exceed {MaxLoanDuration.Days} days.");
 
+			// Get an unreserved product item
 			ProductItem item;
 			try {
 				item = Core_GetUnreservedItems(productId, newLoanSpan).FirstOrDefault();
