@@ -70,40 +70,43 @@ namespace API.Commands
 			int stateLen = states.Max(x => x.Length);
 			int cstateLen = connectionStates.Max(x => x.Length);
 			int pingLen = pings.Max(x => x.Length);
-
-			var builder = new StringBuilder();
-			// Write headers
-			builder.Append(Fit("", 0, "| "));
-			builder.Append(Fit(threadIds[0], idlen));
-			builder.Append(Fit(names[0], nameLen));
-			builder.Append(Fit(types[0], typeLen));
-			builder.Append(Fit(states[0], stateLen));
-			builder.Append(Fit(connectionStates[0], cstateLen));
-			builder.Append(Fit(pings[0], pingLen));
-			log.Info(builder.ToString());
-			builder.Clear();
-
-			builder.Append(Fit("", 0, "|-", '-'));
-			builder.Append(Fit("", idlen, "-|-", '-'));
-			builder.Append(Fit("", nameLen, "-|-", '-'));
-			builder.Append(Fit("", typeLen, "-|-", '-'));
-			builder.Append(Fit("", stateLen, "-|-", '-'));
-			builder.Append(Fit("", cstateLen, "-|-", '-'));
-			builder.Append(Fit("", pingLen, "-|", '-'));
-			log.Info(builder.ToString());
-			builder.Clear();
-			foreach (var id in threadIds.TakeLast(threadIds.Count - 1).OrderBy(x => int.Parse(x)))
+			
+			lock (log)
 			{
-				int i = threadIds.IndexOf(id);
+				var builder = new StringBuilder();
+				// Write headers
 				builder.Append(Fit("", 0, "| "));
-				builder.Append(Fit(id, idlen));
-				builder.Append(Fit(names[i], nameLen));
-				builder.Append(Fit(types[i], typeLen));
-				builder.Append(Fit(states[i], stateLen));
-				builder.Append(Fit(connectionStates[i], cstateLen));
-				builder.Append(Fit(pings[i], pingLen));
+				builder.Append(Fit(threadIds[0], idlen));
+				builder.Append(Fit(names[0], nameLen));
+				builder.Append(Fit(types[0], typeLen));
+				builder.Append(Fit(states[0], stateLen));
+				builder.Append(Fit(connectionStates[0], cstateLen));
+				builder.Append(Fit(pings[0], pingLen));
 				log.Info(builder.ToString());
 				builder.Clear();
+
+				builder.Append(Fit("", 0, "|-", '-'));
+				builder.Append(Fit("", idlen, "-|-", '-'));
+				builder.Append(Fit("", nameLen, "-|-", '-'));
+				builder.Append(Fit("", typeLen, "-|-", '-'));
+				builder.Append(Fit("", stateLen, "-|-", '-'));
+				builder.Append(Fit("", cstateLen, "-|-", '-'));
+				builder.Append(Fit("", pingLen, "-|", '-'));
+				log.Info(builder.ToString());
+				builder.Clear();
+				foreach (var id in threadIds.TakeLast(threadIds.Count - 1).OrderBy(x => int.Parse(x)))
+				{
+					int i = threadIds.IndexOf(id);
+					builder.Append(Fit("", 0, "| "));
+					builder.Append(Fit(id, idlen));
+					builder.Append(Fit(names[i], nameLen));
+					builder.Append(Fit(types[i], typeLen));
+					builder.Append(Fit(states[i], stateLen));
+					builder.Append(Fit(connectionStates[i], cstateLen));
+					builder.Append(Fit(pings[i], pingLen));
+					log.Info(builder.ToString());
+					builder.Clear();
+				}
 			}
 		}
 	}
