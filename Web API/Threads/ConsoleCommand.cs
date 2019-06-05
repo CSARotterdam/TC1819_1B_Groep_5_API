@@ -42,7 +42,7 @@ namespace API.Threads {
 				//Execute the command
 				try { command.Invoke(null, new object[] { tokens.TakeLast(tokens.Length - 1).ToArray() }); } catch (Exception e) {
 					CommandMethods.timer.Reset();
-					log.Error($"{e.InnerException.GetType().Name}: {e.InnerException.Message}", e.InnerException, true);
+					log.Error($"{e.InnerException.GetType().Name}: {e.InnerException.Message}", e.InnerException, false);
 				}
 			}
 		}
