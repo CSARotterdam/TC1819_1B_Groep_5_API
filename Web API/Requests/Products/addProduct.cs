@@ -26,7 +26,6 @@ namespace API.Requests {
 			if (productIDValue == null) failedVerifications.Add("productID");
 			if (categoryIDValue == null) failedVerifications.Add("categoryID");
 			if (manufacturerValue == null) failedVerifications.Add("manufacturer");
-			if (descriptionValue == null) failedVerifications.Add("description");
 			if (nameValue == null) failedVerifications.Add("name");
 
 			if (failedVerifications.Any())
@@ -36,7 +35,6 @@ namespace API.Requests {
 			if (productIDValue.Type != JTokenType.String) failedVerifications.Add("productID");
 			if (categoryIDValue.Type != JTokenType.String) failedVerifications.Add("categoryID");
 			if (manufacturerValue.Type != JTokenType.String) failedVerifications.Add("manufacturer");
-			if (descriptionValue.Type != JTokenType.Object) failedVerifications.Add("description");
 			if (nameValue.Type != JTokenType.Object) failedVerifications.Add("name");
 
 			if (failedVerifications.Any())
