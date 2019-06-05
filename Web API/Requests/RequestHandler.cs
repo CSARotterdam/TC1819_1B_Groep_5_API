@@ -43,7 +43,7 @@ namespace API.Requests {
 		/// <summary>
 		/// The maximum duration of a loan, as specified in the <see cref="Program.Settings"/>.
 		/// </summary>
-		private TimeSpan MaxLoanDuration => new TimeSpan((long)Program.Settings["requestSettings"]["maxLoanDuration"]);
+		private TimeSpan MaxLoanDuration => (TimeSpan)Program.Settings["requestSettings"]["maxLoanDuration"];
 
 		/// <summary>
 		/// Creates a new instance of <see cref="RequestHandler"/>.
