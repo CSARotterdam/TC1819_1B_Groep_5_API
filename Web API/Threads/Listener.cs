@@ -10,6 +10,8 @@ namespace API.Threads {
 		/// Gets whether or not this Listener's worker thread is alive.
 		/// </summary>
 		public bool IsAlive => workerThread.IsAlive;
+		public ThreadState ThreadState => workerThread.ThreadState;
+		public int ManagedThreadId => workerThread.ManagedThreadId;
 		public string Name { get { return workerThread?.Name; } set { workerThread.Name = value; } }
 
 		public BlockingCollection<HttpListenerContext> Queue { get; }

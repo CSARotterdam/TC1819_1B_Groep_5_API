@@ -26,6 +26,11 @@ namespace API.Requests {
 		public Logger Log { get; set; }
 
 		/// <summary>
+		/// The state of the underlying <see cref="MySqlConnection"/>.
+		/// </summary>
+		public ConnectionState State => Connection?.State ?? ConnectionState.Closed;
+
+		/// <summary>
 		/// The <see cref="TechlabMySQL"/> connection assigned to this <see cref="RequestHandler"/>.
 		/// </summary>
 		protected TechlabMySQL Connection { get; }
@@ -244,5 +249,15 @@ namespace API.Requests {
 					.Equals(value, operandtype)
 			).FirstOrDefault();
 		}
+
+		/// <summary>
+		/// Pings the underlying connection.
+		/// </summary>
+		public bool Ping() => Connection.Ping();
+
+		/// <summary>
+		/// Disposes the underlying connection.
+		/// </summary>
+		public void Dispose() => Connection?.Dispose();
 	}
 }

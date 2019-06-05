@@ -18,6 +18,8 @@ namespace API.Threads
 		/// Gets whether or not this requestWorker's thread is alive.
 		/// </summary>
 		public bool IsAlive => workerThread.IsAlive;
+		public System.Threading.ThreadState ThreadState => workerThread.ThreadState;
+		public int ManagedThreadId => workerThread.ManagedThreadId;
 		public string Name { get { return workerThread?.Name; } set { workerThread.Name = value; } }
 
 		private readonly BlockingCollection<HttpListenerContext> RequestQueue;
