@@ -66,14 +66,24 @@ namespace API {
 			}
 
 			log.Config("Setting up files and directories...");
-			IOSetup();
-
+			try {
+				IOSetup();
+			} catch (IOException e ) {
+				log.Fatal("Failed to set up files and directories.");
+				log.Fatal(e.Message);
+				Console.ReadKey();
+				Console.WriteLine();
+				log.Close();
+				return;
+			}
+			
 			log.OutputStreams.Add(new AdvancingWriter(Logs("latest.log"))
 			{
 				Compression = true,
 				CompressOnClose = false,
 				Archive = Logs("{0:dd-MM-yyyy}.{2}.zip")
 			});
+
 
 			//Get local IP address, if autodetect is enabled in settings.
 			List<string> addresses = Settings["connectionSettings"]["serverAddresses"].ToObject<List<string>>();
@@ -90,6 +100,22 @@ namespace API {
 
 			//Create request queue
 			var requestQueue = new BlockingCollection<HttpListenerContext>();
+
+			// Create listener thingy.
+			HttpListener listener = new HttpListener();
+			foreach (string address in addresses)
+				listener.Prefixes.Add("http://" + address + "/");
+			ListenerThread = new Listener(listener, requestQueue, "ListenerThread", log);
+			try {
+				ListenerThread.Start();
+			} catch (HttpListenerException e) {
+				log.Fatal("Failed to create Listener. Are you running the server in Administrator mode?.");
+				log.Fatal(e.Message);
+				Console.ReadKey();
+				Console.WriteLine();
+				log.Close();
+				return;
+			}
 
 			//Create console command thread
 			ConsoleThread = new Thread(() => API.Threads.ConsoleCommand.main(log)) {
@@ -111,13 +137,7 @@ namespace API {
 					log.Error(e.Message);
 				}
 			}
-
-			// Create listener thingy.
-			HttpListener listener = new HttpListener();
-			foreach (string address in addresses)
-				listener.Prefixes.Add("http://" + address + "/");
-			ListenerThread = new Listener(listener, requestQueue, "ListenerThread", log);
-			ListenerThread.Start();
+			
 			log.Info("Finished setup");
 
 			// Wait until all threads are terminated
