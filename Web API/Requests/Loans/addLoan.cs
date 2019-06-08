@@ -60,7 +60,7 @@ namespace API.Requests
 				return Templates.NoItemsForProduct(productId);
 			}
 			if (item == null)
-				return Templates.ReservationFailed($"Product '{productId}' has no items available during this time.");
+				return Templates.NoItemsForProduct($"Product '{productId}' has no items available during this time.");
 
 			var loan = new LoanItem(null, CurrentUser.Username, item.Id.Value, start, end);
 			Connection.Upload(loan);
