@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static API.Requests.RequestMethodAttributes;
@@ -25,62 +26,45 @@ namespace API.Requests {
 				productIDs = productValue.ToObject<List<string>>();
 			}
 
-			//Get all relevant loans
-			MySqlConditionBuilder query = new MySqlConditionBuilder();
-			foreach (string ID in productIDs) {
-				query.Or();
-				query.Column("product");
-				query.Equals(ID, MySqlDbType.String);
-			}
-			List<ProductItem> productItems = Connection.Select<ProductItem>(query).ToList();
-			query = new MySqlConditionBuilder();
-			foreach (ProductItem pitem in productItems) {
-				query.Or();
-				query.Column("product_item");
-				query.Equals(pitem.Id, MySqlDbType.String);
-			}
-			List<LoanItem> loanItems = Connection.Select<LoanItem>(query).ToList();
+			// Build condition that matches all relevant productItems and get said productItems
+			// The lookup groups the productItems and loanItems to a single product id.
+			var condition = new MySqlConditionBuilder("product", MySqlDbType.String, productIDs.ToArray());
+			var productItemsArray = Connection.Select<ProductItem>(condition).ToArray();
+			var productItems = productItemsArray.ToLookup(x => x.ProductId);
 
-			//Create response
-			JObject results = new JObject();
-			foreach (string productID in productIDs) {
+			// Build condition that matches all relevand loanItems and get said loanItems
+			condition = new MySqlConditionBuilder("product_item", MySqlDbType.Int32, productItemsArray.Select(x => x.Id.Value).Cast<object>().ToArray());
+			var loanItems = Connection.Select<LoanItem>(condition).ToLookup(x => productItemsArray.First(y => y.Id == x.ProductItem).ProductId);
 
-				//Create base entry
-				JObject entry = new JObject() {
-					{"total", 0 },
-					{"reservations", 0 },
-					{"loanedOut", 0},
-					{"inStock", 0}
+			// DateTimeSpan representing now->midnight for filtering relevant loans
+			DateTimeSpan today = new DateTimeSpan(DateTime.Now, DateTime.Now.Date.AddDays(1));
+
+			// Build response data
+			var responseData = new JObject();
+			foreach (var productID in productIDs)
+			{
+				var items = productItems[productID];
+				var loans = loanItems[productID];
+				var relevantLoans = loans.Where(x => today.Overlaps(x.Start, x.End)).ToArray();
+
+				var entry = new JObject() {
+					{"total", items.Count() },
+					{"totalReservations", loans.Count() },
+					{"reservations", relevantLoans.Length },
+					{"loanedOut", relevantLoans.Count(x => x.IsAcquired) },
+					{"inStock", items.Count() - relevantLoans.Count(x => x.IsAcquired) },
+					{"available", items.Count() - relevantLoans.Length }
 				};
 
-				//Calculate stats
-				foreach(ProductItem productitem in productItems) {
-					if(productitem.ProductId != productID) {
-						continue;
-					}
-					entry["total"] = (int)entry["total"] + 1;
-
-					foreach(LoanItem loan in loanItems) {
-						if(loan.ProductItem != productitem.Id) {
-							continue;
-						}
-						entry["reservations"] = (int)entry["reservations"] + 1;
-
-						if (loan.IsAcquired) {
-							entry["loanedOut"] = (int)entry["loanedOut"] + 1;
-						}
-					}
-				}
-				entry["inStock"] = (int)entry["total"] - (int)entry["loanedOut"];
-
-				//Add entry
-				results[productID] = entry;
+				responseData.Add(productID, entry);
 			}
+
+			Log.Info(responseData);
 
 			//Return response
 			return new JObject() {
 				{"reason", null },
-				{"responseData", results}
+				{"responseData", responseData}
 			};
 		}
 	}
