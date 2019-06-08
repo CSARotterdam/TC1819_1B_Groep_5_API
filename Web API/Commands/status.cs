@@ -46,7 +46,7 @@ namespace API.Commands
 				threadIds.Add(id?.ToString() ?? "-");
 				states.Add(state?.ToString() ?? System.Threading.ThreadState.Stopped.ToString());
 				connectionStates.Add(cstate?.ToString() ?? ConnectionState.Closed.ToString());
-				pings.Add(Misc.FormatDelay(ping, 1));
+				pings.Add(cstate != null ? Misc.FormatDelay(ping, 1) : "0 ns");
 			}
 
 			var timer = new Stopwatch();
@@ -94,7 +94,16 @@ namespace API.Commands
 				builder.Append(Fit("", pingLen, "-|", '-'));
 				log.Info(builder.ToString());
 				builder.Clear();
-				foreach (var id in threadIds.TakeLast(threadIds.Count - 1).OrderBy(x => int.Parse(x)))
+				
+				// Yes, please calm down with the applause. I am very aware that this is the best method name in existence.
+				// Oh please, all this praise is too much for one so humble such as myself.
+				int parseOrDont(string s)
+				{
+					int.TryParse(s, out int res);
+					return res;
+				}
+
+				foreach (var id in threadIds.TakeLast(threadIds.Count - 1).OrderBy(x => parseOrDont(x)))
 				{
 					int i = threadIds.IndexOf(id);
 					builder.Append(Fit("", 0, "| "));
