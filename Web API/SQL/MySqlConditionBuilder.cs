@@ -59,7 +59,7 @@ namespace MySQLWrapper.Data
 		public MySqlConditionBuilder(string column, MySqlDbType type, params object[] fields)
 		{
 			foreach (var field in fields)
-				Column(column).Equals(field, type);
+				Or().Column(column).Equals(field, type);
 		}
 		/// <summary>
 		/// Auto-generates a condition that matches the primary key with the it's value in the
