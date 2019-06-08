@@ -58,8 +58,10 @@ namespace MySQLWrapper.Data
 		/// <param name="fields">An array of values to compare to the column.</param>
 		public MySqlConditionBuilder(string column, MySqlDbType type, params object[] fields)
 		{
+			NewGroup();
 			foreach (var field in fields)
 				Or().Column(column).Equals(field, type);
+			EndGroup();
 		}
 		/// <summary>
 		/// Auto-generates a condition that matches the primary key with the it's value in the
