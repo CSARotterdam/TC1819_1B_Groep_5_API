@@ -187,9 +187,16 @@ namespace API {
 
 			// Compress previous log
 			var logfile = Logs("latest.log");
-			if (File.Exists(logfile)) {
-				var lastArchive = Directory.GetFiles(LogDir).OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
-				if (lastArchive != null) {
+			if (File.Exists(logfile))
+			{
+				// Get most recent zip file
+				var lastArchive = Directory.GetFiles(LogDir)
+					.OrderBy(x => File.GetCreationTime(x))
+					.Where(x => Path.GetExtension(x).ToLower() == ".zip")
+						.LastOrDefault();
+				// Add latest.log to the most recent archive if it exists
+				if (lastArchive != null)
+				{
 					using (var archive = ZipFile.Open(lastArchive, ZipArchiveMode.Update))
 						archive.CreateEntryFromFile(logfile, Path.GetFileName(logfile));
 					File.Delete(logfile);
