@@ -59,8 +59,6 @@ namespace API.Requests {
 				responseData.Add(productID, entry);
 			}
 
-			Log.Info(responseData);
-
 			//Return response
 			return new JObject() {
 				{"reason", null },
