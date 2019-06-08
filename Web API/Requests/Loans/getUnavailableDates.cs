@@ -75,7 +75,7 @@ namespace API.Requests
 			var dateCache = new Dictionary<DateTime, int>();
 			foreach (var loan in loanItems)
 			{
-				while (loan.Start <= loan.End)
+				while (loan.Start < loan.End)
 				{
 					if (loan.Start < range.Start)
 					{
