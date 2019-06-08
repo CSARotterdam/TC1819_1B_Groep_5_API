@@ -129,7 +129,7 @@ namespace MySQLWrapper
 		/// <summary>
 		/// Returns true if the server was successfully pinged. False otherwise.
 		/// </summary>
-		public bool Ping() => Connection.Ping();
+		public bool Ping() => _connection?.Ping() ?? false;
 		#endregion
 		
 		public void Reconnect()
