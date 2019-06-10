@@ -116,10 +116,9 @@ namespace API.Requests {
 				for (int i = 0; i < responseData.Count; i++) {
 					var nameData = names.First(x => x[0].Equals(nameIds[i]));
 					var translations = new JObject();
-					for (int j = 1; j < languageColumns.Count; j++) {
-						translations[languageColumns[j]] = new JValue(nameData[j]);
-					}
-
+					for (int j = 1; j < languageColumns.Count; j++)
+						if (nameData[j] != null)
+							translations[languageColumns[j]] = new JValue(nameData[j]);
 					responseData[i]["name"] = translations;
 				}
 			}

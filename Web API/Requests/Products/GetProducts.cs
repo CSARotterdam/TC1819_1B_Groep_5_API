@@ -101,7 +101,8 @@ namespace API.Requests {
 					var nameData = names.First(x => x[0].Equals(nameIds[i]));
 					var translations = new JObject();
 					for (int j = 1; j < languageColumns.Count; j++)
-						translations[languageColumns[j]] = new JValue(nameData[j]);
+						if (nameData[j] != null)
+							translations[languageColumns[j]] = new JValue(nameData[j]);
 					responseData[i]["name"] = translations;
 				}
 			}
@@ -132,11 +133,14 @@ namespace API.Requests {
 					var nameData = names.First(x => x[0].Equals(descIds[i]));
 					var translations = new JObject();
 					for (int j = 1; j < languageColumns.Count; j++)
-						translations[languageColumns[j]] = new JValue(nameData[j]);
+						if (nameData[j] != null)
+							translations[languageColumns[j]] = new JValue(nameData[j]);
 					responseData[i]["description"] = translations;
 				}
 			}
 
+
+			Log.Info(response);
 			return response;
 		}
 	}
