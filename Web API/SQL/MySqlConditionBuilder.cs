@@ -211,6 +211,34 @@ namespace MySQLWrapper.Data
 			else modifyingOperand = false;
 			return this;
 		}
+		/// <summary>
+		/// Appends the TRUE keyword as operator. Effectively equivalent to 1 as integer.
+		/// </summary>
+		public MySqlConditionBuilder True()
+		{
+			if (!expectingOperand)
+				throw new OperationCanceledException("Can't append operand; Not expecting operand.");
+			Append("TRUE");
+			expectingOperand = false;
+			if (!modifyingOperand)
+				unfinished = !unfinished;
+			else modifyingOperand = false;
+			return this;
+		}
+		/// <summary>
+		/// Appends the FALSE keyword as operator. Effectively equivalent to 0 as integer.
+		/// </summary>
+		public MySqlConditionBuilder False()
+		{
+			if (!expectingOperand)
+				throw new OperationCanceledException("Can't append operand; Not expecting operand.");
+			Append("FALSE");
+			expectingOperand = false;
+			if (!modifyingOperand)
+				unfinished = !unfinished;
+			else modifyingOperand = false;
+			return this;
+		}
 		#endregion
 
 		#region Comparison operators
