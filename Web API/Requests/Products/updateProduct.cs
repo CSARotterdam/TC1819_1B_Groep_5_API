@@ -18,6 +18,7 @@ namespace API.Requests {
 			string extension = null;
 			byte[] imageData = null;
 			JObject names = null;
+			JObject descriptions = null;
 			JObject newImage = null;
 
 			request.TryGetValue("productID", out JToken idValue);
@@ -25,6 +26,7 @@ namespace API.Requests {
 			request.TryGetValue("categoryID", out JToken categoryIDValue);
 			request.TryGetValue("manufacturer", out JToken manufacturerValue);
 			request.TryGetValue("name", out JToken nameValue);
+			request.TryGetValue("description", out JToken descriptionValue);
 			request.TryGetValue("image", out JToken imageValue);
 			if (idValue == null || idValue.Type != JTokenType.String) {
 				return Templates.MissingArguments("productID");
@@ -46,6 +48,9 @@ namespace API.Requests {
 			if (nameValue != null && nameValue.Type == JTokenType.Object) {
 				names = nameValue.ToObject<JObject>();
 			}
+			if(descriptionValue != null && descriptionValue.Type == JTokenType.Object) {
+				descriptions = descriptionValue.ToObject<JObject>();
+			}
 			if (imageValue != null && imageValue.Type == JTokenType.Object) {
 				newImage = imageValue.ToObject<JObject>();
 				newImage.TryGetValue("data", out JToken dataValue);
@@ -65,6 +70,11 @@ namespace API.Requests {
 			Product product = GetObject<Product>(productID);
 			if (product == null) {
 				return Templates.NoSuchProduct(productID);
+			}
+			//If a new ID was given, check if it exists first.
+			Product newProduct = GetObject<Product>(newProductID);
+			if (newProduct != null) {
+				return Templates.AlreadyExists(productID);
 			}
 
 			///////////////Image
@@ -93,43 +103,62 @@ namespace API.Requests {
 				}
 			}
 
-			///////////////LanguageItem
+			///////////////Name
 			//Edit the LanguageItem if needed;
-			LanguageItem item = product.GetName(Connection);
+			LanguageItem name = product.GetName(Connection);
 			if (names != null) {
 				if (names.TryGetValue("en", out JToken enValue)) {
 					if (enValue.Type == JTokenType.String) {
-						item.en = enValue.ToObject<string>();
+						name.en = enValue.ToObject<string>();
 					}
 				}
 				if (names.TryGetValue("nl", out JToken nlValue)) {
 					if (nlValue.Type == JTokenType.String) {
-						item.nl = nlValue.ToObject<string>();
+						name.nl = nlValue.ToObject<string>();
 					}
 				}
 				if (names.TryGetValue("ar", out JToken arValue)) {
 					if (arValue.Type == JTokenType.String) {
-						item.ar = arValue.ToObject<string>();
+						name.ar = arValue.ToObject<string>();
 					}
 				}
-				item.Update(Connection);
+				name.Update(Connection);
 			}
 
-			//If a new product ID was specified, check if it already exists. If it doesn't, change the product ID.
-			if (newProductID != null) {
-				Product newProduct = GetObject<Product>(newProductID);
-				if (newProduct != null) {
-					return Templates.AlreadyExists(productID);
-				} else {
-					image.Id = newProductID + "_image";
-					image.Update(Connection);
-					product.Image = image.Id;
-					item.Id = newProductID + "_name";
-					item.Update(Connection);
-					product.Name = item.Id;
-					product.UpdateTrace();
-					product.Id = newProductID;
+			///////////////Description
+			//Edit the LanguageItem if needed;
+			LanguageItem description = product.GetDescription(Connection);
+			if (descriptions != null) {
+				if (descriptions.TryGetValue("en", out JToken enValue)) {
+					if (enValue.Type == JTokenType.String) {
+						description.en = enValue.ToObject<string>();
+					}
 				}
+				if (descriptions.TryGetValue("nl", out JToken nlValue)) {
+					if (nlValue.Type == JTokenType.String) {
+						description.nl = nlValue.ToObject<string>();
+					}
+				}
+				if (descriptions.TryGetValue("ar", out JToken arValue)) {
+					if (arValue.Type == JTokenType.String) {
+						description.ar = arValue.ToObject<string>();
+					}
+				}
+				description.Update(Connection);
+			}
+
+			//If a new ID was specified, change the product ID.
+			if (newProductID != null) {
+				image.Id = newProductID + "_image";
+				image.Update(Connection);
+				product.Image = image.Id;
+				name.Id = newProductID + "_name";
+				name.Update(Connection);
+				description.Id = newProductID + "_description";
+				description.Update(Connection);
+				product.Name = name.Id;
+				product.UpdateTrace();
+				product.Id = newProductID;
 			}
 
 			///////////////Product

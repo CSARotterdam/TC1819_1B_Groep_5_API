@@ -90,7 +90,7 @@ namespace API.Requests {
 		/// </summary>
 		public static JObject AlreadyExists(string message = null) {
 			return new JObject() {
-				{"reason", "NoSuchProduct" },
+				{"reason", "AlreadyExists" },
 				{"message", message },
 			};
 		}
