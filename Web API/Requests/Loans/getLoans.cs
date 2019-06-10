@@ -98,7 +98,12 @@ namespace API.Requests {
 			{
 				var item = new JObject();
 				for (int i = 0; i < requestColumns.Count(); i++)
-					item[(string)requestColumns[i]] = new JValue(loanData[i]);
+				{
+					if (loanData[i] is DateTime)
+						item[(string)requestColumns[i]] = new JValue(((DateTime)loanData[i]).ToUniversalTime().Subtract(Epoch).TotalMilliseconds);
+					else
+						item[(string)requestColumns[i]] = new JValue(loanData[i]);
+				}
 				responseData.Add(item);
 			}
 
