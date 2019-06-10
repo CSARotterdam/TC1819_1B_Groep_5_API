@@ -29,7 +29,7 @@ namespace API.Requests {
 			request.TryGetValue("columns", out JToken requestColumns);
 			request.TryGetValue("productItemIds", out JToken requestProductItems);
 			request.TryGetValue("userId", out JToken requestUserId);
-			request.TryGetValue("loanId", out JToken requestLoanId);
+			request.TryGetValue("loanItemID", out JToken requestLoanId);
 			request.TryGetValue("start", out JToken requestStart);
 			request.TryGetValue("end", out JToken requestEnd);
 
