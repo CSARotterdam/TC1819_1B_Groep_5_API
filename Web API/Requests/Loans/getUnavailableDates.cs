@@ -55,6 +55,13 @@ namespace API.Requests
 			var condition = new MySqlConditionBuilder("product", MySqlDbType.String, requestProductId.ToString());
 			var productItems = Connection.Select<ProductItem>(condition).ToArray();
 
+			// Return empty response if no items were found
+			if (!productItems.Any())
+				return new JObject() {
+					{"reason", null },
+					{"responseData", new JArray() }
+				};
+
 			// Get all loans within the specified range
 			condition = new MySqlConditionBuilder("product_item", MySqlDbType.Int32, productItems.Select(x => x.Id).Cast<object>().ToArray());
 			condition.And()
