@@ -7,7 +7,7 @@ namespace API.Requests {
 		/// </summary>
 		/// <param name="request">The JObject containing the request received from the client.</param>
 		/// <returns>A <see cref="JObject"/> containing the request response, which can then be sent to the client.</returns>
-		public JObject logout(JObject request) {
+		public JObject logout(JObject _) {
 			//Create response object
 			JObject response = new JObject() {
 				{"success", true },
