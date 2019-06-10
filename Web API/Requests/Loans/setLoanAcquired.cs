@@ -13,13 +13,13 @@ namespace API.Requests
 		public JObject setLoanAcquired(JObject request)
 		{
 			// Get arguments
-			request.TryGetValue("loanId", out JToken requestLoanId);
+			request.TryGetValue("loanItemID", out JToken requestLoanItemId);
 			request.TryGetValue("value", out JToken requestAcquiredValue);
 
 			// Verify presence of arguments
 			var failedVerifications = new List<string>();
-			if (requestLoanId == null)
-				failedVerifications.Add("loanId");
+			if (requestLoanItemId == null)
+				failedVerifications.Add("loanItemID");
 			if (requestAcquiredValue == null)
 				failedVerifications.Add("value");
 
@@ -27,8 +27,8 @@ namespace API.Requests
 				return Templates.MissingArguments(failedVerifications.ToArray());
 
 			// Verify arguments
-			if (requestLoanId.Type != JTokenType.Integer)
-				failedVerifications.Add("loanId");
+			if (requestLoanItemId.Type != JTokenType.Integer)
+				failedVerifications.Add("loanItemID");
 			if (requestAcquiredValue.Type != JTokenType.Boolean)
 				failedVerifications.Add("value");
 
@@ -36,10 +36,10 @@ namespace API.Requests
 				return Templates.InvalidArguments(failedVerifications.ToArray());
 
 			// Get loanItem
-			var condition = new MySqlConditionBuilder("id", MySqlDbType.Int32, (object)requestLoanId.ToObject<int>());
+			var condition = new MySqlConditionBuilder("id", MySqlDbType.Int32, (object)requestLoanItemId.ToObject<int>());
 			var loanItem = Connection.Select<LoanItem>(condition).FirstOrDefault();
 			if (loanItem == null)
-				return Templates.NoSuchLoan(requestLoanId.ToString());
+				return Templates.NoSuchLoan(requestLoanItemId.ToString());
 
 			// Update the IsAcquired value if it isn't equal to the 'value' argument
 			if ((bool)requestAcquiredValue != loanItem.IsAcquired)
