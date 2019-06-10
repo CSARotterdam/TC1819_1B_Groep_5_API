@@ -172,6 +172,16 @@ namespace MySQLWrapper.Data
 			return connection.Select<LanguageItem>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { Name })).FirstOrDefault();
 		}
 		/// <summary>
+		/// Gets the <see cref="LanguageItem"/> with an id equal to <see cref="Description"/>.
+		/// </summary>
+		/// <param name="connection">The connection to perform the query on.</param>
+		/// <returns>A <see cref="LanguageItem"/> instance whose Id is equal to <see cref="Description"/>, or null if none are found.</returns>
+		public LanguageItem GetDescription(TechlabMySQL connection)
+		{
+			var reference = new LanguageItem();
+			return connection.Select<LanguageItem>(new MySqlConditionBuilder(reference.GetIndexesOfType(Index.IndexType.PRIMARY).First().Columns, new object[] { Description })).FirstOrDefault();
+		}
+		/// <summary>
 		/// Gets the <see cref="Data.Image"/> with an id equal to <see cref="Image"/>.
 		/// </summary>
 		/// <param name="connection">The connection to perform the query on.</param>
