@@ -75,8 +75,22 @@ namespace API.Requests {
 				.Equals().True();
 			var loans = Connection.Select<LoanItem>(condition).ToArray();
 
-			// Filter items that aren't loaned out
-			var deletableItems = productItems.Where(x => loans.FirstOrDefault(y => y.ProductItem == x.Id) == null).Take((int)requestCount).ToArray();
+			// Create function to track how many product items were ignored and how many weren't
+			int ignored = 0;
+			int notIgnored = 0;
+			bool shouldIgnoreLoanedItem(ProductItem item)
+			{
+				bool b = loans.FirstOrDefault(x => x.ProductItem == item.Id) != null;
+				if (notIgnored != (int)requestCount)
+				{
+					if (b) ignored++;
+					else notIgnored++;
+				}
+				return b;
+			}
+
+			// Filter out items that are loaned out
+			var deletableItems = productItems.Where(x => !shouldIgnoreLoanedItem(x)).Take((int)requestCount).ToArray();
 
 			// Delete all items
 			foreach (var item in deletableItems)
@@ -86,8 +100,8 @@ namespace API.Requests {
 			return new JObject() {
 				{"reason", null },
 				{"responseData", new JObject() {
-					{"deleted", deletableItems.Length },
-					{"ignored", productItems.Length - deletableItems.Length }
+					{"deleted", notIgnored },
+					{"ignored", ignored }
 				}}
 			};
 		}
