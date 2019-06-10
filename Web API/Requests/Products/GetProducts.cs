@@ -139,8 +139,6 @@ namespace API.Requests {
 				}
 			}
 
-
-			Log.Info(response);
 			return response;
 		}
 	}
