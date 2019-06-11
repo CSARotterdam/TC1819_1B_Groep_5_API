@@ -38,6 +38,9 @@ namespace API.Requests {
 			if (loans_isAcquired.Any(x => x))
 				return Templates.CannotDelete("This product still has active loans.");
 
+			// Delete the product
+			Connection.Delete(product);
+			
 			// Delete image
 			product.Delete(Connection);
 			if (product.Image != "default") {

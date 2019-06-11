@@ -38,13 +38,13 @@ namespace API.Requests {
 		public JObject deleteProductItems(JObject request)
 		{
 			//Get arguments
-			request.TryGetValue("productId", out JToken requestProductId);
+			request.TryGetValue("productID", out JToken requestProductId);
 			request.TryGetValue("count", out JToken requestCount);
 
 			// Verify presence of arguments
 			var failedVerifications = new List<string>();
 			if (requestProductId == null)
-				failedVerifications.Add("productId");
+				failedVerifications.Add("productID");
 			if (requestCount == null)
 				failedVerifications.Add("count");
 
