@@ -64,6 +64,18 @@ namespace API.Requests {
 			var condition = new MySqlConditionBuilder("product", MySqlDbType.String, requestProductId.ToString());
 			var productItems = Connection.Select<ProductItem>(condition).ToArray();
 
+			// Return bare response if no items exist
+			if (!productItems.Any())
+			{
+				return new JObject() {
+					{"reason", null },
+					{"responseData", new JObject() {
+						{"deleted", 0 },
+						{"ignored", 0 }
+					}}
+				};
+			}
+
 			// Get all aquired loans that have yet to end
 			condition = new MySqlConditionBuilder("product_item", MySqlDbType.Int32, productItems.Select(x => x.Id).Cast<object>().ToArray());
 			condition.And()

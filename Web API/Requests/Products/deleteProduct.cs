@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static API.Requests.RequestMethodAttributes;
@@ -30,18 +31,26 @@ namespace API.Requests {
 			var condition = new MySqlConditionBuilder("product", MySqlDbType.String, productID);
 			var items = Connection.Select<ProductItem>(condition).ToList();
 
-			// Get associated loans
-			condition = new MySqlConditionBuilder("product_item", MySqlDbType.Int32, items.Select(x => x.Id).Cast<object>().ToArray());
-			List<bool> loans_isAcquired = Connection.Select<LoanItem>(new string[] { "is_item_acquired" }, condition).Select(x => (bool)x[0]).ToList();
+			// Check for associated loans if any items exist
+			if (items.Any())
+			{
+				// Get associated loans that are acquired and end after today
+				condition = new MySqlConditionBuilder("product_item", MySqlDbType.Int32, items.Select(x => x.Id).Cast<object>().ToArray());
+				condition.And()
+					.Column("end")
+					.GreaterThanOrEqual()
+					.Operand(DateTime.Now, MySqlDbType.DateTime);
+				condition.And()
+					.Column("is_item_acquired")
+					.Equals().True();
+				List<bool> loans_isAcquired = Connection.Select<LoanItem>(new string[] { "is_item_acquired" }, condition).Select(x => (bool)x[0]).ToList();
 
-			// Check if any loans are aquired
-			if (loans_isAcquired.Any(x => x))
-				return Templates.CannotDelete("This product still has active loans.");
+				// If any active loans are aquired, respond with CannotDelete
+				if (loans_isAcquired.Any())
+					return Templates.CannotDelete("This product still has active loans.");
+			}
 
-			// Delete the product
-			Connection.Delete(product);
-			
-			// Delete image
+			// Delete image if it isnt the default image
 			product.Delete(Connection);
 			if (product.Image != "default") {
 				product.GetImage(Connection)?.Delete(Connection);
