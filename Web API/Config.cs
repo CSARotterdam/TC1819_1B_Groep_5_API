@@ -10,62 +10,62 @@ namespace API {
 		private static readonly string defaultJson =
 @"{
 	//Settings for the server database.
-	'databaseSettings': {
+	""databaseSettings"": {
 		//The database server to connect to.
-		'serverAddress': null,
-		'database': null,
+		""serverAddress"": null,
+		""database"": null,
 		//Login details for the above server.
-		'username': null,
-		'password': null,		
+		""username"": null,
+		""password"": null,		
 		//The timeout for database queries, in seconds. -1 to disable.
-		'connectionTimeout':-1,
+		""connectionTimeout"":-1,
 		//Whether to keep authenticating the server with the database server.
-		'persistLogin': true,
+		""persistLogin"": true,
 		//Cache the results of database queries, which can lower response time.
-		'caching': true,
+		""caching"": true,
 	},
 
 	//Connection connections
-	'connectionSettings': {
+	""connectionSettings"": {
 		//If true, the server will attempt to automatically detect its IP address by pinging 8.8.8.8
-		'autodetect': true,
+		""autodetect"": true,
 		//A list containing the IP addresses the server will bind to. If autodetect is enabled,
 		//the detected address will be added to this list.
-		'serverAddresses': [
-			'localhost'
+		""serverAddresses"": [
+			""localhost""
 		]
 	},
 
 	//Advanced performance settings
-	'performanceSettings':{
+	""performanceSettings"":{
 		//The amount of worker threads that the server will use. More threads increases performance, but also increases hardware usage.
-		'workerThreadCount': 5,
+		""workerThreadCount"": 5,
 	},
 
 	//User authentication settings
-    'authenticationSettings':{
+    ""authenticationSettings"":{
 		//The amount of time (in seconds) until user tokens expire, forcing clients to authenticate themselves again.
-        'expiration': 7200,
+        ""expiration"": 7200,
 		
 		//Filters that specify the username requirements. Usernames must match one of the specified filters.
 		//If empty, all usernames will be allowed.
-		'usernameRequirements': [
+		""usernameRequirements"": [
 			{
-				'regex': '([A - z])',
-				'length': 5
+				""regex"": ""([A - z])"",
+				""length"": 5
 			},
 			{
-				'regex': '([0 - 9])',
-				'length': 7
+				""regex"": ""([0 - 9])"",
+				""length"": 7
 			}
 	
 		]
     },
 
 	//Request settings
-	'requestSettings':{
+	""requestSettings"":{
 		//The max duration that clients can reserve items for.
-		'maxLoanDuration': '21:00:00:00'
+		""maxLoanDuration"": ""21:00:00:00""
 	}
 }";
 		//End of default JSON string
