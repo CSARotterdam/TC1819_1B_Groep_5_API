@@ -9,7 +9,7 @@ using static API.Requests.RequestMethodAttributes;
 namespace API.Requests {
 	abstract partial class RequestHandler {
 
-		[RequiresPermissionLevel(UserPermission.Collaborator)]
+		[RequiresPermissionLevel(UserPermission.User)]
 		public JObject getProductAvailability(JObject request) {
 			//Get arguments
 			request.TryGetValue("products", out JToken productValue);
