@@ -52,11 +52,11 @@ namespace API {
 		'usernameRequirements': [
 			{
 				'regex': '([A - z])',
-				'length': 6
+				'length': 5
 			},
 			{
 				'regex': '([0 - 9])',
-				'length': 6
+				'length': 7
 			}
 	
 		]
