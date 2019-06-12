@@ -118,12 +118,16 @@ namespace API.Threads
 
 			// Send response
 			context.Response.ContentType = "application/json";
-			int responseSize = SendMessage(context, response.ToString(), statusCode);
-			timer.Stop();
-			Log.Trace(GetTimedMessage(timer, $"Sent response" +
-				$"{(response.ContainsKey("reason") && response["reason"].ToString().Any() ? $" '{response["reason"]}'" : "")} " +
-				$"with {responseSize} bytes."));
-
+			try {
+				int responseSize = SendMessage(context, response.ToString(), statusCode);
+				timer.Stop();
+				Log.Trace(GetTimedMessage(timer, $"Sent response" +
+					$"{(response.ContainsKey("reason") && response["reason"].ToString().Any() ? $" '{response["reason"]}'" : "")} " +
+					$"with {responseSize} bytes."));
+			} catch(HttpListenerException e) {
+				Log.Error("Error sending response: "+e.Message, e, false);
+			}
+			
 			timer.Reset();
 		}
 
