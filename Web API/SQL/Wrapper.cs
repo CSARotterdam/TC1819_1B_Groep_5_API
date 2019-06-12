@@ -129,7 +129,12 @@ namespace MySQLWrapper
 		/// <summary>
 		/// Returns true if the server was successfully pinged. False otherwise.
 		/// </summary>
-		public bool Ping() => _connection?.Ping() ?? false;
+		public bool Ping()
+		{
+			if (_connection.State == ConnectionState.Open)
+				return _connection?.Ping() ?? false;
+			return false;
+		}
 		#endregion
 		
 		public void Reconnect()
@@ -186,7 +191,7 @@ namespace MySQLWrapper
 				_connection.Open();
 			}
 			else if (_connection == null)
-				throw new ObjectDisposedException("The database connections is disposed.");
+				throw new ObjectDisposedException("The database connection is disposed.");
 			return this;
 		}
 	}
