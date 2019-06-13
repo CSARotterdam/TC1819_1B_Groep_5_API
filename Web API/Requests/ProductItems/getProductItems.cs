@@ -15,7 +15,8 @@ namespace API.Requests
 		/// </summary>
 		/// <remarks>
 		/// Optional arguments are:
-		///		- products > a string[] specifying which product's items to return. If null or empty, all items will be returned.
+		///		- products > a string[] specifying which product's items to return. If null or empty, this condition will be ignored.
+		///		- itemIds > an int[] specifying which productItems to return. If null or empty, this condition will be ignored.
 		/// </remarks>
 		/// <param name="request">The request from the client.</param>
 		/// <returns>The contents of the requestData field, which is to be returned to the client.</returns>
@@ -24,10 +25,17 @@ namespace API.Requests
 		{
 			// Get request arguments
 			request.TryGetValue("products", out JToken requestProductIds);
+			request.TryGetValue("itemIds", out JToken requestItemIds);
+
+			// Verify the presence of at least one argument
+			if (requestProductIds == null && requestItemIds == null)
+				return Templates.MissingArguments("products", "itemIds");
 
 			// Verify the argument
 			if (requestProductIds != null && (requestProductIds.Type != JTokenType.Array || requestProductIds.Any(x => x.Type != JTokenType.String)))
 				return Templates.InvalidArgument("products");
+			if (requestItemIds != null && (requestItemIds.Type != JTokenType.Array || requestItemIds.Any(x => x.Type != JTokenType.Integer)))
+				return Templates.InvalidArgument("itemIds");
 
 			//Create base response
 			var responseData = new JObject();
@@ -38,12 +46,13 @@ namespace API.Requests
 
 			// Prepare values
 			requestProductIds = requestProductIds ?? new JArray();
+			requestItemIds = requestItemIds ?? new JArray();
 
 			// Request ProductItem data from database
-			ILookup<string, ProductItem> categoryData = Core_getProductItems(requestProductIds.ToObject<string[]>());
+			ILookup<string, ProductItem> productItemData = Core_getProductItems(requestProductIds.ToObject<string[]>(), requestItemIds.ToObject<int[]>());
 
-			// Add all categories as dictionaries to responseData
-			foreach (var data in categoryData)
+			// Add all grouped productItems as dictionaries to responseData
+			foreach (var data in productItemData)
 			{
 				// Creates an array with the key of the productId, containing all associated items
 				var items = new JArray();
@@ -60,17 +69,23 @@ namespace API.Requests
 		/// </summary>
 		/// <param name="productIds"></param>
 		/// <returns></returns>
-		private ILookup<string, ProductItem> Core_getProductItems(params string[] productIds)
+		private ILookup<string, ProductItem> Core_getProductItems(string[] productIds, int[] itemIds = null)
 		{
-			MySqlConditionBuilder condition = new MySqlConditionBuilder();
+			productIds = productIds ?? new string[0];
+			itemIds = itemIds ?? new int[0];
 
 			// Build condition
-			foreach (var id in productIds)
+			MySqlConditionBuilder condition = new MySqlConditionBuilder("product", MySqlDbType.String, productIds);
+			condition.And();
+			condition.NewGroup();
+			foreach (var id in itemIds)
 			{
-				condition.Or();
-				condition.Column("product");
-				condition.Equals(id, MySqlDbType.String);
+				condition.Or()
+					.Column("id")
+					.Equals(id, MySqlDbType.Int32);
 			}
+			condition.EndGroup();
+
 			var itemPrimary = ProductItem.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0];
 			// Ignore default item
 			condition.And()
