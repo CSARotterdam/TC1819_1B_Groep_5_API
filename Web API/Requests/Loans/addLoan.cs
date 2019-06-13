@@ -85,7 +85,7 @@ namespace API.Requests
 		/// <returns>A subset of all items of the given product type, or null if the product type has no items.</returns>
 		private List<ProductItem> Core_GetUnreservedItems(string productId, DateTimeSpan span)
 		{
-			List<ProductItem> items = Core_getProductItems(productId)[productId].ToList();
+			List<ProductItem> items = Core_getProductItems(new string[] { productId })[productId].ToList();
 			if (!items.Any()) return null;
 
 			var condition = new MySqlConditionBuilder();
