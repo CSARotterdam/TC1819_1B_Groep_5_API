@@ -343,6 +343,18 @@ while True:
 			})
 		except requests.RequestException:
 			print("Failed")
+	
+	elif answer == "21":
+		try:
+			r = requests.post(address, json={
+				"requestType": "getUsers",
+				"username": username,
+				"token": token,
+				"requestData": {
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
 
 	try:
 		print(r.text)
