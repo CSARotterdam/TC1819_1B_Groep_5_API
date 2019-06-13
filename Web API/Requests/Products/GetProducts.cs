@@ -66,6 +66,9 @@ namespace API.Requests {
 			else if (requestLanguages != null && !requestColumns.Contains("name"))
 				((JArray)requestColumns).Add("name");
 
+			// Remove unknown language columns
+			requestLanguages = new JArray(requestLanguages.Where(x => LanguageItem.metadata.Select(y => y.Column).Contains(x.ToString())));
+
 			// Request category data from database
 			List<object[]> categoryData = Connection.Select<Product>(requestColumns.ToObject<string[]>(), condition, range).ToList();
 
