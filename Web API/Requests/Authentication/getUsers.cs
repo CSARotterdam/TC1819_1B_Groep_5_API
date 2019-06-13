@@ -1,5 +1,6 @@
 ﻿using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static API.Requests.RequestMethodAttributes;
@@ -17,7 +18,7 @@ namespace API.Requests {
 			foreach(string[] user in userdata) {
 				users.Add(new JObject() {
 					{"username", user[0] },
-					{"permission", user[1] }
+					{"permission", (int)Enum.Parse(typeof(UserPermission), user[1]) }
 				});
 			}
 
