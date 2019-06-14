@@ -345,6 +345,7 @@ while True:
 			print("Failed")
 	
 	elif answer == "21":
+		print(token)
 		try:
 			r = requests.post(address, json={
 				"requestType": "getUsers",

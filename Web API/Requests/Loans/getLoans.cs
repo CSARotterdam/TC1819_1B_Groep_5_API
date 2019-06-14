@@ -36,11 +36,11 @@ namespace API.Requests {
 			// Verify arguments
 			List<string> failedVerifications = new List<string>();
 			if (requestColumns != null && (requestColumns.Type != JTokenType.Array || requestColumns.Any(x => x.Type != JTokenType.String)))
-				return Templates.InvalidArgument("columns");
+				failedVerifications.Add("columns");
 			if (requestProductItems != null && (requestProductItems.Type != JTokenType.Array || requestProductItems.Any(x => x.Type != JTokenType.String)))
-				return Templates.InvalidArgument("productItemIds");
+				failedVerifications.Add("productItemIds");
 			if (requestUserId != null && requestUserId.Type != JTokenType.String)
-				return Templates.InvalidArgument("userId");
+				failedVerifications.Add("userId");
 
 			if (failedVerifications.Any())
 				return Templates.InvalidArguments(failedVerifications.ToArray());

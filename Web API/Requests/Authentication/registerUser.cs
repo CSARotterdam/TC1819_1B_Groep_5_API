@@ -22,37 +22,10 @@ namespace API.Requests {
 			string username = usernameValue.ToString();
 			string password = passwordValue.ToString();
 
-			//Check if the username matches one of the configured filters.
-			List<JObject> filters = Program.Settings["authenticationSettings"]["usernameRequirements"].ToObject<List<JObject>>();
-			bool validUsername = false;
-			foreach(JObject filter in filters) {
-				filter.TryGetValue("regex", out JToken regex);
-				filter.TryGetValue("length", out JToken length);
-
-				bool lengthPass = true;
-				if(length != null) {
-					lengthPass = false;
-					int val = (int)length;
-					if(username.Length == val) {
-						lengthPass = true;
-					}
-				}
-
-				bool regexPass = true;
-				if(regex != null) {
-					regexPass = false;
-					string val = (string)regex;
-					if (System.Text.RegularExpressions.Regex.IsMatch(username, val)) {
-						regexPass = true;
-					}					
-				}
-
-				if (lengthPass && regexPass) {
-					validUsername = true;
-					break;
-				}
-			}
-			if (!validUsername) {
+			//Verify username
+			Log.Info(Misc.verifyUsernameLength(username));
+			Log.Info(Misc.verifyUsernameRegex(username));
+			if (!Misc.verifyUsernameLength(username) || !Misc.verifyUsernameRegex(username)) {
 				return Templates.InvalidUsername;
 			}
 
