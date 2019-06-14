@@ -72,6 +72,9 @@ namespace API.Requests {
 				((JArray)requestColumns).Add("name");
 			}
 
+			// Remove unknown language columns
+			requestLanguages = new JArray(requestLanguages.Where(x => LanguageItem.metadata.Select(y => y.Column).Contains(x.ToString())));
+
 			// Request category data from database
 			List<object[]> categoryData = Connection.Select<ProductCategory>(requestColumns.ToObject<string[]>(), condition, range).ToList();
 
@@ -101,8 +104,6 @@ namespace API.Requests {
 					nameCondition.Equals(name, MySql.Data.MySqlClient.MySqlDbType.String);
 					first = false;
 				}
-				// If the condition is empty, insert a condition that is false
-				//if (first) nameCondition.Not().Null().Is().Null();
 
 				// Get the specified translations
 				var languageColumns = requestLanguages.ToObject<List<string>>();
@@ -116,10 +117,9 @@ namespace API.Requests {
 				for (int i = 0; i < responseData.Count; i++) {
 					var nameData = names.First(x => x[0].Equals(nameIds[i]));
 					var translations = new JObject();
-					for (int j = 1; j < languageColumns.Count; j++) {
-						translations[languageColumns[j]] = new JValue(nameData[j]);
-					}
-
+					for (int j = 1; j < languageColumns.Count; j++)
+						if (nameData[j] != null)
+							translations[languageColumns[j]] = new JValue(nameData[j]);
 					responseData[i]["name"] = translations;
 				}
 			}

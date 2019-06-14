@@ -18,6 +18,8 @@ namespace API.Threads
 		/// Gets whether or not this requestWorker's thread is alive.
 		/// </summary>
 		public bool IsAlive => workerThread.IsAlive;
+		public System.Threading.ThreadState ThreadState => workerThread.ThreadState;
+		public int ManagedThreadId => workerThread.ManagedThreadId;
 		public string Name { get { return workerThread?.Name; } set { workerThread.Name = value; } }
 
 		private readonly BlockingCollection<HttpListenerContext> RequestQueue;
@@ -116,12 +118,16 @@ namespace API.Threads
 
 			// Send response
 			context.Response.ContentType = "application/json";
-			int responseSize = SendMessage(context, response.ToString(), statusCode);
-			timer.Stop();
-			Log.Trace(GetTimedMessage(timer, $"Sent response" +
-				$"{(response.ContainsKey("reason") && response["reason"].ToString().Any() ? $" '{response["reason"]}'" : "")} " +
-				$"with {responseSize} bytes."));
-
+			try {
+				int responseSize = SendMessage(context, response.ToString(), statusCode);
+				timer.Stop();
+				Log.Trace(GetTimedMessage(timer, $"Sent response" +
+					$"{(response.ContainsKey("reason") && response["reason"].ToString().Any() ? $" '{response["reason"]}'" : "")} " +
+					$"with {responseSize} bytes."));
+			} catch(HttpListenerException e) {
+				Log.Error("Error sending response: "+e.Message, e, false);
+			}
+			
 			timer.Reset();
 		}
 

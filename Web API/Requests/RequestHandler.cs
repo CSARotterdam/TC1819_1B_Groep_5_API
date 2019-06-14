@@ -26,6 +26,11 @@ namespace API.Requests {
 		public Logger Log { get; set; }
 
 		/// <summary>
+		/// The state of the underlying <see cref="MySqlConnection"/>.
+		/// </summary>
+		public ConnectionState State => Connection?.State ?? ConnectionState.Closed;
+
+		/// <summary>
 		/// The <see cref="TechlabMySQL"/> connection assigned to this <see cref="RequestHandler"/>.
 		/// </summary>
 		protected TechlabMySQL Connection { get; }
@@ -38,7 +43,7 @@ namespace API.Requests {
 		/// <summary>
 		/// The maximum duration of a loan, as specified in the <see cref="Program.Settings"/>.
 		/// </summary>
-		private TimeSpan MaxLoanDuration => new TimeSpan((long)Program.Settings["requestSettings"]["maxLoanDuration"]);
+		private TimeSpan MaxLoanDuration => (TimeSpan)Program.Settings["requestSettings"]["maxLoanDuration"];
 
 		/// <summary>
 		/// Creates a new instance of <see cref="RequestHandler"/>.
@@ -244,5 +249,15 @@ namespace API.Requests {
 					.Equals(value, operandtype)
 			).FirstOrDefault();
 		}
+
+		/// <summary>
+		/// Pings the underlying connection.
+		/// </summary>
+		public bool Ping() => Connection.Ping();
+
+		/// <summary>
+		/// Disposes the underlying connection.
+		/// </summary>
+		public void Dispose() => Connection?.Dispose();
 	}
 }

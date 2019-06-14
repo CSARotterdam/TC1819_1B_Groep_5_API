@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static API.Requests.RequestMethodAttributes;
@@ -8,79 +9,60 @@ using static API.Requests.RequestMethodAttributes;
 namespace API.Requests {
 	abstract partial class RequestHandler {
 
-		[RequiresPermissionLevel(UserPermission.Collaborator)]
+		[RequiresPermissionLevel(UserPermission.User)]
 		public JObject getProductAvailability(JObject request) {
 			//Get arguments
-			request.TryGetValue("products", out JToken statTypeValue);
-			if (statTypeValue == null || (statTypeValue.Type != JTokenType.String && statTypeValue.Type != JTokenType.Array)) {
+			request.TryGetValue("products", out JToken productValue);
+			if (productValue == null || (productValue.Type != JTokenType.String && productValue.Type != JTokenType.Array)) {
 				return Templates.MissingArguments("statType");
 			}
 
 			//Parse arguments
 			List<string> productIDs = new List<string>();
-			if (statTypeValue.Type == JTokenType.String) {
+			if (productValue.Type == JTokenType.String) {
 				//TODO Allow * to be used as value, selecting all products
-				productIDs.Add(statTypeValue.ToObject<string>());
-			} else if (statTypeValue.Type == JTokenType.Array) {
-				productIDs = statTypeValue.ToObject<List<string>>();
+				productIDs.Add(productValue.ToObject<string>());
+			} else if (productValue.Type == JTokenType.Array) {
+				productIDs = productValue.ToObject<List<string>>();
 			}
 
-			//Create base response
-			JObject response = new JObject();
+			// Build condition that matches all relevant productItems and get said productItems
+			// The lookup groups the productItems and loanItems to a single product id.
+			var condition = new MySqlConditionBuilder("product", MySqlDbType.String, productIDs.ToArray());
+			var productItemsArray = Connection.Select<ProductItem>(condition).ToArray();
+			var productItems = productItemsArray.ToLookup(x => x.ProductId);
 
-			//Retrieve statistics
-			foreach (string productID in productIDs) {
-				//If the product doesn't exist, add an error entry
-				if (GetObject<Product>(productID) == null) {
-					response[productID] = "NoSuchProduct";
-					continue;
-				}
+			// Build condition that matches all relevand loanItems and get said loanItems
+			condition = new MySqlConditionBuilder("product_item", MySqlDbType.Int32, productItemsArray.Select(x => x.Id.Value).Cast<object>().ToArray());
+			var loanItems = Connection.Select<LoanItem>(condition).ToLookup(x => productItemsArray.First(y => y.Id == x.ProductItem).ProductId);
 
-				//Create base entry
-				JObject entry = new JObject() {
-					{"total", 0 },
-					{"reservations", 0 },
-					{"loanedOut", 0},
-					{"inStock", 0}
+			// DateTimeSpan representing now->midnight for filtering relevant loans
+			DateTimeSpan today = new DateTimeSpan(DateTime.Now, DateTime.Now.Date.AddDays(1));
+
+			// Build response data
+			var responseData = new JObject();
+			foreach (var productID in productIDs)
+			{
+				var items = productItems[productID];
+				var loans = loanItems[productID];
+				var relevantLoans = loans.Where(x => today.Overlaps(x.Start, x.End)).ToArray();
+
+				var entry = new JObject() {
+					{"total", items.Count() },
+					{"totalReservations", loans.Count() },
+					{"reservations", relevantLoans.Length },
+					{"loanedOut", relevantLoans.Count(x => x.IsAcquired) },
+					{"inStock", items.Count() - relevantLoans.Count(x => x.IsAcquired) },
+					{"available", items.Count() - relevantLoans.Length }
 				};
 
-				//Get all loans belonging to this product
-				List<ProductItem> productItems = Connection.Select<ProductItem>(new MySqlConditionBuilder()
-					.Column("product")
-					.Equals(productID, MySqlDbType.String)
-				).ToList();
-				List<LoanItem> loans = new List<LoanItem>();
-				foreach (ProductItem pitem in productItems) {
-					List<LoanItem> loanitems = Connection.Select<LoanItem>(new MySqlConditionBuilder()
-						.Column("product_item")
-						.Equals(pitem.Id, MySqlDbType.Int32)
-					).ToList();
-					loans.AddRange(loanitems);
-				}
-
-				//Count total productItems
-				entry["total"] = productItems.Count();
-
-				//Count total reservations
-				entry["reservations"] = loans.Count;
-
-				//Count total loanedOut
-				foreach (LoanItem loan in loans) {
-					if (loan.IsAcquired)
-						entry["loanedOut"] = (int)entry["loanedOut"] + 1;
-				}
-
-				//Count total inStock
-				entry["inStock"] = (int)entry["total"] - (int)entry["loanedOut"];
-
-				//Add entry
-				response[productID] = entry;
+				responseData.Add(productID, entry);
 			}
 
 			//Return response
 			return new JObject() {
 				{"reason", null },
-				{"responseData", response}
+				{"responseData", responseData}
 			};
 		}
 	}

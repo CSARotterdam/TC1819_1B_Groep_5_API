@@ -18,7 +18,7 @@ namespace API.Requests {
 		/// <param name="request"></param>
 		/// <returns></returns>
 		[RequiresPermissionLevel(UserPermission.User)]
-		public JObject GetImages(JObject request) {
+		public JObject getImages(JObject request) {
 			//Get arguments
 			request.TryGetValue("columns", out JToken requestColumns);
 			request.TryGetValue("images", out JToken requestImageIds);
@@ -81,7 +81,7 @@ namespace API.Requests {
 					item.Add((string)requestColumns[i], new JValue(data[i]));
 				}
 
-				responseData.Add((string)data[0], new JArray(data.TakeLast(data.Length - 1)));
+				responseData.Add((string)data[0], item);
 			}
 
 			return response;

@@ -11,7 +11,7 @@ namespace MySQLWrapper.Data
 		public const string schema = "language";
 		public static readonly ReadOnlyCollection<ColumnMetadata> metadata = Array.AsReadOnly(new ColumnMetadata[]
 		{
-			new ColumnMetadata("id", 50, MySqlDbType.VarChar),
+			new ColumnMetadata("id", 80, MySqlDbType.VarChar),
 			new ColumnMetadata("en", char.MaxValue, MySqlDbType.Text),
 			new ColumnMetadata("nl", char.MaxValue, MySqlDbType.Text),
 			new ColumnMetadata("ar", char.MaxValue, MySqlDbType.Text),

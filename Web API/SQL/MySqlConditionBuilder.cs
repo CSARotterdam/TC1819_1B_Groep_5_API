@@ -51,6 +51,19 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		public MySqlConditionBuilder() { }
 		/// <summary>
+		/// Matches a specific column to a set of fields.
+		/// </summary>
+		/// <param name="column">The name of the column to match.</param>
+		/// <param name="type">The type of the column to match.</param>
+		/// <param name="fields">An array of values to compare to the column.</param>
+		public MySqlConditionBuilder(string column, MySqlDbType type, params object[] fields)
+		{
+			NewGroup();
+			foreach (var field in fields)
+				Or().Column(column).Equals(field, type);
+			EndGroup();
+		}
+		/// <summary>
 		/// Auto-generates a condition that matches the primary key with the it's value in the
 		/// given <see cref="SchemaItem"/>.
 		/// </summary>
@@ -68,19 +81,19 @@ namespace MySQLWrapper.Data
 		/// <summary>
 		/// Auto-generates a condition that exactly matches the given fields and metadata.
 		/// </summary>
-		/// <param name="Metadata">A set of <see cref="ColumnMetadata"/> objects.</param>
-		/// <param name="Fields">A set of objects to compare to the columns.</param>
-		public MySqlConditionBuilder(ColumnMetadata[] Metadata, object[] Fields)
+		/// <param name="metadata">A set of <see cref="ColumnMetadata"/> objects.</param>
+		/// <param name="fields">A set of objects to compare to the columns.</param>
+		public MySqlConditionBuilder(ColumnMetadata[] metadata, object[] fields)
 		{
-			if (Metadata.Length != Fields.Length)
+			if (metadata.Length != fields.Length)
 				throw new ArgumentException("Metadata and Fields must be equal in length.");
-			for (int i = 0; i < Fields.Length; i++)
+			for (int i = 0; i < fields.Length; i++)
 			{
 				// Append an AND
 				if (i != 0) And();
 				// Append conditions for each column
-				if (Fields[i] == null) Column(Metadata[i].Column).Is().Null();
-				else Column(Metadata[i].Column).Equals(Fields[i], Metadata[i].Type);
+				if (fields[i] == null) Column(metadata[i].Column).Is().Null();
+				else Column(metadata[i].Column).Equals(fields[i], metadata[i].Type);
 			}
 		}
 
@@ -167,9 +180,17 @@ namespace MySQLWrapper.Data
 		{
 			if (!expectingOperand)
 				throw new OperationCanceledException("Can't append operand; Not expecting operand.");
-			var paramName = "@" + GetHashedName() + "_param" + Parameters.Count;
-			Parameters.Add(new MySqlParameter(paramName, type) { Value = value });
-			Append(paramName);
+			if (value != null)
+			{
+				var paramName = "@" + GetHashedName() + "_param" + Parameters.Count;
+				Parameters.Add(new MySqlParameter(paramName, type) { Value = value });
+				Append(paramName);
+			}
+			else
+			{
+				Null();
+				return this;
+			}
 			expectingOperand = false;
 			if (!modifyingOperand)
 				unfinished = !unfinished;
@@ -190,9 +211,37 @@ namespace MySQLWrapper.Data
 			else modifyingOperand = false;
 			return this;
 		}
+		/// <summary>
+		/// Appends the TRUE keyword as operator. Effectively equivalent to 1 as integer.
+		/// </summary>
+		public MySqlConditionBuilder True()
+		{
+			if (!expectingOperand)
+				throw new OperationCanceledException("Can't append operand; Not expecting operand.");
+			Append("TRUE");
+			expectingOperand = false;
+			if (!modifyingOperand)
+				unfinished = !unfinished;
+			else modifyingOperand = false;
+			return this;
+		}
+		/// <summary>
+		/// Appends the FALSE keyword as operator. Effectively equivalent to 0 as integer.
+		/// </summary>
+		public MySqlConditionBuilder False()
+		{
+			if (!expectingOperand)
+				throw new OperationCanceledException("Can't append operand; Not expecting operand.");
+			Append("FALSE");
+			expectingOperand = false;
+			if (!modifyingOperand)
+				unfinished = !unfinished;
+			else modifyingOperand = false;
+			return this;
+		}
 		#endregion
 
-		#region Comarison operators
+		#region Comparison operators
 		/// <summary>
 		/// Appends an Equals operator the condition. Fails if it is not expected.
 		/// </summary>
@@ -202,7 +251,7 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		/// <param name="value">The value to append.</param>
 		/// <param name="type">The type of the value.</param>
-		public MySqlConditionBuilder Equals(object value, MySqlDbType type) => Equals().Operand(value, type);
+		public MySqlConditionBuilder Equals(object value, MySqlDbType type) => value != null ? Equals().Operand(value, type) : Is().Null();
 		/// <summary>
 		/// Appends an Is operator and an operand the condition. Fails if it is not expected.
 		/// </summary>
@@ -228,7 +277,7 @@ namespace MySQLWrapper.Data
 		/// </summary>
 		/// <param name="value">The value to append.</param>
 		/// <param name="type">The type of the value.</param>
-		public MySqlConditionBuilder NotEquals(object value, MySqlDbType type) => NotEquals().Operand(value, type);
+		public MySqlConditionBuilder NotEquals(object value, MySqlDbType type) => value != null ? NotEquals().Operand(value, type) : Not().Is().Null();
 		/// <summary>
 		/// Appends a Less Than operator the condition. Fails if it is not expected.
 		/// </summary>
@@ -400,9 +449,12 @@ namespace MySQLWrapper.Data
 		{
 			if (depth == 0)
 				throw new OperationCanceledException("Can't exit main clause.");
-			if (conditionString.Substring(0, cursor+1).EndsWith("()"))
-				throw new OperationCanceledException("Can't exit empty group.");
-			cursor++;
+			if (conditionString.Substring(0, cursor + 1).EndsWith("()"))
+			{
+				conditionString = conditionString.Substring(0, cursor - 1);
+				cursor--;
+			}
+			else cursor++;
 			depth--;
 			return this;
 		}

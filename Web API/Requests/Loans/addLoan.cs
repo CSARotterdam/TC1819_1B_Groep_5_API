@@ -10,6 +10,15 @@ namespace API.Requests
 {
 	abstract partial class RequestHandler
 	{
+		/// <summary>
+		/// Creates and uploads a loan associated with a specific user, product item and date range.
+		/// </summary>
+		/// <remarks>
+		/// Required arguments are:
+		///		- productId > The id of the product from which to take and reserve an item.
+		///		- start > The date when the loan will start. May not be before today.
+		///		- end > The date when the loan will end. The timespan between start and end may not be longer than <see cref="MaxLoanDuration"/>.
+		/// </remarks>
 		[RequiresPermissionLevel(UserPermission.User)]
 		public JObject addLoan(JObject request)
 		{
@@ -43,6 +52,7 @@ namespace API.Requests
 			if (newLoanSpan.Start < DateTime.Now.Date) return Templates.InvalidArgument("'start' may not be set earlier than today.");
 			if (newLoanSpan.Duration > MaxLoanDuration) return Templates.InvalidArgument($"Duration of the loan may not exceed {MaxLoanDuration.Days} days.");
 
+			// Get an unreserved product item
 			ProductItem item;
 			try {
 				item = Core_GetUnreservedItems(productId, newLoanSpan).FirstOrDefault();
@@ -50,7 +60,7 @@ namespace API.Requests
 				return Templates.NoItemsForProduct(productId);
 			}
 			if (item == null)
-				return Templates.ReservationFailed($"Product '{productId}' has no items available during this time.");
+				return Templates.NoItemsForProduct($"Product '{productId}' has no items available during this time.");
 
 			var loan = new LoanItem(null, CurrentUser.Username, item.Id.Value, start, end);
 			Connection.Upload(loan);
@@ -75,7 +85,7 @@ namespace API.Requests
 		/// <returns>A subset of all items of the given product type, or null if the product type has no items.</returns>
 		private List<ProductItem> Core_GetUnreservedItems(string productId, DateTimeSpan span)
 		{
-			List<ProductItem> items = Core_getProductItems(productId)[productId].ToList();
+			List<ProductItem> items = Core_getProductItems(new string[] { productId })[productId].ToList();
 			if (!items.Any()) return null;
 
 			var condition = new MySqlConditionBuilder();
@@ -99,7 +109,6 @@ namespace API.Requests
 			List<LoanItem> loans = Connection.Select<LoanItem>(condition).ToList();
 			foreach (var loan in loans)
 			{
-				Log.Info(loan);
 				if (!items.Any(x => x.Id == loan.ProductItem))
 					continue;
 				var loanSpan = new DateTimeSpan(loan.Start, loan.End);

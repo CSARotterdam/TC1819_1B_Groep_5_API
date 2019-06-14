@@ -98,6 +98,17 @@ namespace API.Requests
 				|| (Contains(span.Start) && Contains(span.End));
 		}
 
+		/// <summary>
+		/// Returns whether or not a date range in any way overlaps this
+		/// <see cref="DateTimeSpan"/>.
+		/// </summary>
+		/// <remarks>
+		/// Equivalent to Overlaps(new DateTimeSpan(start, end));
+		/// </remarks>
+		/// <param name="start">The start of the date span to check.</param>
+		/// <param name="end">The end of the date span to check.</param>
+		public bool Overlaps(DateTime start, DateTime end) => Overlaps(new DateTimeSpan(start, end));
+
 		public bool Equals(DateTimeSpan span) => span.Start == Start && span.End == End;
 
 		public override string ToString() => $"{Start.ToString()} - {End.ToString()}";

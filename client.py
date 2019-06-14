@@ -30,7 +30,10 @@ while True:
 				}
 			})
 			print(r.text)
-			token = r.json()["responseData"]["token"]
+			try:
+				token = r.json()["responseData"]["token"]
+			except KeyError:
+				pass
 		except requests.RequestException:
 			print("Failed")
 
@@ -336,6 +339,19 @@ while True:
 				"token": token,
 				"requestData": {
 					"products": ["lizard", "dr-prrt-drel"]
+				}
+			})
+		except requests.RequestException:
+			print("Failed")
+	
+	elif answer == "21":
+		print(token)
+		try:
+			r = requests.post(address, json={
+				"requestType": "getUsers",
+				"username": username,
+				"token": token,
+				"requestData": {
 				}
 			})
 		except requests.RequestException:

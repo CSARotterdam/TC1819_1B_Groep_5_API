@@ -66,6 +66,9 @@ namespace API.Requests {
 			else if (requestLanguages != null && !requestColumns.Contains("name"))
 				((JArray)requestColumns).Add("name");
 
+			// Remove unknown language columns
+			requestLanguages = new JArray(requestLanguages.Where(x => LanguageItem.metadata.Select(y => y.Column).Contains(x.ToString())));
+
 			// Request category data from database
 			List<object[]> categoryData = Connection.Select<Product>(requestColumns.ToObject<string[]>(), condition, range).ToList();
 
@@ -101,8 +104,41 @@ namespace API.Requests {
 					var nameData = names.First(x => x[0].Equals(nameIds[i]));
 					var translations = new JObject();
 					for (int j = 1; j < languageColumns.Count; j++)
-						translations[languageColumns[j]] = new JValue(nameData[j]);
+						if (nameData[j] != null)
+							translations[languageColumns[j]] = new JValue(nameData[j]);
 					responseData[i]["name"] = translations;
+				}
+			}
+
+			if (requestLanguages != null)
+			{
+				List<string> descIds = responseData.Select(x => x["description"].ToString()).ToList();
+
+				// Build a condition to get all language items in one query
+				var descCondition = new MySqlConditionBuilder();
+				foreach (var desc in descIds)
+				{
+					descCondition.Or();
+					descCondition.Column("id");
+					descCondition.Equals(desc, MySqlDbType.String);
+				}
+
+				// Get the specified translations
+				var languageColumns = requestLanguages.ToObject<List<string>>();
+				if (languageColumns.Count == 0)
+					languageColumns.AddRange(LanguageItem.metadata.Select(x => x.Column));
+				else
+					languageColumns.Insert(0, "id");
+
+				List<object[]> names = Connection.Select<LanguageItem>(languageColumns.ToArray(), descCondition).ToList();
+				for (int i = 0; i < responseData.Count; i++)
+				{
+					var nameData = names.First(x => x[0].Equals(descIds[i]));
+					var translations = new JObject();
+					for (int j = 1; j < languageColumns.Count; j++)
+						if (nameData[j] != null)
+							translations[languageColumns[j]] = new JValue(nameData[j]);
+					responseData[i]["description"] = translations;
 				}
 			}
 

@@ -1,7 +1,7 @@
 ﻿using API.Threads;
 using Logging;
+using MySql.Data.MySqlClient;
 using MySQLWrapper;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
@@ -20,27 +20,30 @@ namespace API {
 		public static Logger log = new Logger(Level.ALL, Console.Out);
 		public static TechlabMySQL Connection;
 
-		public static List<RequestWorker> RequestWorkers = new List<RequestWorker>();
+		public static RequestWorker[] RequestWorkers;
 		public static Listener ListenerThread;
 		public static Thread ConsoleThread;
 
 		public static JObject Settings;
 
+		private static string LogDir
+		{
+			get
+			{
+				if (Settings == null || !Settings.ContainsKey("logSettings") || !((JObject)Settings["logSettings"]).ContainsKey("outputDir"))
+					return "Logs";
+				return (string)Settings["logSettings"]["outputDir"];
+			}
+		}
+		private static string Logs(string file) => Path.Combine(LogDir, file);
+
 		public static void Main() {
-			IOSetup();
-
-			log.OutputStreams.Add(new AdvancingWriter("Logs/latest.log", new TimeSpan(0, 0, 5)) {
-				Compression = true,
-				CompressOnClose = false,
-				Archive = "Logs/{0:dd-MM-yyyy}.{2}.zip"
-			});
-
 			log.Info("Server is starting!");
 
 			//Load configuration file
-			log.Info("Loading configuration file.");
+			log.Config("Loading configuration file");
 			Settings = Config.loadConfig();
-			if(Settings == null) {
+			if (Settings == null) {
 				log.Fatal("The server failed to start because of an invalid configuration setting. Please check the server configuration!");
 				log.Fatal("Press the any key to exit...");
 				Console.ReadKey();
@@ -48,7 +51,39 @@ namespace API {
 				log.Close();
 				return;
 			}
-			log.Info("Loaded configuration file.");
+
+			if (Settings.ContainsKey("logSettings"))
+			{
+				JObject logSettings = (JObject)Settings["logSettings"];
+				if (logSettings.ContainsKey("logLevel"))
+				{
+					var logLevel = (Level)typeof(Level).GetFields().First(x => x.Name.ToLower() == ((string)logSettings["logLevel"]).ToLower()).GetValue(null);
+					if (logLevel != null)
+						log.LogLevel = logLevel;
+				}
+				if (logSettings.ContainsKey("format"))
+					log.Format = (string)logSettings["format"];
+			}
+
+			log.Config("Setting up files and directories...");
+			try {
+				IOSetup();
+			} catch (IOException e ) {
+				log.Fatal("Failed to set up files and directories.");
+				log.Fatal(e.Message);
+				Console.ReadKey();
+				Console.WriteLine();
+				log.Close();
+				return;
+			}
+			
+			log.OutputStreams.Add(new AdvancingWriter(Logs("latest.log"))
+			{
+				Compression = true,
+				CompressOnClose = false,
+				Archive = Logs("{0:dd-MM-yyyy}.{2}.zip")
+			});
+
 
 			//Get local IP address, if autodetect is enabled in settings.
 			List<string> addresses = Settings["connectionSettings"]["serverAddresses"].ToObject<List<string>>();
@@ -66,6 +101,22 @@ namespace API {
 			//Create request queue
 			var requestQueue = new BlockingCollection<HttpListenerContext>();
 
+			// Create listener thingy.
+			HttpListener listener = new HttpListener();
+			foreach (string address in addresses)
+				listener.Prefixes.Add("http://" + address + "/");
+			ListenerThread = new Listener(listener, requestQueue, "ListenerThread", log);
+			try {
+				ListenerThread.Start();
+			} catch (HttpListenerException e) {
+				log.Fatal("Failed to create Listener. Are you running the server in Administrator mode?.");
+				log.Fatal(e.Message);
+				Console.ReadKey();
+				Console.WriteLine();
+				log.Close();
+				return;
+			}
+
 			//Create console command thread
 			ConsoleThread = new Thread(() => API.Threads.ConsoleCommand.main(log)) {
 				IsBackground = true
@@ -73,24 +124,24 @@ namespace API {
 			ConsoleThread.Start();
 
 			//Create worker threads
-			log.Info("Creating worker threads.");
+			log.Config("Creating worker threads...");
 			int threadCount = (int)Settings["performanceSettings"]["workerThreadCount"];
+			RequestWorkers = new RequestWorker[threadCount];
 			for (int i = 0; i < threadCount; i++) {
-				var worker = new RequestWorker(CreateConnection(), requestQueue, "RequestWorker" + (i + 1), log);
-				worker.Start();
-				RequestWorkers.Add(worker);
+				try {
+					var worker = new RequestWorker(CreateConnection(), requestQueue, "RequestWorker" + (i + 1), log);
+					worker.Start();
+					RequestWorkers[i] = worker;
+				} catch(MySqlException e) {
+					log.Error("Failed to create connection for RequestWorker" + (i + 1));
+					log.Error(e.Message);
+				}
 			}
-
-			// Create listener thingy.
-			HttpListener listener = new HttpListener();
-			foreach (string address in addresses)
-				listener.Prefixes.Add("http://" + address + "/");
-			ListenerThread = new Listener(listener, requestQueue, "ListenerThread", log);
-			ListenerThread.Start();
-			log.Config("Finished setup");
+			
+			log.Info("Finished setup");
 
 			// Wait until all threads are terminated
-			foreach (var worker in RequestWorkers) {
+			foreach (var worker in RequestWorkers.Where(x => x != null)) {
 				worker.Join();
 				log.Fine($"Stopped '{worker}'");
 			}
@@ -130,20 +181,25 @@ namespace API {
 		/// <summary>
 		/// Performs setup for all IO-related features
 		/// </summary>
-		public static void IOSetup()
-		{
+		public static void IOSetup() {
 			// Create folders
-			Directory.CreateDirectory("Logs");
+			Directory.CreateDirectory(LogDir);
 
 			// Compress previous log
-			if (File.Exists("Logs/latest.log"))
+			var logfile = Logs("latest.log");
+			if (File.Exists(logfile))
 			{
-				var lastArchive = Directory.GetFiles("Logs").OrderBy(x => File.GetCreationTime(x)).LastOrDefault();
+				// Get most recent zip file
+				var lastArchive = Directory.GetFiles(LogDir)
+					.OrderBy(x => File.GetCreationTime(x))
+					.Where(x => Path.GetExtension(x).ToLower() == ".zip")
+						.LastOrDefault();
+				// Add latest.log to the most recent archive if it exists
 				if (lastArchive != null)
 				{
 					using (var archive = ZipFile.Open(lastArchive, ZipArchiveMode.Update))
-						archive.CreateEntryFromFile("Logs/latest.log", "latest.log");
-					File.Delete("Logs/latest.log");
+						archive.CreateEntryFromFile(logfile, Path.GetFileName(logfile));
+					File.Delete(logfile);
 				}
 			}
 		}

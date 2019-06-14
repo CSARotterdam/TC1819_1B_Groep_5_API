@@ -13,10 +13,10 @@ namespace API.Requests {
 		/// Handles requests with requestType "resizeLoan".
 		/// </summary>
 		/// <remarks>
-		/// Optional arguments are:
+		/// Required arguments are:
 		///		- loanId > The id of the loan to edit.
-		///		- Start > Specifies a limit where all returned loans must have ended after this limit.
-		///		- End > Specifies a limit where all returned loans must have started before this limit.
+		///		- start > Specifies a limit where all returned loans must have ended after this limit.
+		///		- end > Specifies a limit where all returned loans must have started before this limit.
 		/// </remarks>
 		/// <param name="request">The request from the client.</param>
 		/// <returns>The contents of the requestData field, which is to be returned to the client.</returns>

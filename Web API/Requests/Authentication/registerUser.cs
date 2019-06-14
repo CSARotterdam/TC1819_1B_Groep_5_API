@@ -1,6 +1,7 @@
 ﻿using MySQLWrapper.Data;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using static API.Requests.RequestMethodAttributes;
 
 namespace API.Requests {
@@ -21,10 +22,13 @@ namespace API.Requests {
 			string username = usernameValue.ToString();
 			string password = passwordValue.ToString();
 
-			//Check if username already exists
-			if (GetObject<User>(username, "Username") != null) {
-				return Templates.AlreadyExists(username);
+			//Verify username
+			Log.Info(Misc.verifyUsernameLength(username));
+			Log.Info(Misc.verifyUsernameRegex(username));
+			if (!Misc.verifyUsernameLength(username) || !Misc.verifyUsernameRegex(username)) {
+				return Templates.InvalidUsername;
 			}
+
 
 			//Check if password is a SHA-512 hash.
 			//This checks whether the password string is the correct length for a SHA-512 hash, and if it is a proper hexadecimal number.
@@ -34,6 +38,12 @@ namespace API.Requests {
 				return Templates.InvalidPassword;
 			}
 
+			//Check if username already exists
+			if (GetObject<User>(username, "Username") != null) {
+				return Templates.AlreadyExists(username);
+			}
+
+			//Create user
 			long token = (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
 			User user = new User(username, password, token, UserPermission.User);
 			user.Upload(Connection);

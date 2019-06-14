@@ -1,5 +1,4 @@
-﻿using System;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace API.Requests {
 	public static class Templates {
@@ -91,7 +90,7 @@ namespace API.Requests {
 		/// </summary>
 		public static JObject AlreadyExists(string message = null) {
 			return new JObject() {
-				{"reason", "NoSuchProduct" },
+				{"reason", "AlreadyExists" },
 				{"message", message },
 			};
 		}
@@ -104,6 +103,22 @@ namespace API.Requests {
 			{"reason", "InvalidPassword" }
 		};
 
+		/// <summary>
+		/// Sent when a client attempts to use a username with an invalid format.
+		/// Usernames must match at least one of the filters configured in config.json, if any.
+		/// </summary>
+		public static JObject InvalidUsername = new JObject() {
+			{"reason", "InvalidUsername" }
+		};
+
+		/// <summary>
+		/// Used when a delete request cannot finish because of false prerequisites.
+		/// </summary>
+		/// <param name="message">An optional message to attach.</param>
+		public static JObject CannotDelete(string message) => new JObject() {
+				{"reason", "CannotDelete"},
+				{"message", message}
+			};
 
 		/// <summary>
 		/// Sent when a client sends a request without including the data necessary to fullfil it.
@@ -117,6 +132,10 @@ namespace API.Requests {
 			};
 		}
 
+		/// <summary>
+		/// Sent when a client sends a request without including several required parameters.
+		/// </summary>
+		/// <param name="args">A set of parameter names</param>
 		public static JObject MissingArguments(params string[] args) => MissingArguments(string.Join(", ", args));
 
 		/// <summary>
@@ -148,12 +167,7 @@ namespace API.Requests {
 		/// </summary>
 		/// <param name="argName">The name of the argument with an invalid value.</param>
 		/// <returns>The "Invalid Argument" response template.</returns>
-		public static JObject InvalidArgument(string argName) {
-			return new JObject() {
-				{"reason", "InvalidArgument"},
-				{"message", argName}
-			};
-		}
+		public static JObject InvalidArgument(string argName) => InvalidArguments(argName);
 
 		/// <summary>
 		/// Sent when a client sends a request with arguments set to unacceptable values.
@@ -163,7 +177,7 @@ namespace API.Requests {
 		/// <returns>The "Invalid Arguments" response template.</returns>
 		public static JObject InvalidArguments(params string[] argNames) {
 			return new JObject() {
-				{"reason", "InvalidArgument"},
+				{"reason", "InvalidArguments"},
 				{"message", string.Join(", ", argNames) }
 			};
 		}
@@ -208,8 +222,7 @@ namespace API.Requests {
 		/// Sent when the client requested a resize to the loan's timespan, but the specified loan has already expired.
 		/// </summary>
 		/// <param name="message">An optional message.</param>
-		public static JObject LoanExpired(string message = null)
-		{
+		public static JObject LoanExpired(string message = null) {
 			return new JObject() {
 				{"reason", "LoanResizeFailed"},
 				{"message", message }
@@ -220,8 +233,7 @@ namespace API.Requests {
 		/// Sent when the client requested a delete to a loan, but the loan has already started.
 		/// </summary>
 		/// <param name="message">An optional message.</param>
-		public static JObject LoanAlreadyStarted(string message = null)
-		{
+		public static JObject LoanAlreadyStarted(string message = null) {
 			return new JObject() {
 				{"reason", "LoanAlreadyStarted"},
 				{"message", message }
