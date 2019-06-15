@@ -42,5 +42,46 @@ namespace API {
 				return Math.Round(timer.ElapsedTicks / 10d, decimals) + " us";
 			return Math.Round(timer.ElapsedTicks * 100d, decimals) + " ns";
 		}
+
+		public static Boolean verifyUsernameRegex(string username) {
+			List<JObject> filters = Program.Settings["authenticationSettings"]["usernameRequirements"].ToObject<List<JObject>>();
+			bool regexPass = true;
+			foreach (JObject filter in filters) {
+				filter.TryGetValue("regex", out JToken regex);
+				regexPass = true;
+				if (regex != null) {
+					regexPass = false;
+					string val = (string)regex;
+					if (System.Text.RegularExpressions.Regex.IsMatch(username, val)) {
+						regexPass = true;
+					}
+				}
+				if (regexPass) {
+					return true;
+				};
+			}
+			return regexPass;
+		}
+
+		public static Boolean verifyUsernameLength(string username) {
+			bool lengthPass = true;
+			List<JObject> filters = Program.Settings["authenticationSettings"]["usernameRequirements"].ToObject<List<JObject>>();
+			foreach (JObject filter in filters) {
+				filter.TryGetValue("length", out JToken length);
+
+				lengthPass = true;
+				if (length != null) {
+					lengthPass = false;
+					int val = (int)length;
+					if (username.Length == val) {
+						lengthPass = true;
+					}
+				}
+				if (lengthPass) {
+					return true;
+				};
+			}
+			return lengthPass;
+		}
 	}
 }
