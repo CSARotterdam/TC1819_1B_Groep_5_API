@@ -51,11 +51,11 @@ namespace API {
 		//If empty, all usernames will be allowed.
 		""usernameRequirements"": [
 			{
-				""regex"": ""([A - z])"",
+				""regex"": ""([A-z])"",
 				""length"": 5
 			},
 			{
-				""regex"": ""([0 - 9])"",
+				""regex"": ""([0-9])"",
 				""length"": 7
 			}
 	
