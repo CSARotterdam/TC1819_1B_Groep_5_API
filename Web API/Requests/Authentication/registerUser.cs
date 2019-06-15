@@ -23,8 +23,6 @@ namespace API.Requests {
 			string password = passwordValue.ToString();
 
 			//Verify username
-			Log.Info(Misc.verifyUsernameLength(username));
-			Log.Info(Misc.verifyUsernameRegex(username));
 			if (!Misc.verifyUsernameLength(username) || !Misc.verifyUsernameRegex(username)) {
 				return Templates.InvalidUsername;
 			}
