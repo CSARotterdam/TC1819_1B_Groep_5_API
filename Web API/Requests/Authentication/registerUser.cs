@@ -77,9 +77,11 @@ namespace API.Requests {
 
 			//Create response object
 			JObject response = new JObject() {
-				{"userToken", (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds },
-				{"permissionLevel", 0},
 				{"reason", null},
+				{"responseData", new JObject() {
+					{"userToken", (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds },
+					{"permissionLevel", 0}
+				}}
 			};
 
 			return response;
