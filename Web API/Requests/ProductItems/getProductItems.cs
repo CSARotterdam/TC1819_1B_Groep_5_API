@@ -72,19 +72,21 @@ namespace API.Requests
 		private ILookup<string, ProductItem> Core_getProductItems(string[] productIds, int[] itemIds = null)
 		{
 			productIds = productIds ?? new string[0];
-			itemIds = itemIds ?? new int[0];
 
 			// Build condition
 			MySqlConditionBuilder condition = new MySqlConditionBuilder("product", MySqlDbType.String, productIds);
-			condition.And();
-			condition.NewGroup();
-			foreach (var id in itemIds)
+			if (itemIds != null && itemIds.Length != 0)
 			{
-				condition.Or()
-					.Column("id")
-					.Equals(id, MySqlDbType.Int32);
+				condition.And();
+				condition.NewGroup();
+				foreach (var id in itemIds)
+				{
+					condition.Or()
+						.Column("id")
+						.Equals(id, MySqlDbType.Int32);
+				}
+				condition.EndGroup();
 			}
-			condition.EndGroup();
 
 			var itemPrimary = ProductItem.indexes.First(x => x.Type == Index.IndexType.PRIMARY).Columns[0];
 			// Ignore default item
